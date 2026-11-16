@@ -109,13 +109,13 @@ test('submission and summary include activity, custom detail, area, day and time
 });
 test('cartoon is now an actual MP4 video element, not SVG or a GIF',()=>{
   assert.match(html, /<video id="bunny-video"/);
-  assert.match(html, /playsinline webkit-playsinline autoplay muted loop/);
-  assert.match(html, /poster="\/video\/poster\.png"/);
+  assert.match(html, /playsinline webkit-playsinline muted loop/);
+  assert.match(html, /poster="\/video\/nibbles-flow\.webp"/);
   assert.doesNotMatch(html, /<svg\b/i);
-  assert.match(js, /function playBunnyFilm\(path\)/);
-  assert.match(js, /fetch\('\/video\/manifest\.json'/);
-  assert.match(js, /video\.play\(\)/);
-  assert.match(js, /bunnyVideo\.pause\(\)/);
+  assert.match(js, /function paintSpeech\(canvas, amount\)/);
+  assert.match(js, /fetch\('\/video\/nibbles-flow-mouth\.json'/);
+  assert.match(js, /bunnyVideo\.play\(\)/);
+  assert.match(js, /video\.pause\(\)/);
   const source=readFileSync('scripts/video/render_nibbles.py','utf8');
   assert.match(source, /nibbles-reference\.webp/);
   assert.match(source, /def load_poses\(/);
@@ -133,7 +133,7 @@ test('pre-recorded bunny narration is available with an explicit safe device voi
   assert.equal(typeof manifest.clips,'object');
   assert.match(js, /fetch\('\/audio\/manifest\.json'/);
   assert.match(js, /function say\(text,clipKey=sceneTrackKey\(\),onComplete\)/);
-  assert.match(js, /function playRecordedClip\(path, text, token, onComplete, film\)/);
+  assert.match(js, /function playRecordedClip\(path, text, token, onComplete, clipKey\)/);
   assert.match(js, /function speakWithDevice\(text,token,onComplete\)/);
   assert.match(js, /audio\.play\(\)\.catch\(fallBack\)/);
   assert.match(js, /voiceSession/);
@@ -152,9 +152,9 @@ test('expressive character narration maps to all scenes and every activity-speci
   assert.match(js, /'password'/);
   assert.match(js, /'yes'/);
 });
-test('video and sound are kept together: no timer-driven fake mouth on the visible character',()=>{
-  assert.match(js, /videoClips\[clipKey\]/);
-  assert.match(js, /playBunnyFilm\(film\)/);
+test('the Flow bunny mouth uses cues from the Qwen recording clock',()=>{
+  assert.match(js, /mouthCues\[clipKey\]/);
+  assert.match(js, /Math\.floor\(audio\.currentTime \* 20\)/);
   assert.match(js, /ended\(\)/);
   assert.match(js, /error: fallBack/);
   assert.match(js, /startIdleVideo\(\)/);
@@ -211,7 +211,7 @@ test('invitation uses an immersive viewport layout and the approved Nibbles art 
   assert.match(css, /\.shell \{[^}]*min-height: 100dvh/);
   assert.match(css, /\.gate-screen \{[^}]*min-height: var\(--visible-height, 100dvh\)/);
   assert.match(css, /@media \(max-aspect-ratio: 1\/1\)/);
-  assert.equal((html.match(/class=\"gate-character\" src=\"\/video\/idle\.mp4\"/g)||[]).length,2);
+  assert.equal((html.match(/class=\"gate-character\" src=\"\/video\/nibbles-flow\.mp4\"/g)||[]).length,2);
   assert.equal((html.match(/class=\"gate-canvas\"/g)||[]).length,2);
 });
 
@@ -232,20 +232,15 @@ test('animation atlas preserves Nibbles and supplies distinct acting keyframes',
   assert.match(source,/return 19/);
 });
 
-test('the player accepts the current version 3 video manifest and starts idle animation',()=>{
-  const videoManifest=JSON.parse(readFileSync('public/video/manifest.json','utf8'));
-  assert.equal(videoManifest.version,3);
-  assert.equal(Object.keys(videoManifest.clips).length,16);
-  assert.match(js,/Number\.isInteger\(data\?\.version\)\s*\|\|\s*data\.version<1/);
-  assert.match(js,/videoClips\.idle='\/video\/idle\.mp4'/);
+test('the deployed character has a Flow dance clip, poster and speech cues',()=>{
+  const cues=JSON.parse(readFileSync('public/video/nibbles-flow-mouth.json','utf8'));
+  const audio=JSON.parse(readFileSync('public/audio/manifest.json','utf8'));
+  assert.deepEqual(Object.keys(cues),Object.keys(audio.clips));
+  for(const clip of Object.values(cues)) assert.match(clip,/^[0-9]{20,}$/);
+  assert.ok(readFileSync('public/video/nibbles-flow.mp4').length > 100000);
   assert.match(js,/startIdleVideo\(\)/);
-});
-
-test('the keyed character has a poster fallback and choices overlay the scene',()=>{
-  assert.match(js,/keyBunnyVideo\(bunnyVideo, bunnyCanvas\)/);
-  assert.match(js,/const pixels = frame\.data/);
-  assert.match(js,/poster\.src = '\/video\/poster\.png'/);
-  assert.match(js,/requestVideoFrameCallback/);
+  assert.match(js,/ctx\.drawImage\(poster, 0, 0\)/);
+  assert.match(js,/requestAnimationFrame\(drawMouth\)/);
   assert.match(html,/class="interaction"/);
   assert.match(css,/\.choices, [^{]+\{ display: grid; grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)/);
   assert.match(css,/backdrop-filter: blur\(12px\)/);

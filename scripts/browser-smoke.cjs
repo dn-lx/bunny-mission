@@ -204,8 +204,8 @@ async function bypassFullscreenPrompt(page) {
     await clipPage.close();
     console.log('PASS: prerecorded character narration, lip sync and cancel-on-scene-change');
 
-    // Verify the site uses the actual rendered H.264 film during normal Qwen speech.
-    if(fs.existsSync(path.join(root,'video','ask.mp4'))){
+    // Check the exported Flow video and its Qwen-driven speaking frame.
+    if(fs.existsSync(path.join(root,'video','nibbles-flow.mp4'))){
       const filmPage=await browser.newPage({viewport:{width:390,height:844}});
       const errors=[];
       filmPage.on('pageerror',err=>errors.push(String(err)));
@@ -225,8 +225,7 @@ async function bypassFullscreenPrompt(page) {
       await filmPage.goto(origin,{waitUntil:'domcontentloaded'});
       await filmPage.waitForFunction(()=>{
         const v=document.querySelector('.gate-character');
-        const c=document.querySelector('.gate-canvas');
-        return v&&v.currentTime>.2&&c&&c.width>100;
+        return v && v.currentSrc.includes('/video/nibbles-flow.mp4') && v.currentTime>.2;
       },{timeout:10000});
       await bypassFullscreenPrompt(filmPage);
       await filmPage.locator('#invite-code').fill('TEST');
@@ -235,27 +234,22 @@ async function bypassFullscreenPrompt(page) {
       const video=filmPage.locator('#bunny-video');
       await filmPage.waitForFunction(()=>{
         const v=document.querySelector('#bunny-video');
-        return v && v.currentSrc.includes('/video/ask.mp4') && v.readyState >= 2;
+        return v && v.currentSrc.includes('/video/nibbles-flow.mp4') && v.readyState >= 2;
       },{timeout:15000}).catch(async ()=>{
         const state=await video.evaluate(v=>({src:v.currentSrc,ready:v.readyState,error:v.error?.message}));
         throw Error('MP4 did not load in headless browser: '+JSON.stringify(state));
       });
       assert.equal(await video.evaluate(v=>v.tagName),'VIDEO','Must render an actual video');
       assert.ok(await video.evaluate(v=>v.videoWidth)>100,'Decoded film frames are missing');
-      await filmPage.waitForFunction(()=>{
-        const c=document.querySelector('#bunny-canvas');
-        return c&&c.width>100&&c.height>100;
-      },{timeout:10000});
-      const cutout=await filmPage.locator('#bunny-canvas').evaluate(canvas=>{
-        const pixels=canvas.getContext('2d').getImageData(0,0,canvas.width,canvas.height).data;
-        let transparent=0,visible=0;
-        for(let i=3;i<pixels.length;i+=4){if(pixels[i]<32)transparent++;if(pixels[i]>220)visible++;}
-        return {transparent,visible};
-      });
-      assert.ok(cutout.transparent>1000,'Blue video background must be removed');
-      assert.ok(cutout.visible>10000,'Nibbles must remain visible after background removal');
       const hear = async scene => filmPage.waitForFunction(
         id=>window.__spokenScenes.has('/audio/'+id+'.mp3'),scene,{timeout:15000});
+      await filmPage.locator('#bunny-canvas.speaking-frame').waitFor({state:'visible'});
+      const mouthBefore = await filmPage.locator('#bunny-canvas').evaluate(
+        c=>c.getContext('2d').getImageData(260,280,24,24).data.join(','));
+      await filmPage.waitForFunction(before=>{
+        const canvas=document.querySelector('#bunny-canvas.speaking-frame');
+        return canvas && canvas.getContext('2d').getImageData(260,280,24,24).data.join(',')!==before;
+      },mouthBefore,{timeout:5000});
       await hear('ask');
       await filmPage.locator('#yes-btn').click();
       await hear('yes');
@@ -270,7 +264,7 @@ async function bypassFullscreenPrompt(page) {
       await hear('success');
       assert.deepEqual(errors,[],'Film page caused browser errors');
       await filmPage.close();
-      console.log('PASS: actual H.264 bunny MP4 loads and decodes in headless Chrome');
+      console.log('PASS: Google Flow clip decodes, mouth moves, Qwen narration plays through the invitation');
     }
 
 

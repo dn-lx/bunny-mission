@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#fff7ed">
-  <link rel="icon" href="/video/poster.png" type="image/png">
+  <link rel="icon" href="/video/nibbles-flow.webp" type="image/png">
   <link rel="manifest" href="/manifest.webmanifest">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -19,7 +19,7 @@
     <section class="gate-screen" id="full-screen-gate">
       <div class="gate-art" aria-hidden="true">
         <div class="gate-film">
-          <video class="gate-character" src="/video/idle.mp4" muted loop playsinline webkit-playsinline preload="none"></video>
+          <video class="gate-character" src="/video/nibbles-flow.mp4" muted loop playsinline webkit-playsinline preload="none" poster="/video/nibbles-flow.webp"></video>
           <canvas class="gate-canvas" aria-hidden="true"></canvas>
         </div>
       </div>
@@ -36,7 +36,7 @@
     <section class="gate-screen" id="password-gate" hidden>
       <div class="gate-art" aria-hidden="true">
         <div class="gate-film">
-          <video class="gate-character" src="/video/idle.mp4" muted loop playsinline webkit-playsinline preload="none"></video>
+          <video class="gate-character" src="/video/nibbles-flow.mp4" muted loop playsinline webkit-playsinline preload="none" poster="/video/nibbles-flow.webp"></video>
           <canvas class="gate-canvas" aria-hidden="true"></canvas>
         </div>
       </div>
@@ -64,8 +64,8 @@
     <section class="shell" aria-label="Bunny's tiny invitation">
       <div class="art-pane">
         <div class="bunny-wrap" data-mood="smile" id="bunny" role="button" tabindex="0" aria-label="Play a funny bunny film" title="Tap to hear a silly bunny line">
-          <video id="bunny-video" class="bunny-film" playsinline webkit-playsinline autoplay muted loop preload="metadata"
-                 poster="/video/poster.png" aria-hidden="true"></video>
+          <video id="bunny-video" class="bunny-film" playsinline webkit-playsinline muted loop preload="metadata"
+                 src="/video/nibbles-flow.mp4" poster="/video/nibbles-flow.webp" aria-hidden="true"></video>
           <canvas id="bunny-canvas" class="bunny-canvas" aria-hidden="true"></canvas>
         </div>
         <div class="confetti hidden" id="confetti" aria-hidden="true"></div>
@@ -127,72 +127,37 @@
       const bunnyCanvas = document.getElementById('bunny-canvas');
       const gateVideos = Array.from(document.querySelectorAll('.gate-character'));
       const poster = new Image();
-      poster.src = '/video/poster.png';
+      poster.src = '/video/nibbles-flow.webp';
+      const danceVideo = '/video/nibbles-flow.mp4';
+      let mouthCues = {};
+      const mouthReady = fetch('/video/nibbles-flow-mouth.json')
+        .then(response => response.ok ? response.json() : {})
+        .then(cues => { mouthCues = cues; })
+        .catch(() => { /* The Flow clip is still available without mouth cues. */ });
+      const gateCanvas = gateVideos[1].nextElementSibling;
 
-      function keyBunnyVideo(video, canvas) {
-        const context = canvas.getContext('2d', { willReadFrequently: true });
-        if (!context) return;
-        const useVideoFrames = typeof video.requestVideoFrameCallback === 'function';
-        let frameRequest = null;
-        let hasVideoFrame = false;
-
-        function draw(source, width, height) {
-          if (canvas.width !== width) canvas.width = width;
-          if (canvas.height !== height) canvas.height = height;
-          context.clearRect(0, 0, width, height);
-          context.drawImage(source, 0, 0);
-          const frame = context.getImageData(0, 0, width, height);
-          const pixels = frame.data;
-          for (let i = 0; i < pixels.length; i += 4) {
-            const r = pixels[i], g = pixels[i + 1], b = pixels[i + 2];
-            const blue = Math.max(0, Math.min(1,
-              (r - 140) / 50, (g - 165) / 55, (b - 190) / 45,
-              (b - r - 25) / 34, (g - r - 10) / 24, (250 - r) / 70));
-            // Suppress reflected blue around bright fur and the floor shadow.
-            // Keep the saturated blue eyes, where the red channel is darker.
-            const spill = Math.max(0, Math.min(1, (r - 130) / 42, (b - g - 6) / 28, (b - r - 15) / 35));
-            if (!blue && !spill) continue;
-            const opacity = 1 - Math.min(1, blue * 1.55);
-            pixels[i + 3] = Math.round(255 * opacity);
-            pixels[i + 2] = Math.round(b - Math.max(blue, spill) * (b - g));
+      function paintSpeech(canvas, amount) {
+        if (!poster.naturalWidth) return;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+        const size = poster.naturalWidth;
+        if (canvas.width !== size) canvas.width = size;
+        if (canvas.height !== size) canvas.height = size;
+        ctx.drawImage(poster, 0, 0);
+        if (amount > .12) {
+          // Mouth placement is measured from the first frame of the Flow clip.
+          const height = 9 * amount;
+          ctx.fillStyle = '#573432';
+          ctx.beginPath();
+          ctx.ellipse(272, 289 + height * .3, 9 + 3 * amount, height, 0, 0, Math.PI * 2);
+          ctx.fill();
+          if (amount > .45) {
+            ctx.fillStyle = '#f6e9cf';
+            ctx.fillRect(269, 289 - height * .35, 5, height * .42);
           }
-          context.putImageData(frame, 0, 0);
         }
-
-        function drawPoster() {
-          if (!hasVideoFrame && poster.naturalWidth) draw(poster, poster.naturalWidth, poster.naturalHeight);
-        }
-        function drawVideo() {
-          if (video.readyState < 2 || !video.videoWidth) return;
-          draw(video, video.videoWidth, video.videoHeight);
-          hasVideoFrame = true;
-        }
-        function queueFrame() {
-          if (frameRequest !== null || video.paused || video.ended) return;
-          frameRequest = useVideoFrames
-            ? video.requestVideoFrameCallback(onFrame)
-            : requestAnimationFrame(onFrame);
-        }
-        function onFrame() {
-          frameRequest = null;
-          drawVideo();
-          queueFrame();
-        }
-        function stop() {
-          if (frameRequest === null) return;
-          if (useVideoFrames) video.cancelVideoFrameCallback(frameRequest);
-          else cancelAnimationFrame(frameRequest);
-          frameRequest = null;
-        }
-        if (poster.complete) drawPoster();
-        else poster.addEventListener('load', drawPoster, { once: true });
-        video.addEventListener('loadeddata', drawVideo);
-        video.addEventListener('playing', queueFrame);
-        video.addEventListener('pause', stop);
-        video.addEventListener('ended', stop);
+        canvas.classList.add('speaking-frame');
       }
-      keyBunnyVideo(bunnyVideo, bunnyCanvas);
-      gateVideos.forEach(video => keyBunnyVideo(video, video.nextElementSibling));
       function syncGateVideos(){
         gateVideos.forEach(video=>{
           const screen=video.closest('.gate-screen');
@@ -312,39 +277,16 @@
       const voicePicker = document.getElementById('voice-picker');
       let availableVoices = [];
       let recordingClips = Object.create(null);
-      let videoClips = Object.create(null);
-      let activeVideo = false;
       function startIdleVideo() {
-        if (reduceMotion || !unlocked || activeVideo || !videoClips.idle) return;
-        if(bunnyVideo.getAttribute('src') !== videoClips.idle) {
-          bunnyVideo.pause();
-          bunnyVideo.src = videoClips.idle;
-          bunnyVideo.load();
-        }
-        bunnyVideo.muted = true;
-        bunnyVideo.loop = true;
+        if (reduceMotion || !unlocked) return;
+        if (bunnyVideo.getAttribute('src') !== danceVideo) bunnyVideo.src = danceVideo;
         bunnyVideo.play().catch(() => {});
       }
-      const videoReady = fetch('/video/manifest.json',{cache:'no-store'})
-        .then(res=>res.ok?res.json():{})
-        .then(data=>{
-          if(!Number.isInteger(data?.version) || data.version<1 || !data.clips || typeof data.clips!=='object')return;
-          for(const [name,path] of Object.entries(data.clips)){
-            if(/^[a-z0-9_-]{1,32}$/.test(name)&&
-               typeof path==='string'&&/^\/video\/[a-z0-9_-]+\.mp4$/.test(path)){
-              videoClips[name]=path;
-            }
-          }
-          videoClips.idle='/video/idle.mp4';
-          startIdleVideo();
-        })
-        .catch(()=>{ /* Existing Qwen MP3s remain the backup for older browsers. */ });
       // Keep one media element across all steps. Mobile browsers can grant audio
       // playback permission per element and require the first play inside a tap.
       const narration = new Audio();
       narration.preload = 'auto';
       let stopRecording = null;
-      let activeFilm = null;
       let gateSpeechKey = 'password';
       let gateSpeech = 'Psst! Here is your secret bunny entrance. Type your invitation password to see the surprise!';
       let voiceSession = 0;
@@ -360,7 +302,7 @@
           refreshVoices();
         })
         .catch(() => { /* Offline and missing manifests safely use device voices. */ });
-      const voiceReady = Promise.all([videoReady, audioReady]);
+      const voiceReady = Promise.all([mouthReady, audioReady]);
       function voiceQuality(voice) {
         const name = voice.name.toLowerCase();
         let score = /^en-us/i.test(voice.lang) ? 42 : /^en-gb/i.test(voice.lang) ? 10 : 0;
@@ -397,7 +339,7 @@
         ++voiceSession;
         stopRecording?.();
         narration.pause();
-        stopBunnyFilm();
+        resetFlowSpeech();
         speechUtterance = null;
         setTalking(false);
         try { window.speechSynthesis?.cancel(); } catch (_) { /* Older mobile browsers. */ }
@@ -416,18 +358,23 @@
         msg.rate = 1.02;
         msg.pitch = 1.06;
         msg.volume = .95;
-        msg.onstart = () => { if(token === voiceSession) setTalking(true); };
+        msg.onstart = () => {
+          if (token !== voiceSession) return;
+          setTalking(true);
+          if (!reduceMotion) paintSpeech(unlocked ? bunnyCanvas : gateCanvas, .3);
+        };
         // Where supported, move the mouth at actual spoken-word boundaries.
         msg.onboundary = (event) => {
           if(token !== voiceSession || !bunny.classList.contains('talking')) return;
           if(event.name && event.name !== 'word') return;
           const word = spoken.slice(event.charIndex, event.charIndex + (event.charLength || 5)).toLowerCase();
           const open = /[aeiou]/.test(word) ? 2 : /[pbm]/.test(word) ? 3 : 1;
-          bunny.dataset.lip = String(open);
+          if (!reduceMotion) paintSpeech(unlocked ? bunnyCanvas : gateCanvas, open / 3);
         };
         const finish = () => {
           if(token !== voiceSession) return;
           setTalking(false);
+          resetFlowSpeech();
           speechUtterance = null;
           if (typeof onComplete === 'function') onComplete();
         };
@@ -435,55 +382,49 @@
         msg.onerror = finish;
         try { window.speechSynthesis.speak(msg); } catch (_) { finish(); }
       }
-      function stopBunnyFilm() {
-        if (activeFilm) {
-          const video = activeFilm;
-          activeFilm = null;
-          video.pause();
-          activeVideo = false;
-          if (video !== bunnyVideo && video.isConnected) {
-            video.src = '/video/idle.mp4';
-            video.loop = true;
-            syncGateVideos();
-          }
-          startIdleVideo();
-        }
+      function resetFlowSpeech() {
+        for (const canvas of [bunnyCanvas, gateCanvas]) canvas.classList.remove('speaking-frame');
+        startIdleVideo();
+        if (!unlocked) syncGateVideos();
       }
-      function playBunnyFilm(path) {
-        if (!path || reduceMotion) return null;
-        const video = unlocked ? bunnyVideo : gateVideos[1];
-        activeFilm = video;
-        activeVideo = true;
-        video.pause();
-        video.loop = false;
-        video.muted = true;
-        video.src = path;
-        return video;
-      }
-      function playRecordedClip(path, text, token, onComplete, film) {
+      function playRecordedClip(path, text, token, onComplete, clipKey) {
         const audio = narration;
-        const video = playBunnyFilm(film);
+        const video = unlocked ? bunnyVideo : gateVideos[1];
+        const canvas = unlocked ? bunnyCanvas : gateCanvas;
+        const cues = mouthCues[clipKey];
+        const dance = clipKey === 'yes' || clipKey === 'secret';
+        let frame = null;
+        let previous = -1;
+        function drawMouth() {
+          const index = Math.floor(audio.currentTime * 20);
+          if (index !== previous) {
+            paintSpeech(canvas, Number(cues[index] || 0) / 9);
+            if (canvas.classList.contains('speaking-frame')) previous = index;
+          }
+          frame = requestAnimationFrame(drawMouth);
+        }
         const listeners = {
           playing() {
             setTalking(true);
-            if (video) video.play().catch(() => {});
-          },
-          waiting() { video?.pause(); },
-          timeupdate() {
-            if (video && video.readyState >= 2 &&
-                Math.abs(video.currentTime - audio.currentTime) > .2) {
-              video.currentTime = Math.min(audio.currentTime, video.duration);
+            if (reduceMotion) return;
+            if (dance) {
+              startIdleVideo();
+              if (video.readyState >= 1) video.currentTime = 0;
+            } else if (cues && frame === null) {
+              video.pause();
+              drawMouth();
             }
           },
           ended() {
             cleanup();
-            stopBunnyFilm();
+            resetFlowSpeech();
             setTalking(false);
             onComplete?.();
           },
           error: fallBack
         };
         function cleanup() {
+          if (frame !== null) cancelAnimationFrame(frame);
           for (const [event, listener] of Object.entries(listeners)) {
             audio.removeEventListener(event, listener);
           }
@@ -493,7 +434,7 @@
           if (token !== voiceSession || stopRecording !== cleanup) return;
           cleanup();
           audio.pause();
-          stopBunnyFilm();
+          resetFlowSpeech();
           setTalking(false);
           speakWithDevice(text, token, onComplete);
         }
@@ -533,10 +474,9 @@
         if (!voiceOn) return false;
         const token=voiceSession;
         const sceneCanUseRecording=clipKey && !editedVoiceClips.has(clipKey);
-        const film = sceneCanUseRecording && videoClips[clipKey];
         const clip = sceneCanUseRecording && recordingClips[clipKey];
         if (clip && !voicePicker.value) {
-          playRecordedClip(clip, text, token, onComplete, film);
+          playRecordedClip(clip, text, token, onComplete, clipKey);
           return true;
         }
         startIdleVideo();

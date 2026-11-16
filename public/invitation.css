@@ -120,8 +120,11 @@ button:disabled { cursor: default; opacity: .53; }
   object-fit: contain;
   pointer-events: none;
 }
-.bunny-film, .gate-character { opacity: 0; }
-.bunny-canvas, .gate-canvas { filter: drop-shadow(0 12px 16px #822c3c20); }
+.bunny-film, .gate-character, .bunny-canvas, .gate-canvas {
+  border-radius: 24%;
+}
+.bunny-canvas, .gate-canvas { visibility: hidden; }
+.speaking-frame { visibility: visible; }
 
 .content-pane, .gate-screen {
   --scene-gap: 0px;
