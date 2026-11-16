@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#fff7ed">
-  <link rel="icon" href="/video/nibbles-flow.webp" type="image/png">
+  <link rel="icon" href="/video/flow/poster.webp" type="image/png">
   <link rel="manifest" href="/manifest.webmanifest">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -19,8 +19,7 @@
     <section class="gate-screen" id="full-screen-gate">
       <div class="gate-art" aria-hidden="true">
         <div class="gate-film">
-          <video class="gate-character" src="/video/nibbles-flow.mp4" muted loop playsinline webkit-playsinline preload="none" poster="/video/nibbles-flow.webp"></video>
-          <canvas class="gate-canvas" aria-hidden="true"></canvas>
+          <video class="gate-character" playsinline webkit-playsinline preload="none" poster="/video/flow/poster.webp"></video>
         </div>
       </div>
       <div class="gate-copy">
@@ -36,8 +35,7 @@
     <section class="gate-screen" id="password-gate" hidden>
       <div class="gate-art" aria-hidden="true">
         <div class="gate-film">
-          <video class="gate-character" src="/video/nibbles-flow.mp4" muted loop playsinline webkit-playsinline preload="none" poster="/video/nibbles-flow.webp"></video>
-          <canvas class="gate-canvas" aria-hidden="true"></canvas>
+          <video class="gate-character" playsinline webkit-playsinline preload="none" poster="/video/flow/poster.webp"></video>
         </div>
       </div>
       <div class="gate-copy">
@@ -59,14 +57,13 @@
   <main class="layout" id="app-main">
     <header class="topline">
       <div class="brand"><span class="brand-icon" aria-hidden="true">♡</span> tiny bunny mission</div>
-      <div class="voice-tools"><select id="voice-picker" class="voice-picker" aria-label="Choose bunny voice" title="Choose a voice from your device" hidden><option value="">Bunny picks</option></select><button id="voice-control" class="voice-control" type="button" aria-pressed="true">🔊 Bunny voice on</button></div>
+      <button id="voice-control" class="voice-control" type="button" aria-label="Mute Nibbles" aria-pressed="true">🔊</button>
     </header>
     <section class="shell" aria-label="Bunny's tiny invitation">
       <div class="art-pane">
-        <div class="bunny-wrap" data-mood="smile" id="bunny" role="button" tabindex="0" aria-label="Play a funny bunny film" title="Tap to hear a silly bunny line">
-          <video id="bunny-video" class="bunny-film" playsinline webkit-playsinline muted loop preload="metadata"
-                 src="/video/nibbles-flow.mp4" poster="/video/nibbles-flow.webp" aria-hidden="true"></video>
-          <canvas id="bunny-canvas" class="bunny-canvas" aria-hidden="true"></canvas>
+        <div class="bunny-wrap" data-mood="smile" id="bunny" role="button" tabindex="0" aria-label="Replay Nibbles">
+          <video id="bunny-video" class="bunny-film" playsinline webkit-playsinline preload="metadata"
+                 poster="/video/flow/poster.webp" aria-hidden="true"></video>
         </div>
         <div class="confetti hidden" id="confetti" aria-hidden="true"></div>
       </div>
@@ -77,7 +74,7 @@
             <h1 id="title">A little bunny has a question.</h1>
             <p class="description" id="description"></p>
           </div>
-          <button id="voice-replay" class="voice-replay" type="button">▶ Hear the bunny</button>
+          <button id="voice-replay" class="voice-replay" type="button" aria-label="Replay Nibbles">▶</button>
           <details class="dialogue"><summary>Read bunny’s line</summary><p class="bubble" id="bubble"></p></details>
         </div>
         <div class="interaction">
@@ -124,50 +121,18 @@
       const dialogue = copy.querySelector('.dialogue');
       const bunny = document.getElementById('bunny');
       const bunnyVideo = document.getElementById('bunny-video');
-      const bunnyCanvas = document.getElementById('bunny-canvas');
-      const gateVideos = Array.from(document.querySelectorAll('.gate-character'));
-      const poster = new Image();
-      poster.src = '/video/nibbles-flow.webp';
-      const danceVideo = '/video/nibbles-flow.mp4';
-      let mouthCues = {};
-      const mouthReady = fetch('/video/nibbles-flow-mouth.json')
+      const gateVideo = document.querySelector('#password-gate .gate-character');
+      const flowReady = fetch('/video/flow/manifest.json')
         .then(response => response.ok ? response.json() : {})
-        .then(cues => { mouthCues = cues; })
-        .catch(() => { /* The Flow clip is still available without mouth cues. */ });
-      const gateCanvas = gateVideos[1].nextElementSibling;
-
-      function paintSpeech(canvas, amount) {
-        if (!poster.naturalWidth) return;
-        const ctx = canvas.getContext('2d');
-        if (!ctx) return;
-        const size = poster.naturalWidth;
-        if (canvas.width !== size) canvas.width = size;
-        if (canvas.height !== size) canvas.height = size;
-        ctx.drawImage(poster, 0, 0);
-        if (amount > .12) {
-          // Mouth placement is measured from the first frame of the Flow clip.
-          const height = 9 * amount;
-          ctx.fillStyle = '#573432';
-          ctx.beginPath();
-          ctx.ellipse(272, 289 + height * .3, 9 + 3 * amount, height, 0, 0, Math.PI * 2);
-          ctx.fill();
-          if (amount > .45) {
-            ctx.fillStyle = '#f6e9cf';
-            ctx.fillRect(269, 289 - height * .35, 5, height * .42);
+        .then(data => {
+          if (data.version !== 1) return;
+          for (const [key, path] of Object.entries(data.clips || {})) {
+            if (/^\/video\/flow\/[a-z-]+\.mp4$/.test(path)) flowClips[key] = path;
           }
-        }
-        canvas.classList.add('speaking-frame');
-      }
-      function syncGateVideos(){
-        gateVideos.forEach(video=>{
-          const screen=video.closest('.gate-screen');
-          if(!reduceMotion&&screen&&!screen.hidden&&document.body.contains(video))video.play().catch(()=>{});
-          else video.pause();
-        });
-      }
+        })
+        .catch(() => { /* Device speech is available if the recordings fail to load. */ });
       const confetti = document.getElementById('confetti');
       const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      syncGateVideos();
       let step = 'intro';
       let tries = 0;
       let escapeTimer = null;
@@ -200,14 +165,14 @@
           chapter: 'the big question',
           heading: `${person}, would you like to go out with ${sender}?`,
           subheading: 'That’s the whole big, very important question. What do you think?',
-          speech: 'Ehhh... Alex has a question for ya. He sent a rabbit. Bold choice, huh?',
+          speech: 'Would you like to go out with Alex?',
           mood: 'wink'
         },
         outing: {
           chapter: 'step 1 of 4',
           heading: 'What would you enjoy doing?',
           subheading: 'Pick an idea that actually sounds fun to you.',
-          speech: 'Here is the fun part. Coffee, wandering, food or sweets? I did not even put carrot farming on the list.',
+          speech: 'What would you like to do together?',
           mood: 'smile',
           options: [
             ['☕','Coffee or tea','coffee'], ['🌿','A walk and exploring','walk'],
@@ -226,7 +191,7 @@
           chapter: 'step 3 of 4',
           heading: 'Where would be convenient?',
           subheading: 'No need to pick a specific place yet.',
-          speech: 'Somewhere comfortable for you, of course. My hop-mobile has a very limited range.',
+          speech: 'Where would you feel most comfortable meeting?',
           mood: 'smile',
           options: [
             ['📍','Somewhere near me'], ['🧭','Somewhere near Alex'],
@@ -237,21 +202,21 @@
           chapter: 'step 4 of 4',
           heading: 'Which day works for you?',
           subheading: 'Pick a day from the calendar and a time of day, or decide together later.',
-          speech: 'Aha! The calendar! Pick a day that works for you. This rabbit does not do surprise alarms.',
+          speech: 'Pick a day and time, or decide together later.',
           mood: 'wink'
         },
         success: {
           chapter: 'mission complete',
           heading: 'Bunny is doing happy little jumps!',
           subheading: `You said yes to going out with ${sender}. I think this deserves a tiny celebration.`,
-          speech: 'Well, would ya look at that! Mission accomplished! I knew this bow tie had magical powers!',
+          speech: 'Lovely. Your plans are ready to share with Alex.',
           mood: 'happy'
         },
         decline: {
           chapter: 'still bunny approved',
           heading: 'Absolutely no worries.',
           subheading: 'Thank you for answering. You’re lovely, and this bunny wishes you a wonderful day.',
-          speech: 'Hey, no worries! Thanks for being straight with me. Here’s a little flower, on the house.',
+          speech: 'No worries at all. Have a lovely day.',
           mood: 'smile'
         }
       };
@@ -272,223 +237,124 @@
         render();
         window.scrollTo(0, 0);
       }
-      // Pre-recorded character clips take priority when published in /audio/manifest.json.
-      // No clip exists until an MP3 is actually uploaded; browser speech remains the fallback.
-      const voicePicker = document.getElementById('voice-picker');
-      let availableVoices = [];
-      let recordingClips = Object.create(null);
-      function startIdleVideo() {
-        if (reduceMotion || !unlocked) return;
-        if (bunnyVideo.getAttribute('src') !== danceVideo) bunnyVideo.src = danceVideo;
-        bunnyVideo.play().catch(() => {});
-      }
-      // Keep one media element across all steps. Mobile browsers can grant audio
-      // playback permission per element and require the first play inside a tap.
+      const flowClips = Object.create(null);
       const narration = new Audio();
-      narration.preload = 'auto';
-      let stopRecording = null;
-      let gateSpeechKey = 'password';
-      let gateSpeech = 'Psst! Here is your secret bunny entrance. Type your invitation password to see the surprise!';
+      const voiceControl = document.getElementById('voice-control');
+      let stopPlayback = null;
       let voiceSession = 0;
-      let speechUtterance = null;
-      const audioReady = fetch('/audio/manifest.json', {cache:'no-store'})
-        .then(response => response.ok ? response.json() : {})
-        .then(data => {
-          if (!data || data.version !== 1 || !data.clips || typeof data.clips !== 'object') return;
-          for (const [id,path] of Object.entries(data.clips)) {
-            if (/^[a-z0-9_-]{1,32}$/.test(id) && typeof path === 'string' &&
-                /^\/audio\/[a-z0-9_-]+\.mp3$/.test(path)) recordingClips[id] = path;
-          }
-          refreshVoices();
-        })
-        .catch(() => { /* Offline and missing manifests safely use device voices. */ });
-      const voiceReady = Promise.all([mouthReady, audioReady]);
-      function voiceQuality(voice) {
-        const name = voice.name.toLowerCase();
-        let score = /^en-us/i.test(voice.lang) ? 42 : /^en-gb/i.test(voice.lang) ? 10 : 0;
-        if (/natural|neural|premium|enhanced|studio/.test(name)) score += 80;
-        if (/google|microsoft|siri|apple/.test(name)) score += 35;
-        if (/guy|aaron|eddie|fred|tom|davis|eric|tony|matthew|andrew|roger/.test(name)) score += 18;
-        if (/sonia|libby|serena|samantha|kate|aria|jenny/.test(name)) score += 5;
-        if (/compact|espeak|robot/.test(name)) score -= 60;
-        return score;
-      }
-      function refreshVoices() {
-        const selected = voicePicker.value;
-        const hasRecording = Object.keys(recordingClips).length > 0;
-        availableVoices = ('speechSynthesis' in window
-            ? window.speechSynthesis.getVoices().filter(v => /^en\b|^en-/i.test(v.lang))
-            : [])
-          .sort((a,b) => voiceQuality(b)-voiceQuality(a)).slice(0,18);
-        voicePicker.replaceChildren(new Option(hasRecording ? 'Recorded' : 'Bunny picks', ''));
-        availableVoices.forEach(v => voicePicker.append(new Option(v.name+' · '+v.lang,v.voiceURI)));
-        voicePicker.value = availableVoices.some(v => v.voiceURI === selected) ? selected : '';
-        voicePicker.hidden = availableVoices.length < 2 && !hasRecording;
-      }
-      refreshVoices();
-      if ('speechSynthesis' in window) window.speechSynthesis.addEventListener?.('voiceschanged',refreshVoices);
+      let speechUtterance;
+      let gateSpeechKey = 'password';
+      let gateSpeech = 'Psst. Enter your invitation password to open the surprise.';
       const sceneTrackKey = () => step === 'detail' ? 'detail-'+picks.activityKey : step;
-      voicePicker.addEventListener('change', () => {
-        if (unlocked) say(screens[step].speech,sceneTrackKey());
-      });
-      function setTalking(isTalking) {
-        bunny.classList.toggle('talking',isTalking);
-        if (!isTalking) bunny.removeAttribute('data-lip');
-      }
+
       function stopVoice() {
         ++voiceSession;
-        stopRecording?.();
+        stopPlayback?.();
         narration.pause();
-        resetFlowSpeech();
+        bunnyVideo.pause();
+        gateVideo.pause();
         speechUtterance = null;
-        setTalking(false);
         try { window.speechSynthesis?.cancel(); } catch (_) { /* Older mobile browsers. */ }
       }
-      function speakWithDevice(text,token,onComplete) {
-        if (token !== voiceSession || !voiceOn || !('speechSynthesis' in window) ||
-            !('SpeechSynthesisUtterance' in window)) return;
-        const spoken = text.replace(/[♡✉🐰🌷🎉]/gu,'').replace(/\s+/g,' ').trim();
-        const msg = new SpeechSynthesisUtterance(spoken);
-        speechUtterance = msg; // Retain until utterance completes (iOS/Safari).
-        const selected = availableVoices.find(v => v.voiceURI === voicePicker.value);
-        const voice = selected || availableVoices[0] ||
-          window.speechSynthesis.getVoices().find(v => /^en/i.test(v.lang));
-        if (voice) msg.voice = voice;
-        msg.lang = voice?.lang || 'en-US';
-        msg.rate = 1.02;
-        msg.pitch = 1.06;
-        msg.volume = .95;
-        msg.onstart = () => {
-          if (token !== voiceSession) return;
-          setTalking(true);
-          if (!reduceMotion) paintSpeech(unlocked ? bunnyCanvas : gateCanvas, .3);
-        };
-        // Where supported, move the mouth at actual spoken-word boundaries.
-        msg.onboundary = (event) => {
-          if(token !== voiceSession || !bunny.classList.contains('talking')) return;
-          if(event.name && event.name !== 'word') return;
-          const word = spoken.slice(event.charIndex, event.charIndex + (event.charLength || 5)).toLowerCase();
-          const open = /[aeiou]/.test(word) ? 2 : /[pbm]/.test(word) ? 3 : 1;
-          if (!reduceMotion) paintSpeech(unlocked ? bunnyCanvas : gateCanvas, open / 3);
-        };
+
+      function speakWithDevice(text, token, onComplete) {
+        if (token !== voiceSession || !voiceOn) return;
+        if (!('speechSynthesis' in window) || !('SpeechSynthesisUtterance' in window)) {
+          onComplete?.();
+          return;
+        }
+        const msg = new SpeechSynthesisUtterance(text);
+        speechUtterance = msg;
+        const voices = window.speechSynthesis.getVoices();
+        const soft = voices.find(v => /^en/i.test(v.lang) && /sonia|libby|serena|kate|samantha/i.test(v.name));
+        if (soft) msg.voice = soft;
+        msg.lang = soft?.lang || 'en-GB';
+        msg.rate = .88;
+        msg.pitch = 1.25;
         const finish = () => {
-          if(token !== voiceSession) return;
-          setTalking(false);
-          resetFlowSpeech();
+          if (token !== voiceSession) return;
           speechUtterance = null;
-          if (typeof onComplete === 'function') onComplete();
+          onComplete?.();
         };
         msg.onend = finish;
         msg.onerror = finish;
         try { window.speechSynthesis.speak(msg); } catch (_) { finish(); }
       }
-      function resetFlowSpeech() {
-        for (const canvas of [bunnyCanvas, gateCanvas]) canvas.classList.remove('speaking-frame');
-        startIdleVideo();
-        if (!unlocked) syncGateVideos();
-      }
-      function playRecordedClip(path, text, token, onComplete, clipKey) {
-        const audio = narration;
-        const video = unlocked ? bunnyVideo : gateVideos[1];
-        const canvas = unlocked ? bunnyCanvas : gateCanvas;
-        const cues = mouthCues[clipKey];
-        const dance = clipKey === 'yes' || clipKey === 'secret';
-        let frame = null;
-        let previous = -1;
-        function drawMouth() {
-          const index = Math.floor(audio.currentTime * 20);
-          if (index !== previous) {
-            paintSpeech(canvas, Number(cues[index] || 0) / 9);
-            if (canvas.classList.contains('speaking-frame')) previous = index;
-          }
-          frame = requestAnimationFrame(drawMouth);
-        }
-        const listeners = {
-          playing() {
-            setTalking(true);
-            if (reduceMotion) return;
-            if (dance) {
-              startIdleVideo();
-              if (video.readyState >= 1) video.currentTime = 0;
-            } else if (cues && frame === null) {
-              video.pause();
-              drawMouth();
-            }
-          },
-          ended() {
-            cleanup();
-            resetFlowSpeech();
-            setTalking(false);
-            onComplete?.();
-          },
-          error: fallBack
-        };
+
+      function playFlowClip(media, path, token, onComplete, onFailure) {
         function cleanup() {
-          if (frame !== null) cancelAnimationFrame(frame);
-          for (const [event, listener] of Object.entries(listeners)) {
-            audio.removeEventListener(event, listener);
-          }
-          stopRecording = null;
+          media.removeEventListener('ended', done);
+          media.removeEventListener('error', failed);
+          stopPlayback = null;
         }
-        function fallBack() {
-          if (token !== voiceSession || stopRecording !== cleanup) return;
+        function done() {
+          if (token !== voiceSession || stopPlayback !== cleanup) return;
           cleanup();
-          audio.pause();
-          resetFlowSpeech();
-          setTalking(false);
-          speakWithDevice(text, token, onComplete);
+          onComplete?.();
         }
-        stopRecording = cleanup;
-        for (const [event, listener] of Object.entries(listeners)) {
-          audio.addEventListener(event, listener);
+        function failed() {
+          if (token !== voiceSession || stopPlayback !== cleanup) return;
+          cleanup();
+          onFailure();
         }
-        audio.src = path;
-        audio.play().catch(fallBack);
+        stopPlayback = cleanup;
+        media.addEventListener('ended', done);
+        media.addEventListener('error', failed);
+        media.src = path;
+        media.play().catch(failed);
       }
+
       function enableNarration() {
         if (!voiceOn) return;
         stopVoice();
-        // Start a short silent file during the password submit gesture, before
-        // awaiting the network, to allow this element to play the unlocked line.
+        // Grant the persistent video and its audio fallback playback on the tap
+        // that submits the password, before the asynchronous server response.
+        bunnyVideo.src = '/video/flow/start.mp4';
+        bunnyVideo.play().catch(() => {});
         narration.src = '/audio/narration-start.mp3';
         narration.play().catch(() => {});
       }
-      function performBunnyFlourish() {
-        if(reduceMotion) return;
-        bunny.classList.remove('cartoon-flourish');
-        void bunny.offsetWidth;
-        bunny.classList.add('cartoon-flourish');
-      }
-      bunny.addEventListener('click', () => {
-        if(!unlocked) return;
-        performBunnyFlourish();
-        say('I have a top-secret announcement. Carrots are vegetables. And I am, frankly, adorable. Please keep this confidential.', 'secret');
-      });
-      bunny.addEventListener('keydown', (event) => {
-        if(event.key !== 'Enter' && event.key !== ' ') return;
-        event.preventDefault();
-        bunny.click();
-      });
+
       function say(text,clipKey=sceneTrackKey(),onComplete) {
         stopVoice();
         if (!voiceOn) return false;
-        const token=voiceSession;
-        const sceneCanUseRecording=clipKey && !editedVoiceClips.has(clipKey);
-        const clip = sceneCanUseRecording && recordingClips[clipKey];
-        if (clip && !voicePicker.value) {
-          playRecordedClip(clip, text, token, onComplete, clipKey);
-          return true;
+        const token = voiceSession;
+        const key = clipKey?.startsWith('detail-') ? 'detail' : clipKey;
+        const path = !editedVoiceClips.has(clipKey) && flowClips[key];
+        if (!path) {
+          speakWithDevice(text, token, onComplete);
+          return false;
         }
-        startIdleVideo();
-        speakWithDevice(text,token,onComplete);
-        return false;
+        const fallback = () => speakWithDevice(text, token, onComplete);
+        const playAudio = () => playFlowClip(narration, path, token, onComplete, fallback);
+        if (reduceMotion) playAudio();
+        else playFlowClip(unlocked ? bunnyVideo : gateVideo, path, token, onComplete, playAudio);
+        return true;
       }
-      document.getElementById('voice-replay').addEventListener('click', () => { voiceOn = true; const ctl = document.getElementById('voice-control'); ctl.textContent = '🔊 Bunny voice on'; ctl.setAttribute('aria-pressed','true'); say(screens[step].speech,sceneTrackKey()); });
-      document.getElementById('voice-control').addEventListener('click', event => {
+
+      function updateVoiceControl() {
+        voiceControl.textContent = voiceOn ? '🔊' : '🔇';
+        voiceControl.setAttribute('aria-label', voiceOn ? 'Mute Nibbles' : 'Unmute Nibbles');
+        voiceControl.setAttribute('aria-pressed', String(voiceOn));
+      }
+      function replay() {
+        if (!unlocked) return;
+        voiceOn = true;
+        updateVoiceControl();
+        say(screens[step].speech, sceneTrackKey());
+      }
+      bunny.addEventListener('click', replay);
+      bunny.addEventListener('keydown', event => {
+        if (event.key !== 'Enter' && event.key !== ' ') return;
+        event.preventDefault();
+        replay();
+      });
+      document.getElementById('voice-replay').addEventListener('click', replay);
+      voiceControl.addEventListener('click', () => {
         voiceOn = !voiceOn;
-        event.currentTarget.textContent = voiceOn ? '🔊 Bunny voice on' : '🔇 Bunny voice off';
-        event.currentTarget.setAttribute('aria-pressed', String(voiceOn));
-        if (voiceOn) say(screens[step].speech,sceneTrackKey()); else stopVoice();
+        updateVoiceControl();
+        if (voiceOn) replay();
+        else stopVoice();
       });
       function fitPasswordAboveKeyboard() {
         const vv = window.visualViewport;
@@ -505,8 +371,7 @@
         document.getElementById('full-screen-gate').hidden = true;
         document.getElementById('password-gate').hidden = false;
         document.getElementById('gate').setAttribute('aria-labelledby', 'password-heading');
-        syncGateVideos();
-        fitPasswordAboveKeyboard();
+          fitPasswordAboveKeyboard();
         say(gateSpeech, gateSpeechKey);
         document.getElementById('invite-code').focus({ preventScroll:true });
       }
@@ -546,11 +411,11 @@
           if (!response.ok || !data.ok) throw new Error(data.message || 'This invitation could not be opened.');
           person = clean(data.guestName, 'you');
           inviteId = clean(data.inviteId, 'invite');
-          await Promise.all([configReady, voiceReady]);
+          await Promise.all([configReady, flowReady]);
           screens.ask.heading = fillQuestion(configuredAskTemplate);
           document.body.dataset.locked = 'false';
           document.getElementById('gate').remove();
-          gateVideos.forEach(video=>video.pause());
+          gateVideo.pause();
           unlocked = true;
           nav('ask');
         } catch (failure) {
@@ -712,7 +577,7 @@
             movedOn = true;
             nav('outing');
           };
-          const recorded = say('Oh my goodness! This calls for a happy bunny dance!','yes',afterCelebration);
+          const recorded = say('Oh, lovely! A tiny happy dance!','yes',afterCelebration);
           if (!recorded) setTimeout(afterCelebration, reduceMotion ? 350 : 1350);
           else setTimeout(afterCelebration, 10000); // Never trap visitors if a media event is lost.
         }, 'yes-btn');
@@ -842,7 +707,8 @@
         title.textContent=fillQuestion(data.heading);
         description.textContent=fillQuestion(data.subheading);
         dialogue.open = false;
-        bubble.textContent=data.speech;
+        bubble.textContent = step === 'detail' && !editedVoiceClips.has(sceneTrackKey())
+          ? 'What sounds most like you?' : data.speech;
         chapter.textContent=data.chapter;
         bunny.dataset.mood=data.mood;
         confettiOn(step==='success');
@@ -916,6 +782,12 @@
       function applyOwnerSettings(value){
         if(!value||typeof value!=='object')return;
         sender=typeof value.senderName==='string'&&value.senderName.trim()?value.senderName.trim().slice(0,48):'Alex';
+        if (sender !== 'Alex') {
+          screens.ask.speech = 'Would you like to go out with ' + sender + '?';
+          screens.success.speech = 'Lovely. Your plans are ready to share with ' + sender + '.';
+          editedVoiceClips.add('ask');
+          editedVoiceClips.add('success');
+        }
         const brand=document.querySelector('.brand');
         if(brand&&brand.lastChild?.nodeType===3)brand.lastChild.textContent=' '+(value.siteLabel||'tiny bunny mission');
         configuredAskTemplate=value.screens?.ask?.heading||'{name}, would you like to go out with {sender}?';

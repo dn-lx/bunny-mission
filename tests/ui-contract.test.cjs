@@ -40,15 +40,12 @@ test('explicit user-submitted Netlify response is enabled and can be emailed', (
   assert.match(js,/'decision': 'yes'/);
 });
 
-test('device voice picker prefers higher quality system voices with natural prosody', () => {
-  assert.match(html, /id="voice-picker"/);
-  assert.match(js, /function voiceQuality\(voice\)/);
-  assert.match(js, /natural\|neural\|premium\|enhanced\|studio/);
-  assert.match(js, /voiceschanged/);
-  assert.match(js, /msg\.rate = 1\.02/);
-  assert.match(js, /msg\.pitch = 1\.06/);
-  assert.doesNotMatch(js, /https:\/\/.*(texttospeech|elevenlabs|openai)/);
+test('device speech fallback favours a gentle English voice', () => {
+  assert.match(js, /sonia\|libby\|serena\|kate\|samantha/);
+  assert.match(js, /msg\.rate = \.88/);
+  assert.match(js, /msg\.pitch = 1\.25/);
 });
+
 test('No travels around a larger dedicated arena and still gives up after three dodges', () => {
   assert.match(css, /\.ask-buttons \{ position: relative; min-height:/);
   assert.match(css, /\.ask-buttons #no-btn \{\s*right:/);
@@ -57,12 +54,12 @@ test('No travels around a larger dedicated arena and still gives up after three 
   for (const target of ['-travelX*.97','travelY*.96','-travelX*.96']) assert.ok(js.includes(target));
   assert.match(js, /Date\.now\(\) - lastTouchDodge < 600/);
 });
-test('bunny gives playful, contextual narration across all outing choices', () => {
-  for (const cue of ['carrot farming','carrot shop','carrot cake','rabbit assistant','bow tie']) {
-    assert.ok(js.toLowerCase().includes(cue.toLowerCase()), 'Missing comedic cue: ' + cue);
-  }
-  assert.match(js, /en-us/i);
+test('the invitation question hides support copy while retaining the decision controls', () => {
+  assert.match(css, /body\[data-step="ask"\] :is\(\.brand, \.status, \.description, \.dialogue, \.navline\)/);
+  assert.match(html, /aria-label="Replay Nibbles"/);
+  assert.match(js, /if\(step==='ask'\)addAsk\(\)/);
 });
+
 test('Yes and No have visible emoji markings and absolute layout overrides', () => {
   assert.match(js, /yesSignal\.textContent = '✅'/);
   assert.match(js, /noSignal\.textContent = '❌'/);
@@ -107,37 +104,22 @@ test('submission and summary include activity, custom detail, area, day and time
   assert.match(js, /'meet_area': picks\.meetArea/);
   assert.match(js, /'detail': picks\.detail/);
 });
-test('cartoon is now an actual MP4 video element, not SVG or a GIF',()=>{
+test('the bunny plays inline using native Flow video',()=>{
   assert.match(html, /<video id="bunny-video"/);
-  assert.match(html, /playsinline webkit-playsinline muted loop/);
-  assert.match(html, /poster="\/video\/nibbles-flow\.webp"/);
-  assert.doesNotMatch(html, /<svg\b/i);
-  assert.match(js, /function paintSpeech\(canvas, amount\)/);
-  assert.match(js, /fetch\('\/video\/nibbles-flow-mouth\.json'/);
+  assert.match(html, /playsinline webkit-playsinline preload="metadata"/);
+  assert.match(html, /poster="\/video\/flow\/poster\.webp"/);
+  assert.doesNotMatch(html, /<canvas\b/);
+  assert.match(js, /fetch\('\/video\/flow\/manifest\.json'/);
   assert.match(js, /bunnyVideo\.play\(\)/);
-  assert.match(js, /video\.pause\(\)/);
-  const source=readFileSync('scripts/video/render_nibbles.py','utf8');
-  assert.match(source, /nibbles-reference\.webp/);
-  assert.match(source, /def load_poses\(/);
-  assert.match(source, /def pose_at\(/);
-  assert.match(source, /def voice_level\(/);
-  assert.match(source, /mouth shapes follow the actual Qwen waveform envelope/);
-  assert.match(source, /libx264/);
-  assert.match(source, /'-c:a'/);
-  assert.match(source, /def render_idle\(/);
-  assert.doesNotMatch(source, /cv2\.remap|animated_frame/);
 });
-test('pre-recorded bunny narration is available with an explicit safe device voice fallback', () => {
-  const manifest = JSON.parse(readFileSync('public/audio/manifest.json','utf8'));
-  assert.equal(manifest.version,1);
-  assert.equal(typeof manifest.clips,'object');
-  assert.match(js, /fetch\('\/audio\/manifest\.json'/);
-  assert.match(js, /function say\(text,clipKey=sceneTrackKey\(\),onComplete\)/);
-  assert.match(js, /function playRecordedClip\(path, text, token, onComplete, clipKey\)/);
-  assert.match(js, /function speakWithDevice\(text,token,onComplete\)/);
-  assert.match(js, /audio\.play\(\)\.catch\(fallBack\)/);
-  assert.match(js, /voiceSession/);
+
+test('native Flow speech has audio-only and device speech fallbacks', () => {
+  assert.match(js, /function playFlowClip\(media, path, token, onComplete, onFailure\)/);
+  assert.match(js, /playFlowClip\(narration, path, token, onComplete, fallback\)/);
+  assert.match(js, /function speakWithDevice\(text, token, onComplete\)/);
+  assert.match(js, /media\.play\(\)\.catch\(failed\)/);
 });
+
 test('expressive character narration maps to all scenes and every activity-specific question', () => {
   const worklist = JSON.parse(readFileSync('scripts/voice-script.json','utf8'));
   const ids = ['password','password-error','intro','ask','yes','outing',
@@ -152,20 +134,13 @@ test('expressive character narration maps to all scenes and every activity-speci
   assert.match(js, /'password'/);
   assert.match(js, /'yes'/);
 });
-test('the Flow bunny mouth uses cues from the Qwen recording clock',()=>{
-  assert.match(js, /mouthCues\[clipKey\]/);
-  assert.match(js, /Math\.floor\(audio\.currentTime \* 20\)/);
-  assert.match(js, /ended\(\)/);
-  assert.match(js, /error: fallBack/);
-  assert.match(js, /startIdleVideo\(\)/);
+test('scene changes cancel pending playback and keep native audio and video together',()=>{
+  assert.match(js, /playFlowClip\(unlocked \? bunnyVideo : gateVideo, path, token, onComplete, playAudio\)/);
+  assert.match(js, /media\.addEventListener\('ended', done\)/);
   assert.match(js, /narration\.pause\(\)/);
-  const source=readFileSync('scripts/video/render_nibbles.py','utf8');
-  assert.match(source, /voice_level\(env, norm, t\)/);
-  assert.match(source, /pose_at\(name, t, duration, level\)/);
-  assert.match(source, /IDLE_POSES/);
-  assert.match(source, /GESTURES/);
-  assert.match(source, /'-shortest'/);
+  assert.doesNotMatch(js, /paintSpeech|mouthCues/);
 });
+
 test('recorded narration only activates after the entire clip set is published', () => {
   const { existsSync, statSync, openSync, readSync, closeSync } = require('node:fs');
   const manifest = JSON.parse(readFileSync('public/audio/manifest.json','utf8'));
@@ -211,8 +186,7 @@ test('invitation uses an immersive viewport layout and the approved Nibbles art 
   assert.match(css, /\.shell \{[^}]*min-height: 100dvh/);
   assert.match(css, /\.gate-screen \{[^}]*min-height: var\(--visible-height, 100dvh\)/);
   assert.match(css, /@media \(max-aspect-ratio: 1\/1\)/);
-  assert.equal((html.match(/class=\"gate-character\" src=\"\/video\/nibbles-flow\.mp4\"/g)||[]).length,2);
-  assert.equal((html.match(/class=\"gate-canvas\"/g)||[]).length,2);
+  assert.equal((html.match(/class="gate-character"/g)||[]).length,2);
 });
 
 test('animation atlas preserves Nibbles and supplies distinct acting keyframes',()=>{
@@ -232,16 +206,11 @@ test('animation atlas preserves Nibbles and supplies distinct acting keyframes',
   assert.match(source,/return 19/);
 });
 
-test('the deployed character has a Flow dance clip, poster and speech cues',()=>{
-  const cues=JSON.parse(readFileSync('public/video/nibbles-flow-mouth.json','utf8'));
-  const audio=JSON.parse(readFileSync('public/audio/manifest.json','utf8'));
-  assert.deepEqual(Object.keys(cues),Object.keys(audio.clips));
-  for(const clip of Object.values(cues)) assert.match(clip,/^[0-9]{20,}$/);
-  assert.ok(readFileSync('public/video/nibbles-flow.mp4').length > 100000);
-  assert.match(js,/startIdleVideo\(\)/);
-  assert.match(js,/ctx\.drawImage\(poster, 0, 0\)/);
-  assert.match(js,/requestAnimationFrame\(drawMouth\)/);
-  assert.match(html,/class="interaction"/);
-  assert.match(css,/\.choices, [^{]+\{ display: grid; grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)/);
-  assert.match(css,/backdrop-filter: blur\(12px\)/);
+test('all nine native Flow clips are published with the warm poster',()=>{
+  const { statSync }=require('node:fs');
+  const manifest=JSON.parse(readFileSync('public/video/flow/manifest.json','utf8'));
+  assert.deepEqual(Object.keys(manifest.clips).sort(),
+    ['area','ask','decline','detail','outing','password','schedule','success','yes']);
+  for (const clip of Object.values(manifest.clips)) assert.ok(statSync('public'+clip).size > 100000);
+  assert.ok(statSync('public/video/flow/poster.webp').size > 1000);
 });

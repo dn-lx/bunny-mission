@@ -112,19 +112,20 @@ button:disabled { cursor: default; opacity: .53; }
   transform: translate(-50%, -50%);
 }
 .bunny-wrap { cursor: pointer; border-radius: 38%; }
-.bunny-film, .gate-character, .bunny-canvas, .gate-canvas {
+.bunny-film, .gate-character {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   object-fit: contain;
   pointer-events: none;
+  mask-image: radial-gradient(ellipse 66% 63% at center, #000 66%, transparent 100%);
 }
-.bunny-film, .gate-character, .bunny-canvas, .gate-canvas {
-  border-radius: 24%;
+body[data-step="ask"] :is(.brand, .status, .description, .dialogue, .navline) {
+  display: none;
 }
-.bunny-canvas, .gate-canvas { visibility: hidden; }
-.speaking-frame { visibility: visible; }
+body[data-step="ask"] .topline { justify-content: flex-end; }
+#voice-replay { text-decoration: none; }
 
 .content-pane, .gate-screen {
   --scene-gap: 0px;

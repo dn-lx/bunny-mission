@@ -29,7 +29,7 @@ async function bypassFullscreenPrompt(page) {
     document.getElementById('full-screen-gate').hidden=true;
     const passwordGate=document.getElementById('password-gate');
     passwordGate.hidden=false;
-    await passwordGate.querySelector('.gate-character').play().catch(()=>{});
+
   });
   await page.locator('#invite-code').waitFor({state:'visible',timeout:5000});
 }
@@ -152,110 +152,31 @@ async function bypassFullscreenPrompt(page) {
       console.log('PASS: ' + viewport.width + 'x' + viewport.height + ' emoji layout and interaction');
       await page.close();
     }
-    // Simulate a future generated character clip without spending audio credits.
-    // This verifies recorded clips are preferred and stop on scene changes.
-    const clipPage=await browser.newPage({viewport:{width:390,height:844}});
-    const clipErrors=[];
-    clipPage.on('pageerror', error=>clipErrors.push(String(error)));
-    // Isolate legacy MP3 fallback test: the real-video path is checked separately.
-    await clipPage.route('**/video/manifest.json', route=>route.fulfill({
-      status:200,contentType:'application/json',
-      body:JSON.stringify({version:1,clips:{}})
-    }));
-    await clipPage.route('**/audio/manifest.json', route=>route.fulfill({
-      status:200,contentType:'application/json',
-      body:JSON.stringify({version:1,clips:{ask:'/audio/demo.mp3'}})
-    }));
-    await clipPage.addInitScript(()=>{
-      window.__audioPlayed=[];
-      window.__audioPaused=0;
-      window.__audioPlayers=0;
-      window.Audio=class MockAudio {
-        constructor(){ window.__audioPlayers++;this.paused=true;this.currentTime=0;this.listeners={}; }
-        addEventListener(name,fn){ this.listeners[name]=fn; }
-        removeEventListener(name,fn){ if(this.listeners[name]===fn)delete this.listeners[name]; }
-        play(){
-          this.paused=false;
-          window.__audioPlayed.push(this.src);
-          this.listeners.playing?.();
-          return Promise.resolve();
-        }
-        pause(){ this.paused=true;window.__audioPaused++; }
-        removeAttribute(name){ if(name==='src')this.src=''; }
-      };
-    });
-    await clipPage.goto(origin,{waitUntil:'domcontentloaded'});
-    await bypassFullscreenPrompt(clipPage);
-    await clipPage.locator('#invite-code').fill('Test');
-    await clipPage.locator('#unlock-button').click();
-    await clipPage.locator('#yes-btn').waitFor({state:'visible'});
-    const clipData=await clipPage.evaluate(()=>({
-      paths:window.__audioPlayed,
-      players:window.__audioPlayers,
-      speaking:document.querySelector('#bunny').classList.contains('talking')
-    }));
-    assert.equal(clipData.players,1,'Narration must reuse the player enabled by the unlock tap');
-    assert.deepEqual(clipData.paths,['/audio/narration-start.mp3','/audio/demo.mp3'],
-      'The unlock tap must enable audio before playback of the first line');
-    assert.ok(clipData.speaking,'Bunny mouth must animate during recorded speech');
-    await clipPage.locator('#yes-btn').click();
-    assert.ok(await clipPage.evaluate(()=>window.__audioPaused)>=1,'Scene change must stop old audio');
-    assert.deepEqual(clipErrors,[],'Recorded audio caused JavaScript errors');
-    await clipPage.close();
-    console.log('PASS: prerecorded character narration, lip sync and cancel-on-scene-change');
-
-    // Check the exported Flow video and its Qwen-driven speaking frame.
-    if(fs.existsSync(path.join(root,'video','nibbles-flow.mp4'))){
+    // Verify the native Flow media advances with its own audio in every scene.
+    {
       const filmPage=await browser.newPage({viewport:{width:390,height:844}});
       const errors=[];
       filmPage.on('pageerror',err=>errors.push(String(err)));
-      await filmPage.addInitScript(()=>{
-        window.__spokenScenes=new Set();
-        const OriginalAudio=window.Audio;
-        window.Audio=function(...args){
-          const audio=new OriginalAudio(...args);
-          audio.addEventListener('timeupdate',()=>{
-            if(!audio.paused && audio.currentTime>.1){
-              window.__spokenScenes.add(new URL(audio.currentSrc).pathname);
-            }
-          });
-          return audio;
-        };
-      });
       await filmPage.goto(origin,{waitUntil:'domcontentloaded'});
-      await filmPage.waitForFunction(()=>{
-        const v=document.querySelector('.gate-character');
-        return v && v.currentSrc.includes('/video/nibbles-flow.mp4') && v.currentTime>.2;
-      },{timeout:10000});
       await bypassFullscreenPrompt(filmPage);
       await filmPage.locator('#invite-code').fill('TEST');
       await filmPage.locator('#unlock-button').click();
       await filmPage.locator('#yes-btn').waitFor({state:'visible'});
-      const video=filmPage.locator('#bunny-video');
-      await filmPage.waitForFunction(()=>{
-        const v=document.querySelector('#bunny-video');
-        return v && v.currentSrc.includes('/video/nibbles-flow.mp4') && v.readyState >= 2;
-      },{timeout:15000}).catch(async ()=>{
-        const state=await video.evaluate(v=>({src:v.currentSrc,ready:v.readyState,error:v.error?.message}));
-        throw Error('MP4 did not load in headless browser: '+JSON.stringify(state));
-      });
-      assert.equal(await video.evaluate(v=>v.tagName),'VIDEO','Must render an actual video');
-      assert.ok(await video.evaluate(v=>v.videoWidth)>100,'Decoded film frames are missing');
-      const hear = async scene => filmPage.waitForFunction(
-        id=>window.__spokenScenes.has('/audio/'+id+'.mp3'),scene,{timeout:15000});
-      await filmPage.locator('#bunny-canvas.speaking-frame').waitFor({state:'visible'});
-      const mouthBefore = await filmPage.locator('#bunny-canvas').evaluate(
-        c=>c.getContext('2d').getImageData(260,280,24,24).data.join(','));
-      await filmPage.waitForFunction(before=>{
-        const canvas=document.querySelector('#bunny-canvas.speaking-frame');
-        return canvas && canvas.getContext('2d').getImageData(260,280,24,24).data.join(',')!==before;
-      },mouthBefore,{timeout:5000});
+      assert.equal(await filmPage.locator('#title').textContent(),'Test Girl, would you like to go out with Alex?');
+      for (const selector of ['.brand','.status','.description','.dialogue','.navline']) {
+        assert.equal(await filmPage.locator(selector).isVisible(),false,selector+' must be hidden on the question screen');
+      }
+      const hear = async scene => filmPage.waitForFunction(id=>{
+        const video=document.querySelector('#bunny-video');
+        return video.currentSrc.endsWith('/video/flow/'+id+'.mp4') &&
+          !video.muted && !video.paused && video.currentTime>.15 && video.videoWidth===720;
+      },scene,{timeout:15000});
       await hear('ask');
       await filmPage.locator('#yes-btn').click();
       await hear('yes');
       await hear('outing');
       await filmPage.getByRole('button',{name:/Coffee/}).click();
-      await hear('detail-coffee');
+      await hear('detail');
       await filmPage.getByRole('button',{name:/A cosy café/}).click();
       await hear('area');
       await filmPage.getByRole('button',{name:/Meet halfway/}).click();
@@ -264,7 +185,7 @@ async function bypassFullscreenPrompt(page) {
       await hear('success');
       assert.deepEqual(errors,[],'Film page caused browser errors');
       await filmPage.close();
-      console.log('PASS: Google Flow clip decodes, mouth moves, Qwen narration plays through the invitation');
+      console.log('PASS: native Flow video and audio play through every planning step');
     }
 
 
