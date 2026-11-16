@@ -30,7 +30,7 @@ test('gate supports visible-viewport keyboard repositioning and bunny narration'
   assert.match(css,/\.gate:focus-within\.keyboard-open/);
   assert.match(js,/visualViewport\?\.addEventListener\('resize'/);
   assert.match(js,/function showPassword\(\)/);
-  assert.match(js,/say\('Psst!/);
+  assert.match(js,/say\(gateSpeech, gateSpeechKey\)/);
 });
 test('explicit user-submitted Netlify response is enabled and can be emailed', () => {
   assert.match(html,/name="going-out" data-netlify="true"/);
@@ -112,9 +112,9 @@ test('cartoon is now an actual MP4 video element, not SVG or a GIF',()=>{
   assert.match(html, /playsinline webkit-playsinline autoplay muted loop/);
   assert.match(html, /poster="\/video\/poster\.png"/);
   assert.doesNotMatch(html, /<svg\b/i);
-  assert.match(js, /function playBunnyFilm\(path,text,token,onComplete,clipKey\)/);
+  assert.match(js, /function playBunnyFilm\(path\)/);
   assert.match(js, /fetch\('\/video\/manifest\.json'/);
-  assert.match(js, /bunnyVideo\.play\(\)/);
+  assert.match(js, /video\.play\(\)/);
   assert.match(js, /bunnyVideo\.pause\(\)/);
   const source=readFileSync('scripts/video/render_nibbles.py','utf8');
   assert.match(source, /nibbles-reference\.webp/);
@@ -133,7 +133,7 @@ test('pre-recorded bunny narration is available with an explicit safe device voi
   assert.equal(typeof manifest.clips,'object');
   assert.match(js, /fetch\('\/audio\/manifest\.json'/);
   assert.match(js, /function say\(text,clipKey=sceneTrackKey\(\),onComplete\)/);
-  assert.match(js, /function playRecordedClip\(path,text,token,onComplete\)/);
+  assert.match(js, /function playRecordedClip\(path, text, token, onComplete, film\)/);
   assert.match(js, /function speakWithDevice\(text,token,onComplete\)/);
   assert.match(js, /audio\.play\(\)\.catch\(fallBack\)/);
   assert.match(js, /voiceSession/);
@@ -154,11 +154,11 @@ test('expressive character narration maps to all scenes and every activity-speci
 });
 test('video and sound are kept together: no timer-driven fake mouth on the visible character',()=>{
   assert.match(js, /videoClips\[clipKey\]/);
-  assert.match(js, /playBunnyFilm\(film,text,token,onComplete,clipKey\)/);
-  assert.match(js, /bunnyVideo\.onended/);
-  assert.match(js, /bunnyVideo\.onerror=fallback/);
+  assert.match(js, /playBunnyFilm\(film\)/);
+  assert.match(js, /ended\(\)/);
+  assert.match(js, /error: fallBack/);
   assert.match(js, /startIdleVideo\(\)/);
-  assert.match(js, /currentRecording\.pause\(\)/);
+  assert.match(js, /narration\.pause\(\)/);
   const source=readFileSync('scripts/video/render_nibbles.py','utf8');
   assert.match(source, /voice_level\(env, norm, t\)/);
   assert.match(source, /pose_at\(name, t, duration, level\)/);

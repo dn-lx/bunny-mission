@@ -169,9 +169,11 @@ async function bypassFullscreenPrompt(page) {
     await clipPage.addInitScript(()=>{
       window.__audioPlayed=[];
       window.__audioPaused=0;
+      window.__audioPlayers=0;
       window.Audio=class MockAudio {
-        constructor(url){ this.src=url;this.paused=true;this.currentTime=0;this.listeners={}; }
+        constructor(){ window.__audioPlayers++;this.paused=true;this.currentTime=0;this.listeners={}; }
         addEventListener(name,fn){ this.listeners[name]=fn; }
+        removeEventListener(name,fn){ if(this.listeners[name]===fn)delete this.listeners[name]; }
         play(){
           this.paused=false;
           window.__audioPlayed.push(this.src);
@@ -189,9 +191,12 @@ async function bypassFullscreenPrompt(page) {
     await clipPage.locator('#yes-btn').waitFor({state:'visible'});
     const clipData=await clipPage.evaluate(()=>({
       paths:window.__audioPlayed,
+      players:window.__audioPlayers,
       speaking:document.querySelector('#bunny').classList.contains('talking')
     }));
-    assert.ok(clipData.paths.some(x=>x.endsWith('/audio/demo.mp3')),'Recorded bunny clip should play when present');
+    assert.equal(clipData.players,1,'Narration must reuse the player enabled by the unlock tap');
+    assert.deepEqual(clipData.paths,['/audio/narration-start.mp3','/audio/demo.mp3'],
+      'The unlock tap must enable audio before playback of the first line');
     assert.ok(clipData.speaking,'Bunny mouth must animate during recorded speech');
     await clipPage.locator('#yes-btn').click();
     assert.ok(await clipPage.evaluate(()=>window.__audioPaused)>=1,'Scene change must stop old audio');
@@ -204,6 +209,19 @@ async function bypassFullscreenPrompt(page) {
       const filmPage=await browser.newPage({viewport:{width:390,height:844}});
       const errors=[];
       filmPage.on('pageerror',err=>errors.push(String(err)));
+      await filmPage.addInitScript(()=>{
+        window.__spokenScenes=new Set();
+        const OriginalAudio=window.Audio;
+        window.Audio=function(...args){
+          const audio=new OriginalAudio(...args);
+          audio.addEventListener('timeupdate',()=>{
+            if(!audio.paused && audio.currentTime>.1){
+              window.__spokenScenes.add(new URL(audio.currentSrc).pathname);
+            }
+          });
+          return audio;
+        };
+      });
       await filmPage.goto(origin,{waitUntil:'domcontentloaded'});
       await filmPage.waitForFunction(()=>{
         const v=document.querySelector('.gate-character');
@@ -236,6 +254,20 @@ async function bypassFullscreenPrompt(page) {
       });
       assert.ok(cutout.transparent>1000,'Blue video background must be removed');
       assert.ok(cutout.visible>10000,'Nibbles must remain visible after background removal');
+      const hear = async scene => filmPage.waitForFunction(
+        id=>window.__spokenScenes.has('/audio/'+id+'.mp3'),scene,{timeout:15000});
+      await hear('ask');
+      await filmPage.locator('#yes-btn').click();
+      await hear('yes');
+      await hear('outing');
+      await filmPage.getByRole('button',{name:/Coffee/}).click();
+      await hear('detail-coffee');
+      await filmPage.getByRole('button',{name:/A cosy café/}).click();
+      await hear('area');
+      await filmPage.getByRole('button',{name:/Meet halfway/}).click();
+      await hear('schedule');
+      await filmPage.getByRole('button',{name:/Pick a day together later/}).click();
+      await hear('success');
       assert.deepEqual(errors,[],'Film page caused browser errors');
       await filmPage.close();
       console.log('PASS: actual H.264 bunny MP4 loads and decodes in headless Chrome');

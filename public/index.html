@@ -51,6 +51,7 @@
           <button class="btn btn-primary" id="unlock-button" type="submit">Open my surprise ♡</button>
         </form>
         <p class="gate-hint" id="gate-error" role="status"></p>
+        <button id="gate-voice-replay" class="voice-replay" type="button">▶ Hear the bunny</button>
       </div>
     </section>
   </div>
@@ -324,7 +325,7 @@
         bunnyVideo.loop = true;
         bunnyVideo.play().catch(() => {});
       }
-      fetch('/video/manifest.json',{cache:'no-store'})
+      const videoReady = fetch('/video/manifest.json',{cache:'no-store'})
         .then(res=>res.ok?res.json():{})
         .then(data=>{
           if(!Number.isInteger(data?.version) || data.version<1 || !data.clips || typeof data.clips!=='object')return;
@@ -338,11 +339,17 @@
           startIdleVideo();
         })
         .catch(()=>{ /* Existing Qwen MP3s remain the backup for older browsers. */ });
-      let currentRecording = null;
+      // Keep one media element across all steps. Mobile browsers can grant audio
+      // playback permission per element and require the first play inside a tap.
+      const narration = new Audio();
+      narration.preload = 'auto';
+      let stopRecording = null;
+      let activeFilm = null;
+      let gateSpeechKey = 'password';
+      let gateSpeech = 'Psst! Here is your secret bunny entrance. Type your invitation password to see the surprise!';
       let voiceSession = 0;
-      let lipSyncTimer = null;
       let speechUtterance = null;
-      fetch('/audio/manifest.json', {cache:'no-store'})
+      const audioReady = fetch('/audio/manifest.json', {cache:'no-store'})
         .then(response => response.ok ? response.json() : {})
         .then(data => {
           if (!data || data.version !== 1 || !data.clips || typeof data.clips !== 'object') return;
@@ -353,6 +360,7 @@
           refreshVoices();
         })
         .catch(() => { /* Offline and missing manifests safely use device voices. */ });
+      const voiceReady = Promise.all([videoReady, audioReady]);
       function voiceQuality(voice) {
         const name = voice.name.toLowerCase();
         let score = /^en-us/i.test(voice.lang) ? 42 : /^en-gb/i.test(voice.lang) ? 10 : 0;
@@ -387,20 +395,9 @@
       }
       function stopVoice() {
         ++voiceSession;
-        if (bunnyVideo) {
-          bunnyVideo.onended = null;
-          bunnyVideo.onerror = null;
-          bunnyVideo.onplaying = null;
-          bunnyVideo.pause();
-          activeVideo=false;
-          startIdleVideo();
-        }
-        if (currentRecording) {
-          currentRecording.pause();
-          currentRecording.removeAttribute('src');
-          currentRecording = null;
-        }
-        if (lipSyncTimer) { clearInterval(lipSyncTimer); lipSyncTimer = null; }
+        stopRecording?.();
+        narration.pause();
+        stopBunnyFilm();
         speechUtterance = null;
         setTalking(false);
         try { window.speechSynthesis?.cancel(); } catch (_) { /* Older mobile browsers. */ }
@@ -438,69 +435,82 @@
         msg.onerror = finish;
         try { window.speechSynthesis.speak(msg); } catch (_) { finish(); }
       }
-      function playBunnyFilm(path,text,token,onComplete,clipKey) {
-        if(!bunnyVideo) return false;
-        activeVideo=true;
-        bunnyVideo.pause();
-        bunnyVideo.loop=false;
-        bunnyVideo.muted=false;
-        bunnyVideo.src=path;
-        bunnyVideo.load();
-        let settled=false;
-        const fallback=()=>{
-          if(settled || token!==voiceSession || !activeVideo)return;
-          settled=true;
-          bunnyVideo.pause();activeVideo=false;
-          startIdleVideo();setTalking(false);
-          const clip=recordingClips[clipKey];
-          if(clip) playRecordedClip(clip,text,token,onComplete);
-          else speakWithDevice(text,token,onComplete);
-        };
-        bunnyVideo.onplaying=()=>{ if(token===voiceSession)setTalking(true); };
-        bunnyVideo.onended=()=>{
-          if(token!==voiceSession || settled)return;
-          settled=true;activeVideo=false;
-          setTalking(false);startIdleVideo();
-          if(typeof onComplete==='function')onComplete();
-        };
-        bunnyVideo.onerror=fallback;
-        try {
-          const promise=bunnyVideo.play();
-          if(promise && typeof promise.catch==='function')promise.catch(fallback);
-        }catch(_){fallback();}
-        return true;
-      }
-      function playRecordedClip(path,text,token,onComplete) {
-        const audio = new Audio(path);
-        currentRecording = audio;
-        audio.preload = 'auto';
-        audio.volume = 1;
-        function fallBack() {
-          if (token !== voiceSession || currentRecording !== audio) return;
-          audio.pause();
-          currentRecording = null;
-          if (lipSyncTimer) { clearInterval(lipSyncTimer); lipSyncTimer=null; }
-          setTalking(false);
-          speakWithDevice(text,token,onComplete);
+      function stopBunnyFilm() {
+        if (activeFilm) {
+          const video = activeFilm;
+          activeFilm = null;
+          video.pause();
+          activeVideo = false;
+          if (video !== bunnyVideo && video.isConnected) {
+            video.src = '/video/idle.mp4';
+            video.loop = true;
+            syncGateVideos();
+          }
+          startIdleVideo();
         }
-        audio.addEventListener('playing', () => {
-          if (token !== voiceSession) return;
-          setTalking(true);
-          // Rhythmic lip-sync proxy; accurate phonemes can be added with TTS timestamps.
-          lipSyncTimer = window.setInterval(() => {
-            if (token !== voiceSession || audio.paused) return;
-            bunny.dataset.lip = String(Math.floor(audio.currentTime*13) % 4);
-          }, 65);
-        },{once:true});
-        audio.addEventListener('ended',() => {
-          if (token !== voiceSession) return;
-          currentRecording=null;
-          if(lipSyncTimer) {clearInterval(lipSyncTimer);lipSyncTimer=null;}
+      }
+      function playBunnyFilm(path) {
+        if (!path || reduceMotion) return null;
+        const video = unlocked ? bunnyVideo : gateVideos[1];
+        activeFilm = video;
+        activeVideo = true;
+        video.pause();
+        video.loop = false;
+        video.muted = true;
+        video.src = path;
+        return video;
+      }
+      function playRecordedClip(path, text, token, onComplete, film) {
+        const audio = narration;
+        const video = playBunnyFilm(film);
+        const listeners = {
+          playing() {
+            setTalking(true);
+            if (video) video.play().catch(() => {});
+          },
+          waiting() { video?.pause(); },
+          timeupdate() {
+            if (video && video.readyState >= 2 &&
+                Math.abs(video.currentTime - audio.currentTime) > .2) {
+              video.currentTime = Math.min(audio.currentTime, video.duration);
+            }
+          },
+          ended() {
+            cleanup();
+            stopBunnyFilm();
+            setTalking(false);
+            onComplete?.();
+          },
+          error: fallBack
+        };
+        function cleanup() {
+          for (const [event, listener] of Object.entries(listeners)) {
+            audio.removeEventListener(event, listener);
+          }
+          stopRecording = null;
+        }
+        function fallBack() {
+          if (token !== voiceSession || stopRecording !== cleanup) return;
+          cleanup();
+          audio.pause();
+          stopBunnyFilm();
           setTalking(false);
-          if (typeof onComplete === 'function') onComplete();
-        },{once:true});
-        audio.addEventListener('error',fallBack,{once:true});
+          speakWithDevice(text, token, onComplete);
+        }
+        stopRecording = cleanup;
+        for (const [event, listener] of Object.entries(listeners)) {
+          audio.addEventListener(event, listener);
+        }
+        audio.src = path;
         audio.play().catch(fallBack);
+      }
+      function enableNarration() {
+        if (!voiceOn) return;
+        stopVoice();
+        // Start a short silent file during the password submit gesture, before
+        // awaiting the network, to allow this element to play the unlocked line.
+        narration.src = '/audio/narration-start.mp3';
+        narration.play().catch(() => {});
       }
       function performBunnyFlourish() {
         if(reduceMotion) return;
@@ -523,14 +533,10 @@
         if (!voiceOn) return false;
         const token=voiceSession;
         const sceneCanUseRecording=clipKey && !editedVoiceClips.has(clipKey);
-        const film=sceneCanUseRecording && videoClips[clipKey];
-        if (film && !reduceMotion && !voicePicker.value) {
-          playBunnyFilm(film,text,token,onComplete,clipKey);
-          return true;
-        }
-        const clip=sceneCanUseRecording && recordingClips[clipKey];
+        const film = sceneCanUseRecording && videoClips[clipKey];
+        const clip = sceneCanUseRecording && recordingClips[clipKey];
         if (clip && !voicePicker.value) {
-          playRecordedClip(clip,text,token,onComplete);
+          playRecordedClip(clip, text, token, onComplete, film);
           return true;
         }
         startIdleVideo();
@@ -561,7 +567,7 @@
         document.getElementById('gate').setAttribute('aria-labelledby', 'password-heading');
         syncGateVideos();
         fitPasswordAboveKeyboard();
-        say('Psst! Here is your secret bunny entrance. Type your invitation password to see the surprise!','password');
+        say(gateSpeech, gateSpeechKey);
         document.getElementById('invite-code').focus({ preventScroll:true });
       }
       const fullscreenBtn = document.getElementById('request-fullscreen');
@@ -573,7 +579,9 @@
           return;
         }
         try {
-          await document.documentElement.requestFullscreen({navigationUI:'hide'});
+          const fullscreen = document.documentElement.requestFullscreen({navigationUI:'hide'});
+          enableNarration();
+          await fullscreen;
           showPassword();
         } catch (_) {
           document.getElementById('fullscreen-help').textContent = 'Fullscreen was blocked by your browser. Expand the page manually, then tap below.';
@@ -581,11 +589,13 @@
         }
       });
       manualBtn.addEventListener('click', showPassword);
+      document.getElementById('gate-voice-replay').addEventListener('click', () => say(gateSpeech, gateSpeechKey));
       document.getElementById('unlock-form').addEventListener('submit', async event => {
         event.preventDefault();
         const code = document.getElementById('invite-code').value.trim();
         const button = document.getElementById('unlock-button');
         const error = document.getElementById('gate-error');
+        enableNarration();
         error.textContent = ''; button.disabled = true; button.textContent = 'Checking your envelope…';
         try {
           const response = await fetch('/.netlify/functions/unlock', {
@@ -596,7 +606,7 @@
           if (!response.ok || !data.ok) throw new Error(data.message || 'This invitation could not be opened.');
           person = clean(data.guestName, 'you');
           inviteId = clean(data.inviteId, 'invite');
-          await configReady;
+          await Promise.all([configReady, voiceReady]);
           screens.ask.heading = fillQuestion(configuredAskTemplate);
           document.body.dataset.locked = 'false';
           document.getElementById('gate').remove();
@@ -605,7 +615,9 @@
           nav('ask');
         } catch (failure) {
           error.textContent = failure.message || 'Something went wrong. Try again.';
-          say('Oops! That code does not look quite right. Try another one!','password-error');
+          gateSpeechKey = 'password-error';
+          gateSpeech = 'Oops! That code does not look quite right. Try another one!';
+          say(gateSpeech, gateSpeechKey);
           button.disabled = false; button.textContent = 'Open my surprise ♡';
         }
       });
