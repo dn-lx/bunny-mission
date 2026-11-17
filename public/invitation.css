@@ -119,12 +119,61 @@ button:disabled { cursor: default; opacity: .53; }
   height: 100%;
   object-fit: contain;
   pointer-events: none;
-  mask-image: radial-gradient(ellipse 66% 63% at center, #000 66%, transparent 100%);
+  filter: saturate(.97) brightness(1.015) contrast(.985);
+  -webkit-mask-image: radial-gradient(ellipse 74% 73% at 50% 47%, #000 61%, rgb(0 0 0 / .92) 74%, transparent 100%);
+  mask-image: radial-gradient(ellipse 74% 73% at 50% 47%, #000 61%, rgb(0 0 0 / .92) 74%, transparent 100%);
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+  transition: opacity .22s ease-out;
 }
+.bunny-film.is-transitioning, .gate-character.is-transitioning { opacity: 0; }
 body[data-step="ask"] :is(.brand, .status, .description, .dialogue, .navline) {
   display: none;
 }
 body[data-step="ask"] .topline { justify-content: flex-end; }
+body[data-step] :is(.brand, .status, .description, .dialogue, #voice-replay) {
+  display: none;
+}
+body[data-step] .interaction {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+body[data-step="decline"] .interaction { display: none; }
+body[data-step="ask"] .content-pane {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  justify-self: stretch;
+  width: auto;
+  margin: 0;
+  padding: calc(var(--top-inset) + 50px) var(--page-gutter) var(--bottom-inset);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+}
+body[data-step="ask"] .content-pane .copy { width: 100%; }
+body[data-step="ask"] .content-pane .interaction {
+  width: 100%;
+  margin: auto auto 0;
+}
+body[data-step="ask"] .content-pane .actions {
+  width: min(100%, 420px);
+  margin-inline: auto;
+}
+body[data-step="ask"] .bunny-wrap {
+  top: 51%;
+  left: 50%;
+  width: min(68vw, 80dvh, 620px);
+  transform: translate(-50%, -50%);
+}
 #voice-replay { text-decoration: none; }
 
 .content-pane, .gate-screen {
@@ -238,7 +287,7 @@ h1 {
 .enter { animation: enter .25s ease-out; }
 @keyframes enter { from { opacity: 0; transform: translateY(5px); } }
 
-.ask-buttons { position: relative; min-height: clamp(142px, 23dvh, 220px); }
+.ask-buttons { position: relative; min-height: clamp(142px, 23dvh, 220px); width: 100%; max-width: 420px; margin-inline: auto; }
 .ask-buttons #yes-btn, .ask-buttons #no-btn {
   position: absolute;
   top: 50%;
@@ -263,7 +312,8 @@ h1 {
   transition: transform .48s cubic-bezier(.2, 1.6, .3, 1), background .2s;
 }
 .ask-buttons .face { font-size: clamp(37px, 7dvh, 59px); line-height: 1; }
-.ask-buttons .choice-signal { font-size: 21px; line-height: 1; }
+.ask-buttons .choice-signal { display: none; font-size: 21px; line-height: 1; }
+.ask-buttons .choice-label { font-size: 15px; font-weight: 800; line-height: 1.05; }
 #no-btn.mischief .face { animation: wiggle .26s ease-in-out infinite alternate; }
 #yes-btn.in-love { animation: wiggle .35s ease-in-out infinite alternate; }
 @keyframes wiggle { to { transform: rotate(8deg) scale(1.08); } }
@@ -365,6 +415,16 @@ h1 {
   .description, .gate-desc { margin-top: 8px; }
   .status { margin-bottom: 6px; }
   .interaction { padding: 9px 10px; }
+  body[data-step="ask"] .content-pane {
+    padding: calc(var(--top-inset) + 46px) var(--page-gutter) var(--bottom-inset);
+  }
+  body[data-step="ask"] .content-pane .interaction { width: 100%; }
+  body[data-step="ask"] .bunny-wrap {
+    top: min(22dvh, 240px);
+    left: 50%;
+    width: min(112vw, 70dvh, 690px);
+    transform: translateX(-50%);
+  }
   .choice { min-height: 44px; font-size: 13px; padding: 6px 9px; }
   .ask-buttons { min-height: clamp(135px, 21dvh, 187px); }
   body[data-step="success"] .content-pane { --scene-gap: min(12dvh, 24vw); }

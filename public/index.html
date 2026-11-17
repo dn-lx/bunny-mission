@@ -79,7 +79,7 @@
         </div>
         <div class="interaction">
           <div class="actions" id="actions"></div>
-          <div class="navline"><button class="back hidden" id="back" type="button">← Go back</button><span class="feedback" id="feedback" role="status"></span></div>
+          <div class="navline"><button class="back hidden" id="back" type="button" aria-label="Go back">←</button><span class="feedback" id="feedback" role="status"></span></div>
         </div>
       </div>
     </section>
@@ -170,7 +170,7 @@
         },
         outing: {
           chapter: 'step 1 of 4',
-          heading: 'What would you enjoy doing?',
+          heading: 'What would you like to do?',
           subheading: 'Pick an idea that actually sounds fun to you.',
           speech: 'What would you like to do together?',
           mood: 'smile',
@@ -213,9 +213,9 @@
           mood: 'happy'
         },
         decline: {
-          chapter: 'still bunny approved',
-          heading: 'Absolutely no worries.',
-          subheading: 'Thank you for answering. You’re lovely, and this bunny wishes you a wonderful day.',
+          chapter: '',
+          heading: 'No worries at all',
+          subheading: '',
           speech: 'No worries at all. Have a lovely day.',
           mood: 'smile'
         }
@@ -253,6 +253,8 @@
         narration.pause();
         bunnyVideo.pause();
         gateVideo.pause();
+        bunnyVideo.classList.remove('is-transitioning');
+        gateVideo.classList.remove('is-transitioning');
         speechUtterance = null;
         try { window.speechSynthesis?.cancel(); } catch (_) { /* Older mobile browsers. */ }
       }
@@ -282,9 +284,14 @@
       }
 
       function playFlowClip(media, path, token, onComplete, onFailure) {
+        const isVideo = media instanceof HTMLVideoElement;
+        function reveal() {
+          if (token === voiceSession && isVideo) media.classList.remove('is-transitioning');
+        }
         function cleanup() {
           media.removeEventListener('ended', done);
           media.removeEventListener('error', failed);
+          if (isVideo) media.removeEventListener('loadeddata', reveal);
           stopPlayback = null;
         }
         function done() {
@@ -295,11 +302,16 @@
         function failed() {
           if (token !== voiceSession || stopPlayback !== cleanup) return;
           cleanup();
+          if (isVideo) media.classList.remove('is-transitioning');
           onFailure();
         }
         stopPlayback = cleanup;
         media.addEventListener('ended', done);
         media.addEventListener('error', failed);
+        if (isVideo) {
+          media.classList.add('is-transitioning');
+          media.addEventListener('loadeddata', reveal, {once:true});
+        }
         media.src = path;
         media.play().catch(failed);
       }
@@ -587,13 +599,17 @@
         yes.append(yesFace);
         const yesSignal = document.createElement('span'); yesSignal.className = 'choice-signal';
         yesSignal.setAttribute('aria-hidden','true'); yesSignal.textContent = '✅'; yes.append(yesSignal);
+        const yesLabel = document.createElement('span'); yesLabel.className = 'choice-label';
+        yesLabel.textContent = 'Yes'; yes.append(yesLabel);
         const no = makeButton('', 'btn-secondary emoji-choice', () => {}, 'no-btn');
         no.setAttribute('aria-label', 'No, thank you');
         no.title = 'No';
-        const noFace = document.createElement('span'); noFace.className = 'face'; noFace.setAttribute('aria-hidden','true'); noFace.textContent = '😏';
+        const noFace = document.createElement('span'); noFace.className = 'face'; noFace.setAttribute('aria-hidden','true'); noFace.textContent = '😌';
         no.append(noFace);
         const noSignal = document.createElement('span'); noSignal.className = 'choice-signal';
         noSignal.setAttribute('aria-hidden','true'); noSignal.textContent = '❌'; no.append(noSignal);
+        const noLabel = document.createElement('span'); noLabel.className = 'choice-label';
+        noLabel.textContent = 'No'; no.append(noLabel);
         no.addEventListener('pointerenter', e => {
           if (e.pointerType === 'mouse') dodge(no);
         });
@@ -704,7 +720,9 @@
           screens.detail.heading=question.heading;
           screens.detail.speech=question.speech;
         }
-        title.textContent=fillQuestion(data.heading);
+        const visibleHeading = step === 'outing' ? 'What would you like to do?'
+          : step === 'decline' ? 'No worries at all' : data.heading;
+        title.textContent=fillQuestion(visibleHeading);
         description.textContent=fillQuestion(data.subheading);
         dialogue.open = false;
         bubble.textContent = step === 'detail' && !editedVoiceClips.has(sceneTrackKey())
@@ -775,7 +793,6 @@
           actions.append(row);
           actions.append(makeButton('Play again ↺','btn-quiet',()=>nav('intro')));
         }
-        if(step==='decline')actions.append(makeButton('Send bunny home ♡','btn-secondary',()=>nav('ask')));
         if(unlocked)say(data.speech,sceneTrackKey());
       }
 
