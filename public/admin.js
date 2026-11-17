@@ -48,9 +48,23 @@
     const node=$('status');node.textContent=message;node.hidden=false;
     node.style.background=error?'#a33355':'#2d2937';
   }
+  function resetPasswordVisibility(){
+    $('password').type='password';
+    $('toggle-owner-password').textContent='Show';
+    $('toggle-owner-password').setAttribute('aria-label','Show password');
+    $('toggle-owner-password').setAttribute('aria-pressed','false');
+  }
+  $('toggle-owner-password').addEventListener('click',()=>{
+    const input=$('password'),button=$('toggle-owner-password');
+    const show=input.type==='password';
+    input.type=show?'text':'password';
+    button.textContent=show?'Hide':'Show';
+    button.setAttribute('aria-label',show?'Hide password':'Show password');
+    button.setAttribute('aria-pressed',String(show));
+  });
   function loggedOut(){
     state=null;$('dashboard').hidden=true;$('login').hidden=false;$('logout').hidden=true;
-    $('password').value='';
+    $('password').value='';resetPasswordVisibility();
   }
   async function refresh(){
     try{
