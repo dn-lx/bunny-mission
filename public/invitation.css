@@ -110,6 +110,11 @@ button:disabled { cursor: default; opacity: .53; }
   width: min(72vw, 96dvh);
   aspect-ratio: 1;
   transform: translate(-50%, -50%);
+  /* Feather the whole media stage, including posters, across browsers. */
+  -webkit-mask-image: radial-gradient(ellipse closest-side at 50% 48%, #000 68%, rgb(0 0 0 / .94) 76%, rgb(0 0 0 / .68) 88%, transparent 100%);
+  mask-image: radial-gradient(ellipse closest-side at 50% 48%, #000 68%, rgb(0 0 0 / .94) 76%, rgb(0 0 0 / .68) 88%, transparent 100%);
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
 }
 .bunny-wrap { cursor: pointer; border-radius: 38%; }
 .bunny-film, .gate-character {
@@ -120,12 +125,6 @@ button:disabled { cursor: default; opacity: .53; }
   object-fit: contain;
   pointer-events: none;
   filter: saturate(.97) brightness(1.015) contrast(.985);
-  -webkit-mask-image: radial-gradient(ellipse 74% 73% at 50% 47%, #000 61%, rgb(0 0 0 / .92) 74%, transparent 100%);
-  mask-image: radial-gradient(ellipse 74% 73% at 50% 47%, #000 61%, rgb(0 0 0 / .92) 74%, transparent 100%);
-  -webkit-mask-repeat: no-repeat;
-  mask-repeat: no-repeat;
-  -webkit-mask-size: 100% 100%;
-  mask-size: 100% 100%;
   transition: opacity .22s ease-out;
 }
 .bunny-film.is-transitioning, .gate-character.is-transitioning { opacity: 0; }
