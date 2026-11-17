@@ -40,10 +40,10 @@
   <div id="status" class="status" hidden role="status" aria-live="polite"></div>
   <section class="card login" id="login">
     <h2>Only Alex can sign in 🔐</h2>
-    <p>One private owner account. No public registration.</p>
+    <p id="login-description">Sign in with your private Bunny Studio owner password.</p>
     <form id="login-form">
       <div class="field"><label for="email">Email</label><input id="email" type="email" value="don.alex.perera@gmail.com" autocomplete="username" required></div>
-      <div class="field"><label for="password">Owner password</label><div class="password-row"><input id="password" type="password" autocomplete="current-password" required><button id="toggle-owner-password" class="btn" type="button" aria-label="Show password" aria-controls="password" aria-pressed="false">Show</button></div></div>
+      <div class="field"><label id="password-label" for="password">Owner password</label><div class="password-row"><input id="password" type="password" autocomplete="current-password" required><button id="toggle-owner-password" class="btn" type="button" aria-label="Show password" aria-controls="password" aria-pressed="false">Show</button></div></div>
       <button class="btn primary" type="submit" style="width:100%">Sign in</button>
       <p id="login-error" role="alert"></p>
     </form>
@@ -90,7 +90,7 @@
         <button class="btn primary" type="submit">Save all story changes</button>
       </form>
     </section>
-    <section class="card">
+    <section class="card" id="owner-password-card">
       <h2>Owner password</h2><p>Change the password for this private dashboard. This signs you out of the current session afterward.</p>
       <form id="owner-password-form" class="grid">
         <div class="field"><label for="old-owner-password">Current password</label><input type="password" id="old-owner-password" autocomplete="current-password" required></div>

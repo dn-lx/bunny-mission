@@ -26,6 +26,13 @@ function session(request){
   }catch{return null;}
 }
 function envCredentials(){try{return JSON.parse(process.env.BUNNY_OWNER_CREDENTIALS||'{}');}catch{return {};}}
+const authProvider=()=>process.env.BUNNY_OWNER_AUTH_PROVIDER==='meplus'?'meplus':'local';
+function mePlusAuthConfig(){
+  const url=(process.env.BUNNY_MEPLUS_SUPABASE_URL||'').replace(/\/+$/,'');
+  const key=process.env.BUNNY_MEPLUS_SUPABASE_PUBLISHABLE_KEY||'';
+  const uid=process.env.BUNNY_MEPLUS_OWNER_UID||'';
+  return {url,key,uid,ready:url.startsWith('https://')&&Boolean(key)&&/^[0-9a-f-]{36}$/i.test(uid)};
+}
 const credentialStore=()=>getStore({name:'alex-bunny-owner-auth-develop',consistency:'strong'});
 async function readCredentials(){return (await credentialStore().get('owner-credential',{type:'json'}))||envCredentials();}
 async function saveCredentials(obj){await credentialStore().setJSON('owner-credential',obj);}
@@ -39,6 +46,26 @@ function hashedCredentials(password){
   if(typeof password!=='string'||password.length<14||password.length>120)throw Error('Owner password must be at least 14 characters.');
   const salt=randomBytes(16).toString('hex');
   return {email:ownerEmail,salt,hash:scryptSync(password,Buffer.from(salt,'hex'),32).toString('hex')};
+}
+async function verifyMePlusCredentials(email,password){
+  const config=mePlusAuthConfig();
+  if(!config.ready)return {ok:false,unavailable:true};
+  let response;
+  try{
+    response=await fetch(config.url+'/auth/v1/token?grant_type=password',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','apikey':config.key},
+      body:JSON.stringify({email,password}),
+      signal:AbortSignal.timeout(10000)
+    });
+  }catch{return {ok:false,unavailable:true};}
+  if(response.status===429)return {ok:false,rateLimited:true};
+  if(response.status===400||response.status===401)return {ok:false};
+  if(!response.ok)return {ok:false,unavailable:true};
+  let data;
+  try{data=await response.json();}catch{return {ok:false,unavailable:true};}
+  const user=data?.user;
+  return {ok:Boolean(data?.access_token&&user?.id===config.uid&&String(user?.email||'').trim().toLowerCase()===ownerEmail)};
 }
 async function loginGuard(request){
   const ip=(request.headers.get('x-nf-client-connection-ip')||request.headers.get('x-forwarded-for')||'unknown').split(',')[0].trim().slice(0,100);
@@ -55,7 +82,7 @@ function sameOrigin(request){
 const cookie=token=>COOKIE+'='+token+'; Path=/; Secure; HttpOnly; SameSite=Strict; Max-Age='+MAX_AGE;
 const clearCookie=()=>COOKIE+'=; Path=/; Secure; HttpOnly; SameSite=Strict; Max-Age=0';
 export default async function owner(request){
-  if(!secret()||secret().length<32||!process.env.BUNNY_OWNER_CREDENTIALS)return reply({error:'Owner sign-in has not been provisioned.'},503);
+  if(!secret()||secret().length<32||(authProvider()==='local'&&!process.env.BUNNY_OWNER_CREDENTIALS)||(authProvider()==='meplus'&&!mePlusAuthConfig().ready))return reply({error:'Owner sign-in has not been provisioned.'},503);
   const action=new URL(request.url).searchParams.get('action')||'state';
   if(!['GET','POST'].includes(request.method))return reply({error:'Method not allowed.'},405);
   if(request.method==='POST'&&!sameOrigin(request))return reply({error:'Origin rejected.'},403);
@@ -67,14 +94,30 @@ export default async function owner(request){
     try{body=JSON.parse(raw);}catch{return reply({error:'Invalid JSON.'},400);}
   }
   try{
+    if(action==='auth-mode'&&request.method==='GET')return reply({provider:authProvider()});
     if(action==='login'&&request.method==='POST'){
       const email=String(body.email||'').trim().toLowerCase();
       const guard=await loginGuard(request);
       if(guard.record.count>=6)return reply({error:'Too many attempts. Try again later.'},429);
-      const cred=await readCredentials();
-      if(email!==ownerEmail||!passwordMatches(body.password,cred)){
+      const password=body.password;
+      if(email!==ownerEmail||typeof password!=='string'||password.length>1024){
         await guard.recordFailure();
         return reply({error:'Invalid email or password.'},401);
+      }
+      if(authProvider()==='meplus'){
+        const result=await verifyMePlusCredentials(email,password);
+        if(result.rateLimited)return reply({error:'Me+ sign-in is temporarily rate-limited. Try again shortly.'},429);
+        if(result.unavailable)return reply({error:'Me+ sign-in is temporarily unavailable. Try again shortly.'},503);
+        if(!result.ok){
+          await guard.recordFailure();
+          return reply({error:'Invalid email or password.'},401);
+        }
+      }else{
+        const cred=await readCredentials();
+        if(!passwordMatches(password,cred)){
+          await guard.recordFailure();
+          return reply({error:'Invalid email or password.'},401);
+        }
       }
       await guard.clear();
       return reply({ok:true,email:ownerEmail},200,{'Set-Cookie':cookie(makeToken(ownerEmail))});
@@ -111,6 +154,7 @@ export default async function owner(request){
       return reply({ok:true,invites:publicInvites(next)});
     }
     if(action==='password'){
+      if(authProvider()==='meplus')return reply({error:'Change your password in your Me+ account settings.'},403);
       const cred=await readCredentials();
       if(!passwordMatches(body.currentPassword,cred))return reply({error:'Incorrect current password.'},403);
       await saveCredentials(hashedCredentials(body.newPassword));

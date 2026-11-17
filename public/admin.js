@@ -62,6 +62,17 @@
     button.setAttribute('aria-label',show?'Hide password':'Show password');
     button.setAttribute('aria-pressed',String(show));
   });
+  async function loadAuthMode(){
+    try{
+      const result=await api('auth-mode');
+      const meplus=result.provider==='meplus';
+      $('password-label').textContent=meplus?'Me+ password':'Owner password';
+      $('login-description').textContent=meplus
+        ?'Use your Me+ email and password. Supabase verifies the sign-in; Bunny Studio does not store your password.'
+        :'Sign in with your private Bunny Studio owner password.';
+      $('owner-password-card').hidden=meplus;
+    }catch{/* Keep the login form usable so the server can show the current error. */}
+  }
   function loggedOut(){
     state=null;$('dashboard').hidden=true;$('login').hidden=false;$('logout').hidden=true;
     $('password').value='';resetPasswordVisibility();
@@ -221,5 +232,5 @@
       e.currentTarget.reset();loggedOut();notice('Owner password updated. Sign in with the new password.');
     }catch(error){notice(error.message,true);}finally{save.disabled=false;}
   });
-  refresh();
+  loadAuthMode().finally(refresh);
 })();
