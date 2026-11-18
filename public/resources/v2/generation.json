@@ -19,7 +19,7 @@
     "acceleration": "DBCache faster"
   },
   "videoPrompt": "Full body fluffy cream bunny with lavender eyes and teal scarf, warm sage background. Fixed portrait camera with full ears and feet visible. Feet planted, arms at sides, precise lip synchronization, subtle blinking. Return to same calm closed-mouth resting pose.",
-  "status": "incomplete",
+  "status": "paused-for-planning",
   "blockers": [
     "LongCat rejected requested GPU duration of 480s as larger than the maximum allowed for this anonymous session.",
     "Qwen anonymous ZeroGPU quota exhausted after ask, password and outing. Sign in to inspect account allowance.",
@@ -43,5 +43,8 @@
     "yes",
     "success",
     "decline"
-  ]
+  ],
+  "voiceReview": "Existing recordings rejected as too adult; revised small-girl voice must be auditioned before batch generation.",
+  "activeExperienceVersion": 1,
+  "latestLongcatRetry": "ZeroGPU quota exceeded: 480s requested vs. -240s left; authentication requested; no video produced."
 }

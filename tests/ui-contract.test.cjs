@@ -213,3 +213,15 @@ test('all nine native Flow clips are published with the warm poster',()=>{
   for (const clip of Object.values(manifest.clips)) assert.ok(statSync('public'+clip).size > 100000);
   assert.ok(statSync('public/video/flow/poster.webp').size > 1000);
 });
+
+test('paused version 2 links retain invitation parameters while selecting version 1', () => {
+  const preview = new Script(readFileSync('public/resources/v2/preview.js','utf8'));
+  for (const suffix of ['?version=2&invite=example#bunny','?version=1&invite=example','?invite=example']) {
+    let replaced;
+    const document={documentElement:{dataset:{}}};
+    preview.runInNewContext({document, URL, location:{href:'https://example.test/'+suffix}, history:{state:null, replaceState:(_state,_title,url)=>{replaced=url;}}});
+    assert.equal(document.documentElement.dataset.mediaVersion,'1');
+    if (suffix.includes('version=2')) assert.equal(replaced,'/?version=1&invite=example#bunny');
+    else assert.equal(replaced,undefined);
+  }
+});

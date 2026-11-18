@@ -123,7 +123,7 @@
       const bunny = document.getElementById('bunny');
       const bunnyVideo = document.getElementById('bunny-video');
       const gateVideo = document.querySelector('#password-gate .gate-character');
-      const portraitVersion = query.get('version') === '2';
+      const portraitVersion = document.documentElement.dataset.mediaVersion === '2';
       const audioClips = Object.create(null);
       if (portraitVersion) {
         document.querySelectorAll('video').forEach(video => {
