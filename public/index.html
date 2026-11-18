@@ -821,7 +821,7 @@
 
       function applyOwnerSettings(value){
         if(!value||typeof value!=='object')return;
-        availableDays = new Set(Array.isArray(value.availableDays) ? value.availableDays.filter(key => typeof key==='string' && /^\\d{4}-\\d{2}-\\d{2}$/.test(key)) : []);
+        availableDays = new Set(Array.isArray(value.availableDays) ? value.availableDays.filter(key => typeof key==='string' && /^\d{4}-\d{2}-\d{2}$/.test(key)) : []);
         sender=typeof value.senderName==='string'&&value.senderName.trim()?value.senderName.trim().slice(0,48):'Alex';
         if (sender !== 'Alex') {
           screens.ask.speech = 'Would you like to go out with ' + sender + '?';
