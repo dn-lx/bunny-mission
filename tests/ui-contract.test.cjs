@@ -33,7 +33,7 @@ test('gate supports visible-viewport keyboard repositioning and bunny narration'
   assert.match(js,/say\(gateSpeech, gateSpeechKey\)/);
 });
 test('explicit user-submitted Netlify response is enabled and can be emailed', () => {
-  assert.match(html,/name="going-out" data-netlify="true"/);
+  assert.match(html,/name="going-out-develop" data-netlify="true"/);
   assert.match(html,/name="subject"/);
   assert.match(js,/async function submitAnswer\(/);
   assert.match(js,/send-answer/);
