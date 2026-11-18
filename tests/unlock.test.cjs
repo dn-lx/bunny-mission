@@ -1,7 +1,13 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const { createHash } = require('node:crypto');
-const { handler } = require('../netlify/functions/unlock.cjs');
+async function handler({httpMethod,body}) {
+  const {default:unlock}=await import('../netlify/functions/unlock.mjs');
+  const response=await unlock(new Request('https://example.test/unlock',{
+    method:httpMethod,...(httpMethod==='POST'?{body}:{})
+  }));
+  return {statusCode:response.status,body:await response.text()};
+}
 // The tests inject a sample credential; they NEVER include an actual invite password.
 const code = 'TESTPASSCODE123';
 process.env.GO_OUT_INVITES_JSON = JSON.stringify([
