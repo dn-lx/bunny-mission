@@ -281,8 +281,8 @@
           || voices.find(v => /^en-US$/i.test(v.lang));
         if (soft) msg.voice = soft;
         msg.lang = soft?.lang || 'en-US';
-        msg.rate = .84;
-        msg.pitch = 1.23;
+        msg.rate = .88;
+        msg.pitch = 1.25;
         const finish = () => {
           if (token !== voiceSession) return;
           speechUtterance = null;
