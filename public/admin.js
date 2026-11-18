@@ -2,7 +2,7 @@
   'use strict';
   const $ = id => document.getElementById(id);
   const API='/.netlify/functions/owner';
-  let state=null, editId=null, extraQuestions=[], stepOrder=[], nextExtraId=0;
+  let state=null, editId=null, extraQuestions=[], stepOrder=[], nextExtraId=0, availableDays=[], availabilityBusy=false;
   const enabledSteps=new Set();
   const stepLabels={outing:'Activity',detail:'Activity follow-up',area:'Meeting area',schedule:'Calendar'};
   const timeDefaults=['Morning','Afternoon','Evening','Flexible time'];
@@ -146,6 +146,7 @@
   });
   function renderSettings(){
     const config=state.settings||{};
+    availableDays=Array.isArray(config.availableDays)?[...new Set(config.availableDays)].sort():[];
     $('sender-name').value=config.senderName||'Alex';
     $('site-label').value=config.siteLabel||'tiny bunny mission';
     const screens=$('screen-fields');screens.replaceChildren();
@@ -194,9 +195,64 @@
       const pair=labelInput('Time choice '+(index+1),config.timeLabels?.[index]||'',value,'input',85);
       pair.input.dataset.time=String(index);timeFields.append(pair.outer);
     });
+    renderAvailability();
     renderExtra();
     renderWorkflow();
   }
+  function localDateKey(date){
+    return [date.getFullYear(),String(date.getMonth()+1).padStart(2,'0'),String(date.getDate()).padStart(2,'0')].join('-');
+  }
+  function renderAvailability(){
+    const input=$('available-date');
+    const now=new Date();
+    input.min=localDateKey(now);
+    input.max=localDateKey(new Date(now.getFullYear(),now.getMonth()+4,0));
+    const list=$('availability-days');
+    list.replaceChildren();
+    if(!availableDays.length){
+      list.append(elt('p','No days are open yet. Every guest date is blocked.','mini'));
+      return;
+    }
+    for(const key of availableDays){
+      const [year,month,day]=key.split('-').map(Number);
+      const date=new Date(year,month-1,day);
+      const row=elt('div',null,'question row between');
+      row.setAttribute('role','listitem');
+      row.append(elt('span',new Intl.DateTimeFormat('en',{weekday:'long',month:'long',day:'numeric',year:'numeric'}).format(date)));
+      const block=elt('button','Block this day','btn danger');
+      block.type='button';
+      block.disabled=availabilityBusy;
+      block.addEventListener('click',()=>updateAvailability(availableDays.filter(item=>item!==key),'Day blocked. Guests can no longer select it.'));
+      row.append(block);
+      list.append(row);
+    }
+  }
+  async function updateAvailability(next,message){
+    if(availabilityBusy)return;
+    availabilityBusy=true;
+    $('open-availability').disabled=true;
+    try{
+      const result=await api('availability','POST',{availableDays:next});
+      state.settings=result.settings;
+      availableDays=Array.isArray(result.settings.availableDays)?result.settings.availableDays:[];
+      notice(message);
+    }catch(error){notice(error.message,true);}
+    finally{
+      availabilityBusy=false;
+      $('open-availability').disabled=false;
+      renderAvailability();
+    }
+  }
+  $('open-availability').addEventListener('click',()=>{
+    const key=$('available-date').value;
+    const now=new Date();
+    const minimum=localDateKey(now);
+    const maximum=localDateKey(new Date(now.getFullYear(),now.getMonth()+4,0));
+    if(!key){notice('Choose a date first.',true);return;}
+    if(key<minimum||key>maximum){notice('Choose a date from today through the next four months.',true);return;}
+    if(availableDays.includes(key)){notice('That day is already open.',true);return;}
+    updateAvailability([...availableDays,key].sort(),'Day opened. Guests can now select it.');
+  });
   function renderWorkflow(){
     const list=$('workflow-fields');list.replaceChildren();
     stepOrder.forEach((key,index)=>{
@@ -266,7 +322,7 @@
     const extraIds=new Map(extraQuestions.map((q,index)=>[q.id,'extra-'+index]));
     const workflow=stepOrder.filter(key=>enabledSteps.has(key)).map(key=>extraIds.get(key)||key);
     const settings={senderName:$('sender-name').value,siteLabel:$('site-label').value,screens:{},outingLabels:{},
-      detail:{},areaLabels:[],timeLabels:[],timeHeading:$('time-heading').value,workflow,extraQuestions};
+      detail:{},areaLabels:[],timeLabels:[],availableDays:[...availableDays],timeHeading:$('time-heading').value,workflow,extraQuestions};
     document.querySelectorAll('[data-screen]').forEach(x=>{
       if(!settings.screens[x.dataset.screen])settings.screens[x.dataset.screen]={};
       settings.screens[x.dataset.screen][x.dataset.field]=x.value;
