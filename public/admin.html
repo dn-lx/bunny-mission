@@ -92,6 +92,14 @@
         <h3>Calendar time choices</h3>
         <div id="time-fields" class="grid"></div>
         <div class="divider"></div>
+        <h3>Calendar availability</h3>
+        <p class="mini">Every date starts blocked. Open only the dates you are available; guests can choose dates shown here. Choose dates within the next four months.</p>
+        <div class="row">
+          <div class="field"><label for="available-date">Date to open</label><input id="available-date" type="date"></div>
+          <button id="open-availability" type="button" class="btn primary">Open this day</button>
+        </div>
+        <div id="availability-days" aria-live="polite"></div>
+        <div class="divider"></div>
         <div class="row between"><div><h3>Optional extra questions</h3><p class="mini">Add up to five questions with two to six choices each. Place them anywhere in the workflow above.</p></div><button id="add-question" type="button" class="btn">+ Add question</button></div>
         <div id="extra-questions"></div>
         <button class="btn primary" type="submit">Save all story changes</button>
