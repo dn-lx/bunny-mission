@@ -141,6 +141,7 @@
       let unlocked = false;
       const picks = { outing: '', activityKey: '', detail: '', meetArea: '', day: '', time: '' };
       const planningSteps = ['outing','detail','area','schedule'];
+      let availableDays = new Set();
       let flows = ['ask',...planningSteps,'success'];
       let timeQuestion = 'What time of day suits you?';
       const calendarTimes = [['☀️','Morning'],['🌤️','Afternoon'],['🌙','Evening'],['✨','Flexible time']];
@@ -276,11 +277,12 @@
         const msg = new SpeechSynthesisUtterance(text);
         speechUtterance = msg;
         const voices = window.speechSynthesis.getVoices();
-        const soft = voices.find(v => /^en/i.test(v.lang) && /sonia|libby|serena|kate|samantha/i.test(v.name));
+        const soft = voices.find(v => /^en-US$/i.test(v.lang) && /samantha|ava|jenny|aria|allison|michelle|karen|susan|victoria/i.test(v.name))
+          || voices.find(v => /^en-US$/i.test(v.lang));
         if (soft) msg.voice = soft;
-        msg.lang = soft?.lang || 'en-GB';
-        msg.rate = .88;
-        msg.pitch = 1.25;
+        msg.lang = soft?.lang || 'en-US';
+        msg.rate = .84;
+        msg.pitch = 1.23;
         const finish = () => {
           if (token !== voiceSession) return;
           speechUtterance = null;
@@ -470,6 +472,12 @@
         const wrap = document.createElement('div'); wrap.className = 'calendar-wrap';
         const calendar = document.createElement('div'); calendar.className = 'planning-calendar';
         calendar.setAttribute('aria-label','Choose a day from the calendar');
+        const availabilityHint = document.createElement('p');
+        availabilityHint.className='schedule-hint availability-hint';
+        availabilityHint.setAttribute('role','status');
+        availabilityHint.textContent = availableDays.size
+          ? 'Only dates Alex opened are available.'
+          : 'No dates are open yet. You can pick a day together later.';
         const selectedText = document.createElement('div'); selectedText.className='schedule-hint'; selectedText.setAttribute('role','status');
         const timeLabel = document.createElement('div'); timeLabel.className='gate-label'; timeLabel.textContent=fillQuestion(timeQuestion);
         const times = document.createElement('div'); times.className='time-options';
@@ -526,6 +534,8 @@
             btn.type='button'; btn.className='calendar-day'; btn.textContent=String(d);
             btn.setAttribute('aria-label',new Intl.DateTimeFormat('en',{weekday:'long',month:'long',day:'numeric',year:'numeric'}).format(candidate));
             btn.disabled = key < today || key > maxDate;
+            if (!availableDays.has(key)) btn.disabled = true;
+            btn.classList.toggle('available',availableDays.has(key) && !btn.disabled);
             btn.classList.toggle('today',key===today);
             btn.classList.toggle('selected',key===picks.day);
             if(key===picks.day)btn.setAttribute('aria-pressed','true');
@@ -539,7 +549,7 @@
         controls.append(continueBtn,makeButton('Pick a day together later','btn-secondary',()=>{
           picks.day='Choose together'; picks.time=fillQuestion(calendarTimes[3][1]); advance();
         }));
-        wrap.append(calendar,timeLabel,times,selectedText,controls);
+        wrap.append(calendar,availabilityHint,timeLabel,times,selectedText,controls);
         actions.append(wrap);
       }
       let lastDodgeAt = 0;
@@ -811,6 +821,7 @@
 
       function applyOwnerSettings(value){
         if(!value||typeof value!=='object')return;
+        availableDays = new Set(Array.isArray(value.availableDays) ? value.availableDays.filter(key => typeof key==='string' && /^\\d{4}-\\d{2}-\\d{2}$/.test(key)) : []);
         sender=typeof value.senderName==='string'&&value.senderName.trim()?value.senderName.trim().slice(0,48):'Alex';
         if (sender !== 'Alex') {
           screens.ask.speech = 'Would you like to go out with ' + sender + '?';
