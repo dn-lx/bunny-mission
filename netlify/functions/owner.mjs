@@ -124,6 +124,12 @@ export default async function owner(request){
       await writeSettings(clean);
       return reply({ok:true,settings:clean});
     }
+    if(action==='availability'){
+      const current=await readSettings();
+      const clean=sanitizedSettings({...current,availableDays:body.availableDays});
+      await writeSettings(clean);
+      return reply({ok:true,settings:clean});
+    }
     if(action==='invite'){
       const data=body.invite||{};
       const current=await readInvites();
