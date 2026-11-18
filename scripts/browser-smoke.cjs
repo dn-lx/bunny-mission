@@ -233,6 +233,27 @@ async function bypassFullscreenPrompt(page) {
     await customPage.close();
     console.log('PASS: owner-edited prompts, renamed activity and extra question end-to-end');
 
+    // The portrait preview uses the full character and places choices near the bottom.
+    const portrait=await browser.newPage({viewport:{width:390,height:844}});
+    await portrait.goto(origin+'/?version=2',{waitUntil:'domcontentloaded'});
+    await bypassFullscreenPrompt(portrait);
+    await portrait.locator('#invite-code').fill('TEST');
+    await portrait.locator('#unlock-button').click();
+    await portrait.locator('#yes-btn').waitFor({state:'visible'});
+    await portrait.waitForFunction(()=>document.querySelector('#bunny-video').poster.endsWith('/resources/v2/nibbles-portrait.webp'));
+    const portraitLayout=await portrait.evaluate(()=>{
+      const stage=document.querySelector('#bunny').getBoundingClientRect();
+      const choice=document.querySelector('#yes-btn').getBoundingClientRect();
+      return {width:stage.width,height:stage.height,choiceY:choice.top,overflow:document.documentElement.scrollWidth-innerWidth};
+    });
+    assert.equal(portraitLayout.width,390);
+    assert.equal(portraitLayout.height,844);
+    assert.ok(portraitLayout.choiceY>650,'Choices should overlay the lower part of the portrait');
+    assert.ok(portraitLayout.overflow<=2);
+    await portrait.screenshot({path:process.env.PORTRAIT_SCREENSHOT||'/tmp/bunny-portrait-preview.png'});
+    await portrait.close();
+    console.log('PASS: full-height portrait preview and bottom choices');
+
   } finally {
     if (browser) await browser.close();
     await new Promise(resolve=>server.close(resolve));

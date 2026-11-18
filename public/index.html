@@ -12,6 +12,7 @@
   <meta name="description" content="A tiny adventure with a very important bunny.">
   <title>A tiny bunny mission ✦</title>
   <link rel="stylesheet" href="/invitation.css">
+  <script src="/resources/v2/preview.js"></script>
 </head>
 <body data-locked="true">
   <div class="decor" aria-hidden="true"><span class="d one">♡</span><span class="d two">✧</span><span class="d three">✦</span><span class="d four">♡</span></div>
@@ -122,12 +123,24 @@
       const bunny = document.getElementById('bunny');
       const bunnyVideo = document.getElementById('bunny-video');
       const gateVideo = document.querySelector('#password-gate .gate-character');
-      const flowReady = fetch('/video/flow/manifest.json')
+      const portraitVersion = query.get('version') === '2';
+      const audioClips = Object.create(null);
+      if (portraitVersion) {
+        document.querySelectorAll('video').forEach(video => {
+          video.poster = '/resources/v2/nibbles-portrait.webp';
+        });
+      }
+      const flowReady = fetch(portraitVersion ? '/resources/v2/manifest.json' : '/video/flow/manifest.json')
         .then(response => response.ok ? response.json() : {})
         .then(data => {
-          if (data.version !== 1) return;
+          if (data.version !== (portraitVersion ? 2 : 1)) return;
+          if (portraitVersion) {
+            for (const [key, path] of Object.entries(data.audio || {})) {
+              if (/^\/resources\/v2\/audio\/[a-z-]+\.mp3$/.test(path)) audioClips[key] = path;
+            }
+          }
           for (const [key, path] of Object.entries(data.clips || {})) {
-            if (/^\/video\/flow\/[a-z-]+\.mp4$/.test(path)) flowClips[key] = path;
+            if (/^\/(?:video\/flow|resources\/v2\/video)\/[a-z-]+\.mp4$/.test(path)) flowClips[key] = path;
           }
         })
         .catch(() => { /* Device speech is available if the recordings fail to load. */ });
@@ -331,8 +344,10 @@
         stopVoice();
         // Grant the persistent video and its audio fallback playback on the tap
         // that submits the password, before the asynchronous server response.
-        bunnyVideo.src = '/video/flow/start.mp4';
-        bunnyVideo.play().catch(() => {});
+        if (!portraitVersion) {
+          bunnyVideo.src = '/video/flow/start.mp4';
+          bunnyVideo.play().catch(() => {});
+        }
         narration.src = '/audio/narration-start.mp3';
         narration.play().catch(() => {});
       }
@@ -345,6 +360,11 @@
         const key = clipKey?.startsWith('detail-') ? 'detail' : clipKey;
         const path = !editedVoiceClips.has(clipKey) && flowClips[key];
         if (!path) {
+          const recording = !editedVoiceClips.has(clipKey) && audioClips[key];
+          if (recording) {
+            playFlowClip(narration, recording, token, onComplete, () => speakWithDevice(text, token, onComplete));
+            return true;
+          }
           speakWithDevice(text, token, onComplete);
           return false;
         }

@@ -1,0 +1,47 @@
+{
+  "version": 2,
+  "background": "#DDE7DC",
+  "targetAspectRatio": "9:16",
+  "reference": "/resources/v2/nibbles-portrait.webp",
+  "voiceReference": "/resources/v2/audio/ask.wav",
+  "voiceReferenceText": "Would you like to go out with Alex?",
+  "voiceDescription": "Very soft, sweet, youthful feminine cartoon bunny, gentle standard American English accent. Clean dry speech only.",
+  "qwenSpace": "Qwen/Qwen3-TTS",
+  "qwenModels": [
+    "Qwen3-TTS-12Hz-1.7B-VoiceDesign",
+    "Qwen3-TTS-12Hz-1.7B-Base"
+  ],
+  "longcatSpace": "meituan-longcat/LongCat-Video-Avatar-1.5-Demo",
+  "longcatSettings": {
+    "resolution": "480p",
+    "seed": 2176,
+    "vocal_mode": "Clean speech (fast)",
+    "acceleration": "DBCache faster"
+  },
+  "videoPrompt": "Full body fluffy cream bunny with lavender eyes and teal scarf, warm sage background. Fixed portrait camera with full ears and feet visible. Feet planted, arms at sides, precise lip synchronization, subtle blinking. Return to same calm closed-mouth resting pose.",
+  "status": "incomplete",
+  "blockers": [
+    "LongCat rejected requested GPU duration of 480s as larger than the maximum allowed for this anonymous session.",
+    "Qwen anonymous ZeroGPU quota exhausted after ask, password and outing. Sign in to inspect account allowance.",
+    "Hugging Face browser sign-in returned CloudFront 403 Request blocked. Fresh homepage still showed signed out."
+  ],
+  "pendingAudio": [
+    "detail",
+    "area",
+    "schedule",
+    "yes",
+    "success",
+    "decline"
+  ],
+  "pendingVideo": [
+    "ask",
+    "password",
+    "outing",
+    "detail",
+    "area",
+    "schedule",
+    "yes",
+    "success",
+    "decline"
+  ]
+}

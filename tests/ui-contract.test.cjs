@@ -41,7 +41,7 @@ test('explicit user-submitted Netlify response is enabled and can be emailed', (
 });
 
 test('device speech fallback favours a gentle English voice', () => {
-  assert.match(js, /sonia\|libby\|serena\|kate\|samantha/);
+  assert.match(js, /samantha\|ava\|jenny\|aria/);
   assert.match(js, /msg\.rate = \.88/);
   assert.match(js, /msg\.pitch = 1\.25/);
 });
@@ -108,7 +108,7 @@ test('the bunny plays inline using native Flow video',()=>{
   assert.match(html, /playsinline webkit-playsinline preload="metadata"/);
   assert.match(html, /poster="\/video\/flow\/poster\.webp"/);
   assert.doesNotMatch(html, /<canvas\b/);
-  assert.match(js, /fetch\('\/video\/flow\/manifest\.json'/);
+  assert.match(js, /fetch\(portraitVersion \? '\/resources\/v2\/manifest\.json' : '\/video\/flow\/manifest\.json'/);
   assert.match(js, /bunnyVideo\.play\(\)/);
 });
 

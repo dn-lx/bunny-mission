@@ -1,0 +1,11 @@
+{
+  "ask": "Would you like to go out with Alex?",
+  "password": "Enter your invitation password.",
+  "outing": "What would you like to do together?",
+  "detail": "What sounds most like you?",
+  "area": "Where would you like to meet?",
+  "schedule": "Which available day works for you?",
+  "yes": "Oh, lovely!",
+  "success": "Lovely! Send your choices to Alex.",
+  "decline": "No worries at all."
+}
