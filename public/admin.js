@@ -2,15 +2,18 @@
   'use strict';
   const $ = id => document.getElementById(id);
   const API='/.netlify/functions/owner';
-  let state=null, editId=null, extraQuestions=[];
+  let state=null, editId=null, extraQuestions=[], stepOrder=[], nextExtraId=0;
+  const enabledSteps=new Set();
+  const stepLabels={outing:'Activity',detail:'Activity follow-up',area:'Meeting area',schedule:'Calendar'};
+  const timeDefaults=['Morning','Afternoon','Evening','Flexible time'];
   const defaults={
     screens:{
       ask:['{name}, would you like to go out with {sender}?','That’s the whole big, very important question. What do you think?','Ehhh... Alex has a question for ya. He sent a rabbit. Bold choice, huh?'],
-      outing:['What would you enjoy doing?','Pick an idea that actually sounds fun to you.','Here is the fun part. Coffee, wandering, food or sweets? I did not even put carrot farming on the list.'],
+      outing:['What would you like to do?','Pick an idea that actually sounds fun to you.','Here is the fun part. Coffee, wandering, food or sweets? I did not even put carrot farming on the list.'],
       area:['Where would be convenient?','No need to pick a specific place yet.','Somewhere comfortable for you, of course. My hop-mobile has a very limited range.'],
       schedule:['Which day works for you?','Pick a day from the calendar and a time of day, or decide together later.','Aha! The calendar! Pick a day that works for you. This rabbit does not do surprise alarms.'],
       success:['Bunny is doing happy little jumps!','You said yes to going out with Alex. I think this deserves a tiny celebration.','Well, would ya look at that! Mission accomplished! I knew this bow tie had magical powers!'],
-      decline:['Absolutely no worries.','Thank you for answering. You’re lovely, and this bunny wishes you a wonderful day.','Hey, no worries! Thanks for being straight with me. Here’s a little flower, on the house.']
+      decline:['No worries at all','','Hey, no worries! Thanks for being straight with me. Here’s a little flower, on the house.']
     },
     outings:{coffee:'Coffee or tea',walk:'A walk and exploring',food:'A bite to eat',sweet:'Something sweet',surprise:'A little surprise'},
     details:{
@@ -62,34 +65,33 @@
     button.setAttribute('aria-label',show?'Hide password':'Show password');
     button.setAttribute('aria-pressed',String(show));
   });
-  async function loadAuthMode(){
-    try{
-      const result=await api('auth-mode');
-      const meplus=result.provider==='meplus';
-      $('password-label').textContent=meplus?'Me+ password':'Owner password';
-      $('login-description').textContent=meplus
-        ?'Use your Me+ email and password. Supabase verifies the sign-in; Bunny Studio does not store your password.'
-        :'Sign in with your private Bunny Studio owner password.';
-      $('owner-password-card').hidden=meplus;
-    }catch{/* Keep the login form usable so the server can show the current error. */}
-  }
   function loggedOut(){
-    state=null;$('dashboard').hidden=true;$('login').hidden=false;$('logout').hidden=true;
+    state=null;$('invites').replaceChildren();$('invite-editor').hidden=true;$('invite-password').value='';
+    $('dashboard').hidden=true;$('login').hidden=false;$('logout').hidden=true;
     $('password').value='';resetPasswordVisibility();
   }
   async function refresh(){
     try{
       state=await api('state');$('dashboard').hidden=false;$('login').hidden=true;$('logout').hidden=false;
       extraQuestions=Array.isArray(state.settings.extraQuestions)?state.settings.extraQuestions.map(x=>({...x,options:[...x.options]})):[];
+      const allSteps=[...Object.keys(stepLabels),...extraQuestions.map(q=>q.id)];
+      const configured=state.settings.workflow||allSteps;
+      stepOrder=[...new Set([...configured,...allSteps])];
+      enabledSteps.clear();
+      configured.forEach(key=>enabledSteps.add(key));
+      nextExtraId=extraQuestions.length;
+      $('password').value='';resetPasswordVisibility();
       renderInvites();renderSettings();
-    }catch{loggedOut();}
+      return true;
+    }catch{loggedOut();return false;}
   }
   $('login-form').addEventListener('submit',async e=>{
     e.preventDefault();const button=e.submitter;button.disabled=true;$('login-error').textContent='';
     try{
       await api('login','POST',{email:$('email').value,password:$('password').value});
-      await refresh();notice('Welcome back! Your Bunny Studio is ready.');
-    }catch(error){$('login-error').textContent=error.message;}finally{button.disabled=false;}
+      if(!await refresh())throw new Error('Signed in, but Bunny Studio could not load your settings. Try reloading.');
+      notice('Welcome back! Your Bunny Studio is ready.');
+    }catch(error){$('login-error').textContent=error.message;}finally{button.disabled=false;$('password').value='';resetPasswordVisibility();}
   });
   $('logout').addEventListener('click',async()=>{
     try{await api('logout','POST');}catch{/* still lock local UI */}loggedOut();notice('Signed out.');
@@ -133,12 +135,13 @@
   });
   $('invite-form').addEventListener('submit',async e=>{
     e.preventDefault();const save=e.submitter;save.disabled=true;
-    const body={id:$('invite-id').value.trim(),name:$('invite-name').value.trim(),password:$('invite-password').value.trim(),enabled:$('invite-enabled').checked};
+    const body={id:editId||$('invite-id').value.trim(),name:$('invite-name').value.trim(),password:$('invite-password').value.trim(),enabled:$('invite-enabled').checked};
     try{
       const result=await api('invite','POST',{invite:body});
       state.invites=result.invites;renderInvites();
       $('invite-editor').hidden=true;$('invite-password').value='';
-      notice('Invitation saved. Use the password you generated or entered; it cannot be retrieved afterward.');
+      notice(body.password ? 'Invitation saved. Keep the guest password somewhere private.'
+        : 'Invitation updated. The guest will see the new name when they open it again.');
     }catch(error){notice(error.message,true);}finally{save.disabled=false;}
   });
   function renderSettings(){
@@ -183,7 +186,46 @@
       const pair=labelInput('Area choice '+(index+1),config.areaLabels?.[index]||'',value,'input',85);
       pair.input.dataset.area=String(index);areas.append(pair.outer);
     });
+    const timeFields=$('time-fields');timeFields.replaceChildren();
+    const timeHeading=labelInput('Time of day question',config.timeHeading,'What time of day suits you?','input',180);
+    timeHeading.outer.classList.add('full');timeHeading.input.id='time-heading';
+    timeFields.append(timeHeading.outer);
+    timeDefaults.forEach((value,index)=>{
+      const pair=labelInput('Time choice '+(index+1),config.timeLabels?.[index]||'',value,'input',85);
+      pair.input.dataset.time=String(index);timeFields.append(pair.outer);
+    });
     renderExtra();
+    renderWorkflow();
+  }
+  function renderWorkflow(){
+    const list=$('workflow-fields');list.replaceChildren();
+    stepOrder.forEach((key,index)=>{
+      const extra=extraQuestions.find(q=>q.id===key);
+      const name=stepLabels[key]||extra?.heading||'New question';
+      const row=elt('div',null,'question row between');
+      const label=elt('label',null,'row');
+      const check=elt('input');check.type='checkbox';check.checked=enabledSteps.has(key);
+      check.style.width='auto';check.style.minHeight='0';
+      const caption=elt('span',name);caption.dataset.workflowTitle=key;
+      label.append(check,caption);
+      check.addEventListener('change',()=>{
+        if(check.checked)enabledSteps.add(key);
+        else enabledSteps.delete(key);
+      });
+      const controls=elt('div',null,'row');
+      for(const [direction,offset] of [['Up',-1],['Down',1]]){
+        const button=elt('button',direction,'btn');button.type='button';
+        button.setAttribute('aria-label','Move '+name+' '+direction.toLowerCase());
+        const target=index+offset;
+        button.disabled=target<0||target>=stepOrder.length;
+        button.addEventListener('click',()=>{
+          [stepOrder[index],stepOrder[target]]=[stepOrder[target],stepOrder[index]];
+          renderWorkflow();
+        });
+        controls.append(button);
+      }
+      row.append(label,controls);list.append(row);
+    });
   }
   function renderExtra(){
     const list=$('extra-questions');list.replaceChildren();
@@ -191,10 +233,19 @@
       const box=elt('div',null,'question');
       const top=elt('div',null,'row between');top.append(elt('h3','Extra question '+(index+1)));
       const del=elt('button','Remove','btn danger');del.type='button';
-      del.addEventListener('click',()=>{extraQuestions.splice(index,1);renderExtra();});
+      del.addEventListener('click',()=>{
+        extraQuestions.splice(index,1);
+        stepOrder=stepOrder.filter(key=>key!==q.id);
+        enabledSteps.delete(q.id);
+        renderExtra();renderWorkflow();
+      });
       top.append(del);box.append(top);
       const title=labelInput('Question',q.heading,'e.g. What music do you love?','input',140);
-      title.input.addEventListener('input',()=>{q.heading=title.input.value;});
+      title.input.addEventListener('input',()=>{
+        q.heading=title.input.value;
+        const caption=$('workflow-fields').querySelector('[data-workflow-title="'+q.id+'"]');
+        if(caption)caption.textContent=q.heading||'New question';
+      });
       const speech=labelInput('Bunny commentary',q.speech,'Optional funny line','textarea',400);
       speech.input.addEventListener('input',()=>{q.speech=speech.input.value;});
       const options=labelInput('Choices, one per line',q.options.join('\n'),'Option one\nOption two','textarea',600);
@@ -204,11 +255,18 @@
   }
   $('add-question').addEventListener('click',()=>{
     if(extraQuestions.length>=5){notice('Maximum five extra questions.',true);return;}
-    extraQuestions.push({id:'extra-'+extraQuestions.length,heading:'',speech:'',options:['','']});renderExtra();
+    const id='extra-'+nextExtraId++;
+    extraQuestions.push({id,heading:'',speech:'',options:['','']});
+    stepOrder.push(id);enabledSteps.add(id);
+    renderExtra();renderWorkflow();
+    $('extra-questions').lastElementChild.querySelector('input').focus();
   });
   $('settings-form').addEventListener('submit',async e=>{
     e.preventDefault();const save=e.submitter;save.disabled=true;
-    const settings={senderName:$('sender-name').value,siteLabel:$('site-label').value,screens:{},outingLabels:{},detail:{},areaLabels:[],extraQuestions};
+    const extraIds=new Map(extraQuestions.map((q,index)=>[q.id,'extra-'+index]));
+    const workflow=stepOrder.filter(key=>enabledSteps.has(key)).map(key=>extraIds.get(key)||key);
+    const settings={senderName:$('sender-name').value,siteLabel:$('site-label').value,screens:{},outingLabels:{},
+      detail:{},areaLabels:[],timeLabels:[],timeHeading:$('time-heading').value,workflow,extraQuestions};
     document.querySelectorAll('[data-screen]').forEach(x=>{
       if(!settings.screens[x.dataset.screen])settings.screens[x.dataset.screen]={};
       settings.screens[x.dataset.screen][x.dataset.field]=x.value;
@@ -219,18 +277,12 @@
       settings.detail[x.dataset.detail][x.dataset.field]=x.dataset.field==='options'?x.value.split('\n').map(y=>y.trim()):x.value;
     });
     document.querySelectorAll('[data-area]').forEach(x=>{settings.areaLabels[Number(x.dataset.area)]=x.value;});
+    document.querySelectorAll('[data-time]').forEach(x=>{settings.timeLabels[Number(x.dataset.time)]=x.value;});
     try{
       const result=await api('save','POST',{settings});
-      state.settings=result.settings;notice('Saved. Refresh the visitor page to see the updated invitation.');
-      renderSettings();
+      state.settings=result.settings;
+      notice('Workflow saved. Guests see these changes the next time they unlock an invitation.');
     }catch(error){notice(error.message,true);}finally{save.disabled=false;}
   });
-  $('owner-password-form').addEventListener('submit',async e=>{
-    e.preventDefault();const save=e.submitter;save.disabled=true;
-    try{
-      await api('password','POST',{currentPassword:$('old-owner-password').value,newPassword:$('new-owner-password').value});
-      e.currentTarget.reset();loggedOut();notice('Owner password updated. Sign in with the new password.');
-    }catch(error){notice(error.message,true);}finally{save.disabled=false;}
-  });
-  loadAuthMode().finally(refresh);
+  refresh();
 })();

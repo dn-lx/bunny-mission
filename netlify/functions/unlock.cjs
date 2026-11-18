@@ -15,13 +15,15 @@ exports.handler = async function (event) {
   if (typeof code !== 'string' || !/^[A-Z0-9-]{4,32}$/i.test(code)) return reply(401, { message: 'That password does not seem right.' });
   const stored = process.env.GO_OUT_INVITES_JSON;
   let invites = require('../../lib/invites.cjs');
-  if (process.env.BUNNY_OWNER_CREDENTIALS) {
+  let readGuestSettings;
+  if (process.env.BUNNY_STUDIO_MEPLUS_AUTH || process.env.BUNNY_OWNER_SESSION_SECRET) {
     try {
       // Legacy handler must connect Netlify Blobs to the Lambda event explicitly.
       const {connectLambda} = await import('@netlify/blobs');
       connectLambda(event);
-      const {readInvites} = await import('../../lib/owner-store.mjs');
+      const {readInvites,readSettings,publicSettings} = await import('../../lib/owner-store.mjs');
       invites = await readInvites();
+      readGuestSettings = async () => publicSettings(await readSettings());
     } catch (error) {
       console.error('Invitation storage unavailable',error?.message || error);
       return reply(503, {message:'The invitation service is temporarily unavailable.'});
@@ -48,5 +50,10 @@ exports.handler = async function (event) {
   if (!match) return reply(401, { message: 'That password does not seem right. Try again?' });
   const name = String(match.name || 'you').trim().slice(0, 48);
   const id = String(match.id || 'invite').slice(0, 30).replace(/[^a-zA-Z0-9_-]/g, '');
-  return reply(200, { ok: true, guestName: name, inviteId: id });
+  try {
+    const settings = readGuestSettings ? await readGuestSettings() : {};
+    return reply(200, { ok: true, guestName: name, inviteId: id, settings });
+  } catch {
+    return reply(503, { message: 'The invitation service is temporarily unavailable.' });
+  }
 };

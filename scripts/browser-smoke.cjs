@@ -99,7 +99,7 @@ async function bypassFullscreenPrompt(page) {
         assert.match(await page.locator('#title').innerText(),/no worries/i);
       } else {
         await page.locator('#yes-btn').click();
-        await page.getByRole('heading',{name:'What would you enjoy doing?'}).waitFor({timeout:15000});
+        await page.getByRole('heading',{name:'What would you like to do?'}).waitFor({timeout:15000});
         if(viewport.width===360) {
           await page.getByRole('button',{name:/Coffee or tea/}).click();
           await page.getByRole('heading',{name:'What kind of coffee stop?'}).waitFor();
@@ -125,7 +125,7 @@ async function bypassFullscreenPrompt(page) {
         await page.getByRole('button',{name:/Play again/}).click();
         await page.getByRole('button',{name:/Open the envelope/}).click();
         await page.locator('#yes-btn').click();
-        await page.getByRole('heading',{name:'What would you enjoy doing?'}).waitFor({timeout:15000});
+        await page.getByRole('heading',{name:'What would you like to do?'}).waitFor({timeout:15000});
         await page.getByRole('button',{name:/A walk and exploring/}).click();
         await page.getByRole('heading',{name:'Where should we wander?'}).waitFor();
         await page.getByRole('button',{name:/A park and some nature/}).click();
@@ -140,7 +140,7 @@ async function bypassFullscreenPrompt(page) {
           await page.getByRole('button',{name:/Play again/}).click();
           await page.getByRole('button',{name:/Open the envelope/}).click();
           await page.locator('#yes-btn').click();
-          await page.getByRole('heading',{name:'What would you enjoy doing?'}).waitFor({timeout:15000});
+          await page.getByRole('heading',{name:'What would you like to do?'}).waitFor({timeout:15000});
           await page.getByRole('button',{name:scenario.activity}).click();
           await page.getByRole('heading',{name:scenario.question}).waitFor();
           await page.getByRole('button',{name:scenario.answer}).click();
@@ -193,34 +193,40 @@ async function bypassFullscreenPrompt(page) {
     const customPage=await browser.newPage({viewport:{width:390,height:844}});
     const customErrors=[];
     customPage.on('pageerror',error=>customErrors.push(String(error)));
-    await customPage.route('**/.netlify/functions/public-config',route=>route.fulfill({
+    await customPage.route('**/.netlify/functions/unlock',route=>route.fulfill({
       status:200,contentType:'application/json',
-      body:JSON.stringify({ok:true,settings:{
+      body:JSON.stringify({ok:true,guestName:'Sample Guest',inviteId:'custom-test',settings:{
         senderName:'Alexander',siteLabel:'custom bunny mission',
-        screens:{ask:{heading:'{name}, would you join {sender} for a walk?'}},
+        screens:{
+          ask:{heading:'{name}, would you join {sender} for a walk?'},
+          outing:{heading:'Pick a first plan'}
+        },
         outingLabels:{coffee:'Coffee, obviously'},
+        workflow:['extra-0','outing','schedule'],
+        timeHeading:'When should we meet?',
+        timeLabels:['Early','After lunch','At dusk','Anytime'],
         extraQuestions:[{id:'extra-0',heading:'Which little treat?',speech:'I vote for carrots.',options:['A cupcake','A carrot cake']}]
       }})
-    }));
-    await customPage.route('**/audio/manifest.json',route=>route.fulfill({
-      status:200,contentType:'application/json',body:JSON.stringify({version:1,clips:{}})
     }));
     await customPage.goto(origin,{waitUntil:'domcontentloaded'});
     await bypassFullscreenPrompt(customPage);
     await customPage.locator('#invite-code').fill('TEST');
     await customPage.locator('#unlock-button').click();
-    await customPage.getByRole('heading',{name:'Test Girl, would you join Alexander for a walk?'}).waitFor();
+    await customPage.getByRole('heading',{name:'Sample Guest, would you join Alexander for a walk?'}).waitFor();
     await customPage.locator('#yes-btn').click();
-    await customPage.getByRole('heading',{name:'What would you enjoy doing?'}).waitFor({timeout:12000});
-    await customPage.getByRole('button',{name:/Coffee, obviously/}).click();
-    await customPage.getByRole('button',{name:/A cosy café and a good chat/}).click();
-    await customPage.getByRole('button',{name:/Meet halfway/}).click();
+    await customPage.getByRole('heading',{name:'Which little treat?'}).waitFor({timeout:12000});
+    await customPage.getByRole('button',{name:'A carrot cake'}).click();
+    await customPage.getByRole('heading',{name:'Pick a first plan'}).waitFor();
+    await customPage.getByRole('button',{name:'Coffee, obviously'}).click();
+    await customPage.getByRole('heading',{name:'Which day works for you?'}).waitFor();
+    assert.equal(await customPage.getByRole('button',{name:/After lunch/}).count(),1);
     await customPage.getByRole('button',{name:/Pick a day together later/}).click();
-    await customPage.getByRole('heading',{name:'Which little treat?'}).waitFor();
-    await customPage.getByRole('button',{name:/A carrot cake/}).click();
     const customSummary=await customPage.locator('.summary').innerText();
     assert.match(customSummary,/Which little treat/);
     assert.match(customSummary,/A carrot cake/);
+    assert.match(customSummary,/Coffee, obviously/);
+    assert.match(customSummary,/Anytime/);
+    assert.doesNotMatch(customSummary,/Convenient area|Your preference/);
     assert.deepEqual(customErrors,[],'Configured guest flow has page errors');
     await customPage.close();
     console.log('PASS: owner-edited prompts, renamed activity and extra question end-to-end');
@@ -230,3 +236,4 @@ async function bypassFullscreenPrompt(page) {
     await new Promise(resolve=>server.close(resolve));
   }
 })().catch(err => { console.error(err); process.exitCode=1; });
+

@@ -13,7 +13,7 @@ test('inline browser JavaScript has valid syntax', () => {
 test('invitation uses only facial emoji, but keeps accessible Yes/No labels', () => {
   assert.match(js, /makeButton\('', 'btn-primary emoji-choice'/);
   assert.match(js, /makeButton\('', 'btn-secondary emoji-choice'/);
-  assert.match(js, /aria-label', 'Yes, I would like to go out with Alex'/);
+  assert.match(js, /aria-label', 'Yes, I would like to go out with '\+sender/);
   assert.match(js, /aria-label', 'No, thank you'/);
   assert.doesNotMatch(js, /makeButton\('Yes'/);
   assert.doesNotMatch(js, /makeButton\('No'/);
@@ -79,8 +79,7 @@ test('activity details are meaningful and specific to the selected plan', () => 
     assert.ok(js.includes(detail));
   }
   assert.match(js, /picks\.activityKey=key/);
-  assert.match(js, /nav\('detail'\)/);
-  assert.match(js, /nav\('area'\)/);
+  assert.match(js, /flows\[flows.indexOf\(step\)\+1\]/);
 });
 test('calendar is interactive, excludes previous days, and offers time options', () => {
   assert.match(js, /function addSchedule\(\)/);

@@ -1,75 +1,73 @@
-import { createHash, createHmac, randomBytes, scryptSync, timingSafeEqual } from 'node:crypto';
+import { createHash, createHmac, randomBytes, timingSafeEqual } from 'node:crypto';
 import { getStore } from '@netlify/blobs';
 import { ownerEmail, readInvites, writeInvites, readSettings, writeSettings, sanitizedSettings, publicInvites, makeInvite } from '../../lib/owner-store.mjs';
 
-const COOKIE='__Host-bunny_owner';
-const MAX_AGE=8*60*60;
+const COOKIE='__Host-bunny_studio';
+const MAX_AGE=60*60;
 const headers={'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store','X-Content-Type-Options':'nosniff','Referrer-Policy':'no-referrer','X-Frame-Options':'DENY','Content-Security-Policy':"default-src 'none'; frame-ancestors 'none'"};
 const reply=(data,status=200,extra={})=>new Response(JSON.stringify(data),{status,headers:{...headers,...extra}});
-const secret=()=>process.env.BUNNY_OWNER_SESSION_SECRET;
-const sign=text=>createHmac('sha256',secret()).update(text).digest('base64url');
-const same=(a,b)=>{const x=Buffer.from(a||''),y=Buffer.from(b||'');return x.length===y.length&&timingSafeEqual(x,y);};
-function makeToken(email){
-  const payload=Buffer.from(JSON.stringify({sub:email,exp:Math.floor(Date.now()/1000)+MAX_AGE,csrf:randomBytes(18).toString('base64url')})).toString('base64url');
-  return payload+'.'+sign(payload);
+function readAuthConfig() {
+  try {
+    const {url,key,uid,sessionSecret} = JSON.parse(process.env.BUNNY_STUDIO_MEPLUS_AUTH || '{}');
+    if (!/^https:\/\/[a-z0-9]+\.supabase\.co$/.test(url) ||
+        !/^sb_publishable_[a-zA-Z0-9_-]+$/.test(key) ||
+        !/^[a-f0-9]{8}-(?:[a-f0-9]{4}-){3}[a-f0-9]{12}$/.test(uid) ||
+        !/^[a-f0-9]{64}$/.test(sessionSecret)) return null;
+    return {url,key,uid,sessionSecret};
+  } catch {
+    return null;
+  }
 }
-function session(request){
-  if(!secret()||secret().length<32)return null;
+const sign = (text,config) => createHmac('sha256',config.sessionSecret).update(text).digest('base64url');
+function same(a,b) {
+  if (typeof a !== 'string' || typeof b !== 'string' || !a || !b) return false;
+  const x=Buffer.from(a), y=Buffer.from(b);
+  return x.length===y.length && timingSafeEqual(x,y);
+}
+function makeToken(config, maxAge) {
+  const payload=Buffer.from(JSON.stringify({sub:config.uid,exp:Math.floor(Date.now()/1000)+maxAge,csrf:randomBytes(18).toString('base64url')})).toString('base64url');
+  return payload+'.'+sign(payload,config);
+}
+function session(request,config) {
   const raw=request.headers.get('cookie')||'';
   const value=raw.split(';').map(x=>x.trim()).find(x=>x.startsWith(COOKIE+'='))?.slice(COOKIE.length+1);
-  if(!value||value.length>2000)return null;
-  const [payload,signature]=value.split('.');
-  if(!payload||!signature||!same(signature,sign(payload)))return null;
-  try{
+  if (!value || value.length>2000) return null;
+  const [payload,signature,extra]=value.split('.');
+  if (!payload || extra!==undefined || !same(signature,sign(payload,config))) return null;
+  try {
     const obj=JSON.parse(Buffer.from(payload,'base64url').toString('utf8'));
-    return obj.sub===ownerEmail&&obj.exp>Math.floor(Date.now()/1000)&&obj.exp<Math.floor(Date.now()/1000)+MAX_AGE+30 ? obj : null;
-  }catch{return null;}
+    const now=Math.floor(Date.now()/1000);
+    return obj.sub===config.uid && obj.exp>now && obj.exp<=now+MAX_AGE && typeof obj.csrf==='string' ? obj : null;
+  } catch {
+    return null;
+  }
 }
-function envCredentials(){try{return JSON.parse(process.env.BUNNY_OWNER_CREDENTIALS||'{}');}catch{return {};}}
-const authProvider=()=>process.env.BUNNY_OWNER_AUTH_PROVIDER==='meplus'?'meplus':'local';
-function mePlusAuthConfig(){
-  const url=(process.env.BUNNY_MEPLUS_SUPABASE_URL||'').replace(/\/+$/,'');
-  const key=process.env.BUNNY_MEPLUS_SUPABASE_PUBLISHABLE_KEY||'';
-  const uid=process.env.BUNNY_MEPLUS_OWNER_UID||'';
-  return {url,key,uid,ready:url.startsWith('https://')&&Boolean(key)&&/^[0-9a-f-]{36}$/i.test(uid)};
-}
-const credentialStore=()=>getStore({name:'alex-bunny-owner-auth-develop',consistency:'strong'});
-async function readCredentials(){return (await credentialStore().get('owner-credential',{type:'json'}))||envCredentials();}
-async function saveCredentials(obj){await credentialStore().setJSON('owner-credential',obj);}
-function passwordMatches(pw,cred){
-  if(typeof pw!=='string'||pw.length>200||pw.length<12||cred.email!==ownerEmail||!/^[0-9a-f]{32}$/.test(cred.salt||'')||!/^[0-9a-f]{64}$/.test(cred.hash||''))return false;
-  const target=Buffer.from(cred.hash,'hex');
-  const computed=scryptSync(pw,Buffer.from(cred.salt,'hex'),32);
-  return timingSafeEqual(target,computed);
-}
-function hashedCredentials(password){
-  if(typeof password!=='string'||password.length<14||password.length>120)throw Error('Owner password must be at least 14 characters.');
-  const salt=randomBytes(16).toString('hex');
-  return {email:ownerEmail,salt,hash:scryptSync(password,Buffer.from(salt,'hex'),32).toString('hex')};
-}
-async function verifyMePlusCredentials(email,password){
-  const config=mePlusAuthConfig();
-  if(!config.ready)return {ok:false,unavailable:true};
-  let response;
-  try{
-    response=await fetch(config.url+'/auth/v1/token?grant_type=password',{
+async function verifyMePlusCredentials(config,email,password) {
+  try {
+    const response=await fetch(config.url+'/auth/v1/token?grant_type=password',{
       method:'POST',
-      headers:{'Content-Type':'application/json','apikey':config.key},
+      headers:{'Content-Type':'application/json',apikey:config.key},
       body:JSON.stringify({email,password}),
+      redirect:'error',
       signal:AbortSignal.timeout(10000)
     });
-  }catch{return {ok:false,unavailable:true};}
-  if(response.status===429)return {ok:false,rateLimited:true};
-  if(response.status===400||response.status===401)return {ok:false};
-  if(!response.ok)return {ok:false,unavailable:true};
-  let data;
-  try{data=await response.json();}catch{return {ok:false,unavailable:true};}
-  const user=data?.user;
-  return {ok:Boolean(data?.access_token&&user?.id===config.uid&&String(user?.email||'').trim().toLowerCase()===ownerEmail)};
+    if (response.status===429) return {status:429,error:'Me+ sign-in is temporarily rate limited. Try again shortly.'};
+    if (response.status===400 || response.status===401) return {status:401};
+    if (!response.ok) return {status:503,error:'Me+ sign-in is temporarily unavailable. Try again shortly.'};
+    const {user,access_token,expires_in}=await response.json();
+    if (!access_token || user?.id!==config.uid || user.email?.toLowerCase()!==ownerEmail || !user.email_confirmed_at) return {status:401};
+    if (user.factors?.some(factor=>factor.status==='verified')) {
+      return {status:403,error:'This Me+ account requires multi-factor authentication. Bunny Studio does not support that sign-in method yet.'};
+    }
+    if (!Number.isSafeInteger(expires_in) || expires_in<1) return {status:503,error:'Me+ returned an invalid session.'};
+    return {status:200,maxAge:Math.min(MAX_AGE,expires_in)};
+  } catch {
+    return {status:503,error:'Me+ sign-in is temporarily unavailable. Try again shortly.'};
+  }
 }
-async function loginGuard(request){
+async function loginGuard(request,config){
   const ip=(request.headers.get('x-nf-client-connection-ip')||request.headers.get('x-forwarded-for')||'unknown').split(',')[0].trim().slice(0,100);
-  const key=createHash('sha256').update(ip+'|'+secret()).digest('hex');
+  const key=createHash('sha256').update(ip+'|'+config.sessionSecret).digest('hex');
   const guardStore=getStore({name:'alex-bunny-owner-throttle-develop',consistency:'strong'});
   let record=(await guardStore.get(key,{type:'json'}))||{count:0,start:Date.now()};
   if(Date.now()-record.start>15*60*1000)record={count:0,start:Date.now()};
@@ -79,10 +77,11 @@ function sameOrigin(request){
   const origin=request.headers.get('origin');
   try{return Boolean(origin)&&new URL(origin).origin===new URL(request.url).origin;}catch{return false;}
 }
-const cookie=token=>COOKIE+'='+token+'; Path=/; Secure; HttpOnly; SameSite=Strict; Max-Age='+MAX_AGE;
+const cookie=(token,maxAge)=>COOKIE+'='+token+'; Path=/; Secure; HttpOnly; SameSite=Strict; Max-Age='+maxAge;
 const clearCookie=()=>COOKIE+'=; Path=/; Secure; HttpOnly; SameSite=Strict; Max-Age=0';
 export default async function owner(request){
-  if(!secret()||secret().length<32||(authProvider()==='local'&&!process.env.BUNNY_OWNER_CREDENTIALS)||(authProvider()==='meplus'&&!mePlusAuthConfig().ready))return reply({error:'Owner sign-in has not been provisioned.'},503);
+  const config=readAuthConfig();
+  if (!config) return reply({error:'Me+ sign-in is unavailable on this deployment.'},503);
   const action=new URL(request.url).searchParams.get('action')||'state';
   if(!['GET','POST'].includes(request.method))return reply({error:'Method not allowed.'},405);
   if(request.method==='POST'&&!sameOrigin(request))return reply({error:'Origin rejected.'},403);
@@ -94,35 +93,25 @@ export default async function owner(request){
     try{body=JSON.parse(raw);}catch{return reply({error:'Invalid JSON.'},400);}
   }
   try{
-    if(action==='auth-mode'&&request.method==='GET')return reply({provider:authProvider()});
     if(action==='login'&&request.method==='POST'){
       const email=String(body.email||'').trim().toLowerCase();
-      const guard=await loginGuard(request);
+      const guard=await loginGuard(request,config);
       if(guard.record.count>=6)return reply({error:'Too many attempts. Try again later.'},429);
       const password=body.password;
       if(email!==ownerEmail||typeof password!=='string'||password.length>1024){
         await guard.recordFailure();
         return reply({error:'Invalid email or password.'},401);
       }
-      if(authProvider()==='meplus'){
-        const result=await verifyMePlusCredentials(email,password);
-        if(result.rateLimited)return reply({error:'Me+ sign-in is temporarily rate-limited. Try again shortly.'},429);
-        if(result.unavailable)return reply({error:'Me+ sign-in is temporarily unavailable. Try again shortly.'},503);
-        if(!result.ok){
-          await guard.recordFailure();
-          return reply({error:'Invalid email or password.'},401);
-        }
-      }else{
-        const cred=await readCredentials();
-        if(!passwordMatches(password,cred)){
-          await guard.recordFailure();
-          return reply({error:'Invalid email or password.'},401);
-        }
+      const result=await verifyMePlusCredentials(config,email,password);
+      if (result.status===401) {
+        await guard.recordFailure();
+        return reply({error:'Me+ did not accept that email and password.'},401);
       }
+      if (result.status!==200) return reply({error:result.error},result.status);
       await guard.clear();
-      return reply({ok:true,email:ownerEmail},200,{'Set-Cookie':cookie(makeToken(ownerEmail))});
+      return reply({ok:true,email:ownerEmail},200,{'Set-Cookie':cookie(makeToken(config,result.maxAge),result.maxAge)});
     }
-    const user=session(request);
+    const user=session(request,config);
     if(!user)return reply({error:'Sign in required.'},401);
     if(action==='state'&&request.method==='GET'){
       const [settings,invites]=await Promise.all([readSettings(),readInvites()]);
@@ -153,16 +142,9 @@ export default async function owner(request){
       await writeInvites(next);
       return reply({ok:true,invites:publicInvites(next)});
     }
-    if(action==='password'){
-      if(authProvider()==='meplus')return reply({error:'Change your password in your Me+ account settings.'},403);
-      const cred=await readCredentials();
-      if(!passwordMatches(body.currentPassword,cred))return reply({error:'Incorrect current password.'},403);
-      await saveCredentials(hashedCredentials(body.newPassword));
-      return reply({ok:true},200,{'Set-Cookie':clearCookie()});
-    }
     return reply({error:'Unknown action.'},404);
   }catch(error){
-    console.error('Owner request failed',error?.message||error);
-    return reply({error:error?.message&&/^(A maximum|Each extra|Name and|Invitation ID|Password must|Owner password)/.test(error.message)?error.message:'Unable to complete the request.'},400);
+    console.error('Owner request failed',action,error?.name);
+    return reply({error:error?.message&&/^(A maximum|Each extra|Name and|Invitation ID|Password must|Enter a new password|The activity follow-up)/.test(error.message)?error.message:'Unable to complete the request.'},400);
   }
 }
