@@ -335,6 +335,8 @@ h1 {
 .calendar-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 3px; text-align: center; }
 .calendar-weekday { font-size: 11px; color: var(--muted); }
 .calendar-day { height: clamp(32px, 4.7dvh, 42px); }
+.calendar-day.available { border-color: #e9b7a9; }
+.calendar-day:disabled { opacity: .34; background: transparent; color: var(--muted); }
 .calendar-day.blank { visibility: hidden; }
 .calendar-day.today { border-color: var(--rose); }
 .calendar-day.selected, .time-option.selected { background: var(--berry); color: white; }
