@@ -10,7 +10,9 @@ const server = http.createServer((req, res) => {
   const pathname = new URL(req.url, 'http://localhost').pathname;
   if (pathname === '/.netlify/functions/unlock' && req.method === 'POST') {
     res.writeHead(200, {'Content-Type':'application/json'});
-    res.end(JSON.stringify({ ok:true, guestName:'Test Girl', inviteId:'e2e-test' }));
+    const now = new Date();
+    const availableDate = [now.getFullYear(),String(now.getMonth()+1).padStart(2,'0'),String(now.getDate()).padStart(2,'0')].join('-');
+    res.end(JSON.stringify({ ok:true, guestName:'Test Girl', inviteId:'e2e-test', settings:{availableDays:[availableDate]} }));
     return;
   }
   const name = pathname === '/' ? 'index.html' : pathname.slice(1);
