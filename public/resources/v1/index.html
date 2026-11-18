@@ -1,0 +1,887 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#fff7ed">
+  <link rel="icon" href="/video/flow/poster.webp" type="image/png">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <meta name="description" content="A tiny adventure with a very important bunny.">
+  <title>A tiny bunny mission ✦</title>
+  <link rel="stylesheet" href="/invitation.css">
+</head>
+<body data-locked="true">
+  <div class="decor" aria-hidden="true"><span class="d one">♡</span><span class="d two">✧</span><span class="d three">✦</span><span class="d four">♡</span></div>
+  <div class="gate" id="gate" role="dialog" aria-modal="true" aria-labelledby="gate-heading">
+    <section class="gate-screen" id="full-screen-gate">
+      <div class="gate-art" aria-hidden="true">
+        <div class="gate-film">
+          <video class="gate-character" playsinline webkit-playsinline preload="none" poster="/video/flow/poster.webp"></video>
+        </div>
+      </div>
+      <div class="gate-copy">
+        <h1 id="gate-heading">A tiny surprise awaits.</h1>
+        <p class="gate-desc">Bunny has one little request. Make this screen as big as you can.</p>
+      </div>
+      <div class="gate-actions">
+        <button class="btn btn-primary" id="request-fullscreen" type="button">⛶ Enter fullscreen</button>
+        <p class="gate-help" id="fullscreen-help" role="status"></p>
+        <button class="btn btn-secondary" id="manual-fullscreen" type="button" hidden style="margin-top:8px">I've expanded my screen →</button>
+      </div>
+    </section>
+    <section class="gate-screen" id="password-gate" hidden>
+      <div class="gate-art" aria-hidden="true">
+        <div class="gate-film">
+          <video class="gate-character" playsinline webkit-playsinline preload="none" poster="/video/flow/poster.webp"></video>
+        </div>
+      </div>
+      <div class="gate-copy">
+        <h1 id="password-heading">Secret bunny entrance</h1>
+        <p class="gate-desc">Enter your invitation password to open the surprise.</p>
+      </div>
+      <div class="gate-actions">
+        <form id="unlock-form" autocomplete="off">
+          <label class="gate-label" for="invite-code">Your secret password</label>
+          <input class="gate-code" id="invite-code" type="password" inputmode="text" spellcheck="false" autocapitalize="characters" autocomplete="off" placeholder="••••••••••" maxlength="32" required>
+          <button class="btn btn-primary" id="unlock-button" type="submit">Open my surprise ♡</button>
+        </form>
+        <p class="gate-hint" id="gate-error" role="status"></p>
+        <button id="gate-voice-replay" class="voice-replay" type="button">▶ Hear the bunny</button>
+      </div>
+    </section>
+  </div>
+
+  <main class="layout" id="app-main">
+    <header class="topline">
+      <div class="brand"><span class="brand-icon" aria-hidden="true">♡</span> tiny bunny mission</div>
+      <button id="voice-control" class="voice-control" type="button" aria-label="Mute Nibbles" aria-pressed="true">🔊</button>
+    </header>
+    <section class="shell" aria-label="Bunny's tiny invitation">
+      <div class="art-pane">
+        <div class="bunny-wrap" data-mood="smile" id="bunny" role="button" tabindex="0" aria-label="Replay Nibbles">
+          <video id="bunny-video" class="bunny-film" playsinline webkit-playsinline preload="metadata"
+                 poster="/video/flow/poster.webp" aria-hidden="true"></video>
+        </div>
+        <div class="confetti hidden" id="confetti" aria-hidden="true"></div>
+      </div>
+      <div class="content-pane">
+        <div class="copy enter" id="copy">
+          <div class="status"><span class="chapter" id="chapter"></span><div class="dots" id="dots" aria-hidden="true"></div></div>
+          <div aria-live="polite" aria-atomic="true">
+            <h1 id="title">A little bunny has a question.</h1>
+            <p class="description" id="description"></p>
+          </div>
+          <button id="voice-replay" class="voice-replay" type="button" aria-label="Replay Nibbles">▶</button>
+          <details class="dialogue"><summary>Read bunny’s line</summary><p class="bubble" id="bubble"></p></details>
+        </div>
+        <div class="interaction">
+          <div class="actions" id="actions"></div>
+          <div class="navline"><button class="back hidden" id="back" type="button" aria-label="Go back">←</button><span class="feedback" id="feedback" role="status"></span></div>
+        </div>
+      </div>
+    </section>
+  </main>
+  <!-- Netlify detects this at build time and stores only responses explicitly submitted by a visitor. -->
+  <form name="going-out-develop" data-netlify="true" netlify-honeypot="bot-field" hidden>
+    <input name="form-name" value="going-out-develop" type="hidden">
+    <input name="bot-field" type="text">
+    <input name="invite" type="text">
+    <input name="recipient" type="text">
+    <input name="outing" type="text">
+    <input name="energy" type="text">
+    <input name="timing" type="text">
+    <input name="detail" type="text">
+    <input name="meet_area" type="text">
+    <input name="day" type="text">
+    <input name="time" type="text">
+    <input name="decision" type="text">
+    <input name="extra_answers" type="text">
+    <input name="subject" type="hidden" value="Alex received a bunny invitation answer">
+  </form>
+  <script>
+    (() => {
+      'use strict';
+      const query = new URLSearchParams(window.location.search);
+      const clean = (value, fallback) => (typeof value === 'string' && value.trim() ? value.trim().slice(0, 48).replace(/[<>]/g, '') : fallback);
+      let person = 'you';
+      let inviteId = '';
+      let sender = 'Alex';
+      const title = document.getElementById('title');
+      const description = document.getElementById('description');
+      const bubble = document.getElementById('bubble');
+      const chapter = document.getElementById('chapter');
+      const actions = document.getElementById('actions');
+      const dots = document.getElementById('dots');
+      const back = document.getElementById('back');
+      const feedback = document.getElementById('feedback');
+      const copy = document.getElementById('copy');
+      const dialogue = copy.querySelector('.dialogue');
+      const bunny = document.getElementById('bunny');
+      const bunnyVideo = document.getElementById('bunny-video');
+      const gateVideo = document.querySelector('#password-gate .gate-character');
+      const flowReady = fetch('/video/flow/manifest.json')
+        .then(response => response.ok ? response.json() : {})
+        .then(data => {
+          if (data.version !== 1) return;
+          for (const [key, path] of Object.entries(data.clips || {})) {
+            if (/^\/video\/flow\/[a-z-]+\.mp4$/.test(path)) flowClips[key] = path;
+          }
+        })
+        .catch(() => { /* Device speech is available if the recordings fail to load. */ });
+      const confetti = document.getElementById('confetti');
+      const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      let step = 'intro';
+      let tries = 0;
+      let escapeTimer = null;
+      let lastTouchDodge = 0;
+      let voiceOn = true;
+      let unlocked = false;
+      const picks = { outing: '', activityKey: '', detail: '', meetArea: '', day: '', time: '' };
+      const planningSteps = ['outing','detail','area','schedule'];
+      let availableDays = new Set();
+      let flows = ['ask',...planningSteps,'success'];
+      let timeQuestion = 'What time of day suits you?';
+      const calendarTimes = [['☀️','Morning'],['🌤️','Afternoon'],['🌙','Evening'],['✨','Flexible time']];
+      const extraQuestions = [];
+      const extraAnswers = {};
+      const editedVoiceClips = new Set();
+      let configuredAskTemplate = '{name}, would you like to go out with {sender}?';
+      const fillQuestion = text => String(text).replace(/\{(name|sender)\}/g, (_,key) => key==='name' ? person : sender);
+      const advance = () => nav(flows[flows.indexOf(step)+1] || 'success');
+      function resetAnswers() {
+        for (const key of Object.keys(picks)) picks[key]='';
+        for (const key of Object.keys(extraAnswers)) delete extraAnswers[key];
+      }
+      const activityQuestions = {
+        coffee: { heading: 'What kind of coffee stop?', speech: 'Coffee? Excellent! I like mine with two carrots. I know, I know... weird.', options: [['🛋️','A cosy café and a good chat'], ['🚶','Takeaway coffee and a stroll'], ['🍵','Tea or a different drink'], ['✨','You two can choose']] },
+        walk: { heading: 'Where should we wander?', speech: 'I am extremely good at walking. Except when there is a carrot shop nearby.', options: [['🌳','A park and some nature'], ['🏙️','Exploring the city'], ['🌊','Somewhere by the water'], ['✨','You two can choose']] },
+        food: { heading: 'What food sounds good?', speech: 'Food? Now we are speaking my language. Does the menu have carrot cake?', options: [['🍝','Italian'], ['🍜','Asian food'], ['🌮','Street food or casual bites'], ['✨','You two can choose']] },
+        sweet: { heading: 'Which sweet treat?', speech: 'Sweet treats! I have been training for this question my entire bunny life.', options: [['🥐','Bakery or pastries'], ['🍦','Ice cream or gelato'], ['🧇','Waffles or pancakes'], ['✨','You two can choose']] },
+        surprise: { heading: 'What should the surprise feel like?', speech: 'A surprise! Ooh, I love a mystery. Especially when nobody hides my carrots.', options: [['🛋️','Calm and cosy'], ['🎳','Playful and fun'], ['🌿','Outside and exploring'], ['✨','Alex can come up with something']] }
+      };
+      const screens = {
+        intro: {
+          chapter: 'a tiny surprise',
+          heading: `Hey, ${person}!`,
+          subheading: 'A very small bunny has been sent on a very important mission. It takes about 20 seconds.',
+          speech: 'Well, hello there! My name’s Bunny. I brought a letter, a bow tie, and absolutely zero qualifications for this job.',
+          mood: 'smile'
+        },
+        ask: {
+          chapter: 'the big question',
+          heading: `${person}, would you like to go out with ${sender}?`,
+          subheading: 'That’s the whole big, very important question. What do you think?',
+          speech: 'Would you like to go out with Alex?',
+          mood: 'wink'
+        },
+        outing: {
+          chapter: 'step 1 of 4',
+          heading: 'What would you like to do?',
+          subheading: 'Pick an idea that actually sounds fun to you.',
+          speech: 'What would you like to do together?',
+          mood: 'smile',
+          options: [
+            ['☕','Coffee or tea','coffee'], ['🌿','A walk and exploring','walk'],
+            ['🍝','A bite to eat','food'], ['🍰','Something sweet','sweet'],
+            ['🎁','A little surprise','surprise']
+          ]
+        },
+        detail: {
+          chapter: 'step 2 of 4',
+          heading: 'Just one tiny detail...',
+          subheading: 'So Alex can plan something you would actually like.',
+          speech: 'This is where I pretend to be a very professional rabbit assistant.',
+          mood: 'wink'
+        },
+        area: {
+          chapter: 'step 3 of 4',
+          heading: 'Where would be convenient?',
+          subheading: 'No need to pick a specific place yet.',
+          speech: 'Where would you feel most comfortable meeting?',
+          mood: 'smile',
+          options: [
+            ['📍','Somewhere near me'], ['🧭','Somewhere near Alex'],
+            ['🤝','Meet halfway'], ['💬','Choose a place together']
+          ]
+        },
+        schedule: {
+          chapter: 'step 4 of 4',
+          heading: 'Which day works for you?',
+          subheading: 'Pick a day from the calendar and a time of day, or decide together later.',
+          speech: 'Pick a day and time, or decide together later.',
+          mood: 'wink'
+        },
+        success: {
+          chapter: 'mission complete',
+          heading: 'Bunny is doing happy little jumps!',
+          subheading: `You said yes to going out with ${sender}. I think this deserves a tiny celebration.`,
+          speech: 'Lovely. Your plans are ready to share with Alex.',
+          mood: 'happy'
+        },
+        decline: {
+          chapter: '',
+          heading: 'No worries at all',
+          subheading: '',
+          speech: 'No worries at all. Have a lovely day.',
+          mood: 'smile'
+        }
+      };
+      function makeButton(label, cls, handler, id) {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = `btn ${cls}`;
+        btn.textContent = label;
+        if (id) btn.id = id;
+        btn.addEventListener('click', handler);
+        return btn;
+      }
+      function nav(next) {
+        step = next;
+        tries = 0;
+        clearTimeout(escapeTimer);
+        feedback.textContent = '';
+        render();
+        window.scrollTo(0, 0);
+      }
+      const flowClips = Object.create(null);
+      const narration = new Audio();
+      const voiceControl = document.getElementById('voice-control');
+      let stopPlayback = null;
+      let voiceSession = 0;
+      let speechUtterance;
+      let gateSpeechKey = 'password';
+      let gateSpeech = 'Psst. Enter your invitation password to open the surprise.';
+      const sceneTrackKey = () => step === 'detail' ? 'detail-'+picks.activityKey : step;
+
+      function stopVoice() {
+        ++voiceSession;
+        stopPlayback?.();
+        narration.pause();
+        bunnyVideo.pause();
+        gateVideo.pause();
+        bunnyVideo.classList.remove('is-transitioning');
+        gateVideo.classList.remove('is-transitioning');
+        speechUtterance = null;
+        try { window.speechSynthesis?.cancel(); } catch (_) { /* Older mobile browsers. */ }
+      }
+
+      function speakWithDevice(text, token, onComplete) {
+        if (token !== voiceSession || !voiceOn) return;
+        if (!('speechSynthesis' in window) || !('SpeechSynthesisUtterance' in window)) {
+          onComplete?.();
+          return;
+        }
+        const msg = new SpeechSynthesisUtterance(text);
+        speechUtterance = msg;
+        const voices = window.speechSynthesis.getVoices();
+        const soft = voices.find(v => /^en-US$/i.test(v.lang) && /samantha|ava|jenny|aria|allison|michelle|karen|susan|victoria/i.test(v.name))
+          || voices.find(v => /^en-US$/i.test(v.lang));
+        if (soft) msg.voice = soft;
+        msg.lang = soft?.lang || 'en-US';
+        msg.rate = .88;
+        msg.pitch = 1.25;
+        const finish = () => {
+          if (token !== voiceSession) return;
+          speechUtterance = null;
+          onComplete?.();
+        };
+        msg.onend = finish;
+        msg.onerror = finish;
+        try { window.speechSynthesis.speak(msg); } catch (_) { finish(); }
+      }
+
+      function playFlowClip(media, path, token, onComplete, onFailure) {
+        const isVideo = media instanceof HTMLVideoElement;
+        function reveal() {
+          if (token === voiceSession && isVideo) media.classList.remove('is-transitioning');
+        }
+        function cleanup() {
+          media.removeEventListener('ended', done);
+          media.removeEventListener('error', failed);
+          if (isVideo) media.removeEventListener('loadeddata', reveal);
+          stopPlayback = null;
+        }
+        function done() {
+          if (token !== voiceSession || stopPlayback !== cleanup) return;
+          cleanup();
+          onComplete?.();
+        }
+        function failed() {
+          if (token !== voiceSession || stopPlayback !== cleanup) return;
+          cleanup();
+          if (isVideo) media.classList.remove('is-transitioning');
+          onFailure();
+        }
+        stopPlayback = cleanup;
+        media.addEventListener('ended', done);
+        media.addEventListener('error', failed);
+        if (isVideo) {
+          media.classList.add('is-transitioning');
+          media.addEventListener('loadeddata', reveal, {once:true});
+        }
+        media.src = path;
+        media.play().catch(failed);
+      }
+
+      function enableNarration() {
+        if (!voiceOn) return;
+        stopVoice();
+        // Grant the persistent video and its audio fallback playback on the tap
+        // that submits the password, before the asynchronous server response.
+        bunnyVideo.src = '/video/flow/start.mp4';
+        bunnyVideo.play().catch(() => {});
+        narration.src = '/audio/narration-start.mp3';
+        narration.play().catch(() => {});
+      }
+
+      function say(text,clipKey=sceneTrackKey(),onComplete) {
+        text=fillQuestion(text);
+        stopVoice();
+        if (!voiceOn) return false;
+        const token = voiceSession;
+        const key = clipKey?.startsWith('detail-') ? 'detail' : clipKey;
+        const path = !editedVoiceClips.has(clipKey) && flowClips[key];
+        if (!path) {
+          speakWithDevice(text, token, onComplete);
+          return false;
+        }
+        const fallback = () => speakWithDevice(text, token, onComplete);
+        const playAudio = () => playFlowClip(narration, path, token, onComplete, fallback);
+        if (reduceMotion) playAudio();
+        else playFlowClip(unlocked ? bunnyVideo : gateVideo, path, token, onComplete, playAudio);
+        return true;
+      }
+
+      function updateVoiceControl() {
+        voiceControl.textContent = voiceOn ? '🔊' : '🔇';
+        voiceControl.setAttribute('aria-label', voiceOn ? 'Mute Nibbles' : 'Unmute Nibbles');
+        voiceControl.setAttribute('aria-pressed', String(voiceOn));
+      }
+      function replay() {
+        if (!unlocked) return;
+        voiceOn = true;
+        updateVoiceControl();
+        say(screens[step].speech, sceneTrackKey());
+      }
+      bunny.addEventListener('click', replay);
+      bunny.addEventListener('keydown', event => {
+        if (event.key !== 'Enter' && event.key !== ' ') return;
+        event.preventDefault();
+        replay();
+      });
+      document.getElementById('voice-replay').addEventListener('click', replay);
+      voiceControl.addEventListener('click', () => {
+        voiceOn = !voiceOn;
+        updateVoiceControl();
+        if (voiceOn) replay();
+        else stopVoice();
+      });
+      function fitPasswordAboveKeyboard() {
+        const vv = window.visualViewport;
+        if (vv) document.documentElement.style.setProperty('--visible-height', Math.round(vv.height) + 'px');
+        const gate = document.getElementById('gate');
+        if (!gate) return;
+        gate.classList.toggle('keyboard-open', Boolean(vv && window.innerHeight - vv.height > 100));
+      }
+      window.visualViewport?.addEventListener('resize', fitPasswordAboveKeyboard);
+      window.visualViewport?.addEventListener('scroll', fitPasswordAboveKeyboard);
+      window.addEventListener('orientationchange', () => window.setTimeout(fitPasswordAboveKeyboard, 120));
+      document.getElementById('invite-code').addEventListener('focus', fitPasswordAboveKeyboard);
+      function showPassword() {
+        document.getElementById('full-screen-gate').hidden = true;
+        document.getElementById('password-gate').hidden = false;
+        document.getElementById('gate').setAttribute('aria-labelledby', 'password-heading');
+          fitPasswordAboveKeyboard();
+        say(gateSpeech, gateSpeechKey);
+        document.getElementById('invite-code').focus({ preventScroll:true });
+      }
+      const fullscreenBtn = document.getElementById('request-fullscreen');
+      const manualBtn = document.getElementById('manual-fullscreen');
+      fullscreenBtn.addEventListener('click', async () => {
+        if (!document.documentElement.requestFullscreen) {
+          document.getElementById('fullscreen-help').textContent = 'Your browser cannot switch into fullscreen automatically. On iPhone, use Share → Add to Home Screen; otherwise maximize the page and tap below.';
+          manualBtn.hidden = false;
+          return;
+        }
+        try {
+          const fullscreen = document.documentElement.requestFullscreen({navigationUI:'hide'});
+          enableNarration();
+          await fullscreen;
+          showPassword();
+        } catch (_) {
+          document.getElementById('fullscreen-help').textContent = 'Fullscreen was blocked by your browser. Expand the page manually, then tap below.';
+          manualBtn.hidden = false;
+        }
+      });
+      manualBtn.addEventListener('click', showPassword);
+      document.getElementById('gate-voice-replay').addEventListener('click', () => say(gateSpeech, gateSpeechKey));
+      document.getElementById('unlock-form').addEventListener('submit', async event => {
+        event.preventDefault();
+        const code = document.getElementById('invite-code').value.trim();
+        const button = document.getElementById('unlock-button');
+        const error = document.getElementById('gate-error');
+        enableNarration();
+        error.textContent = ''; button.disabled = true; button.textContent = 'Checking your envelope…';
+        try {
+          const response = await fetch('/.netlify/functions/unlock', {
+            method: 'POST', headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({code}), cache: 'no-store'
+          });
+          const data = await response.json();
+          if (!response.ok || !data.ok) throw new Error(data.message || 'This invitation could not be opened.');
+          person = clean(data.guestName, 'you');
+          inviteId = clean(data.inviteId, 'invite');
+          applyOwnerSettings(data.settings || {});
+          await flowReady;
+          document.body.dataset.locked = 'false';
+          document.getElementById('gate').remove();
+          gateVideo.pause();
+          unlocked = true;
+          nav('ask');
+        } catch (failure) {
+          error.textContent = failure.message || 'Something went wrong. Try again.';
+          gateSpeechKey = 'password-error';
+          gateSpeech = 'Oops! That code does not look quite right. Try another one!';
+          say(gateSpeech, gateSpeechKey);
+          button.disabled = false; button.textContent = 'Open my surprise ♡';
+        }
+      });
+
+      function addChoice(symbol, label, choose) {
+        const btn = document.createElement('button');
+        btn.type = 'button'; btn.className = 'choice';
+        const icon = document.createElement('span'); icon.className = 'choice-icon'; icon.textContent = symbol;
+        icon.setAttribute('aria-hidden', 'true');
+        const text = document.createElement('span'); text.textContent = fillQuestion(label);
+        btn.append(icon,text);
+        btn.addEventListener('click',choose);
+        return btn;
+      }
+      const dayKey = (date) => [date.getFullYear(),String(date.getMonth()+1).padStart(2,'0'),String(date.getDate()).padStart(2,'0')].join('-');
+      const localDay = (key) => {
+        const [y,m,d] = key.split('-').map(Number);
+        return new Date(y,m-1,d);
+      };
+      const formatDay = (key) => key ? key === 'Choose together' ? key
+        : new Intl.DateTimeFormat('en',{weekday:'short',month:'short',day:'numeric',year:'numeric'}).format(localDay(key)) : 'Not selected';
+      let calendarMonth = new Date(new Date().getFullYear(),new Date().getMonth(),1);
+      function addSchedule() {
+        const wrap = document.createElement('div'); wrap.className = 'calendar-wrap';
+        const calendar = document.createElement('div'); calendar.className = 'planning-calendar';
+        calendar.setAttribute('aria-label','Choose a day from the calendar');
+        const availabilityHint = document.createElement('p');
+        availabilityHint.className='schedule-hint availability-hint';
+        availabilityHint.setAttribute('role','status');
+        availabilityHint.textContent = availableDays.size
+          ? 'Only dates Alex opened are available.'
+          : 'No dates are open yet. You can pick a day together later.';
+        const selectedText = document.createElement('div'); selectedText.className='schedule-hint'; selectedText.setAttribute('role','status');
+        const timeLabel = document.createElement('div'); timeLabel.className='gate-label'; timeLabel.textContent=fillQuestion(timeQuestion);
+        const times = document.createElement('div'); times.className='time-options';
+        times.setAttribute('role','group'); times.setAttribute('aria-label','Time of day');
+        const continueBtn = makeButton('Continue ♡','btn-primary',() => {
+          if (!picks.day || !picks.time) return;
+          advance();
+        });
+        continueBtn.id = 'schedule-continue';
+        const updateSelected = () => {
+          selectedText.textContent = picks.day ? formatDay(picks.day) + ' · ' + (picks.time || 'choose a time below') : 'Choose an available day above';
+          continueBtn.disabled = !picks.day || !picks.time;
+          [...times.children].forEach(btn => {
+            const selected = btn.dataset.value === picks.time;
+            btn.classList.toggle('selected',selected);
+            btn.setAttribute('aria-pressed',String(selected));
+          });
+        };
+        for (const [icon,label] of calendarTimes) {
+          const value=fillQuestion(label);
+          const btn = document.createElement('button');
+          btn.type = 'button'; btn.className = 'time-option'; btn.dataset.value = value;
+          btn.textContent = icon + ' ' + value;
+          btn.addEventListener('click',() => { picks.time=value; updateSelected(); });
+          times.append(btn);
+        }
+        function drawCalendar() {
+          calendar.replaceChildren();
+          const header = document.createElement('div'); header.className='calendar-header';
+          const monthTitle = document.createElement('div'); monthTitle.className='calendar-month';
+          monthTitle.textContent = new Intl.DateTimeFormat('en',{month:'long',year:'numeric'}).format(calendarMonth);
+          const previous = document.createElement('button'); previous.className='calendar-arrow'; previous.type='button'; previous.textContent='‹'; previous.setAttribute('aria-label','Previous month');
+          const next = document.createElement('button'); next.className='calendar-arrow'; next.type='button'; next.textContent='›'; next.setAttribute('aria-label','Next month');
+          const now = new Date();
+          const firstAllowedMonth = new Date(now.getFullYear(),now.getMonth(),1);
+          const lastAllowedMonth = new Date(now.getFullYear(),now.getMonth()+3,1);
+          previous.disabled = calendarMonth <= firstAllowedMonth;
+          next.disabled = calendarMonth >= lastAllowedMonth;
+          previous.addEventListener('click',() => { calendarMonth = new Date(calendarMonth.getFullYear(),calendarMonth.getMonth()-1,1); drawCalendar(); });
+          next.addEventListener('click',() => { calendarMonth = new Date(calendarMonth.getFullYear(),calendarMonth.getMonth()+1,1); drawCalendar(); });
+          header.append(previous,monthTitle,next); calendar.append(header);
+          const grid = document.createElement('div'); grid.className='calendar-grid'; grid.setAttribute('role','group'); grid.setAttribute('aria-label',monthTitle.textContent);
+          ['M','T','W','T','F','S','S'].forEach((w,i) => {
+            const cell = document.createElement('span'); cell.className='calendar-weekday'; cell.textContent=w;
+            cell.setAttribute('aria-label',['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'][i]);grid.append(cell);
+          });
+          const y = calendarMonth.getFullYear(), m = calendarMonth.getMonth();
+          const leading = (new Date(y,m,1).getDay()+6)%7;
+          for(let i=0;i<leading;i++) {const blank=document.createElement('span');blank.className='calendar-day blank';grid.append(blank);}
+          const today = dayKey(now), maxDate = dayKey(new Date(now.getFullYear(),now.getMonth()+4,0));
+          for(let d=1;d<=new Date(y,m+1,0).getDate();d++) {
+            const candidate = new Date(y,m,d), key = dayKey(candidate);
+            const btn = document.createElement('button');
+            btn.type='button'; btn.className='calendar-day'; btn.textContent=String(d);
+            btn.setAttribute('aria-label',new Intl.DateTimeFormat('en',{weekday:'long',month:'long',day:'numeric',year:'numeric'}).format(candidate));
+            btn.disabled = key < today || key > maxDate;
+            if (!availableDays.has(key)) btn.disabled = true;
+            btn.classList.toggle('available',availableDays.has(key) && !btn.disabled);
+            btn.classList.toggle('today',key===today);
+            btn.classList.toggle('selected',key===picks.day);
+            if(key===picks.day)btn.setAttribute('aria-pressed','true');
+            btn.addEventListener('click',()=>{picks.day=key;drawCalendar();updateSelected();});
+            grid.append(btn);
+          }
+          calendar.append(grid);
+        }
+        drawCalendar();updateSelected();
+        const controls=document.createElement('div');controls.className='schedule-actions';
+        controls.append(continueBtn,makeButton('Pick a day together later','btn-secondary',()=>{
+          picks.day='Choose together'; picks.time=fillQuestion(calendarTimes[3][1]); advance();
+        }));
+        wrap.append(calendar,availabilityHint,timeLabel,times,selectedText,controls);
+        actions.append(wrap);
+      }
+      let lastDodgeAt = 0;
+      function dodge(no) {
+        if (tries >= 3 || reduceMotion) return false;
+        if (Date.now() - lastDodgeAt < 750) return false;
+        lastDodgeAt = Date.now();
+        const count = ++tries;
+        const arena = no.closest('.ask-buttons');
+        const travelX = Math.max(0, no.offsetLeft - 12);
+        const travelY = Math.max(0, (arena.clientHeight - no.offsetHeight) / 2 - 10);
+        // Three long hops: upper-left, lower-middle, lower-left.
+        const poses = [
+          {x:-travelX*.97, y:-travelY*.94, turn:19, face:'😛'},
+          {x:-travelX*.48, y:travelY*.96, turn:-19, face:'🤪'},
+          {x:-travelX*.96, y:travelY*.92, turn:14, face:'😜'}
+        ];
+        const pose = poses[count - 1];
+        no.style.setProperty('--dx', Math.round(pose.x) + 'px');
+        no.style.setProperty('--dy', Math.round(pose.y) + 'px');
+        no.style.setProperty('--twist', pose.turn + 'deg');
+        no.classList.add('mischief');
+        const face = no.querySelector('.face');
+        if (face) face.textContent = pose.face;
+        bunny.dataset.mood = 'blep';
+        // The No joke has no extra text, only expressions and movement.
+        clearTimeout(escapeTimer);
+        escapeTimer = window.setTimeout(() => {
+          no.style.setProperty('--dx','0px');
+          no.style.setProperty('--dy','0px');
+          no.style.setProperty('--twist','0deg');
+          no.classList.remove('mischief');
+          if (count === 3) {
+            no.classList.add('gave-up');
+            if (face) face.textContent = '😌';
+          }
+          bunny.dataset.mood = 'wink';
+        }, 840);
+        return true;
+      }
+      function addAsk() {
+        const row = document.createElement('div'); row.className = 'ask-buttons';
+        const yes = makeButton('', 'btn-primary emoji-choice', () => {
+          if (yes.disabled) return;
+          yes.disabled = true;
+          yes.classList.add('in-love');
+          const face = yes.querySelector('.face'); if (face) face.textContent = '😍';
+          bunny.dataset.mood = 'happy';
+          const spark = document.createElement('span'); spark.className = 'love-sparkles';
+          spark.setAttribute('aria-hidden','true');
+          spark.innerHTML = '<span style="left:12%;top:0">💖</span><span style="right:12%;top:8%">💕</span>';
+          yes.append(spark);
+          let movedOn = false;
+          const afterCelebration = () => {
+            if (movedOn || step !== 'ask') return;
+            movedOn = true;
+            advance();
+          };
+          const recorded = say('Oh, lovely! A tiny happy dance!','yes',afterCelebration);
+          if (!recorded) setTimeout(afterCelebration, reduceMotion ? 350 : 1350);
+          else setTimeout(afterCelebration, 10000); // Never trap visitors if a media event is lost.
+        }, 'yes-btn');
+        yes.setAttribute('aria-label', 'Yes, I would like to go out with '+sender);
+        yes.title = 'Yes';
+        const yesFace = document.createElement('span'); yesFace.className = 'face'; yesFace.setAttribute('aria-hidden','true'); yesFace.textContent = '🥰';
+        yes.append(yesFace);
+        const yesSignal = document.createElement('span'); yesSignal.className = 'choice-signal';
+        yesSignal.setAttribute('aria-hidden','true'); yesSignal.textContent = '✅'; yes.append(yesSignal);
+        const yesLabel = document.createElement('span'); yesLabel.className = 'choice-label';
+        yesLabel.textContent = 'Yes'; yes.append(yesLabel);
+        const no = makeButton('', 'btn-secondary emoji-choice', () => {}, 'no-btn');
+        no.setAttribute('aria-label', 'No, thank you');
+        no.title = 'No';
+        const noFace = document.createElement('span'); noFace.className = 'face'; noFace.setAttribute('aria-hidden','true'); noFace.textContent = '😌';
+        no.append(noFace);
+        const noSignal = document.createElement('span'); noSignal.className = 'choice-signal';
+        noSignal.setAttribute('aria-hidden','true'); noSignal.textContent = '❌'; no.append(noSignal);
+        const noLabel = document.createElement('span'); noLabel.className = 'choice-label';
+        noLabel.textContent = 'No'; no.append(noLabel);
+        no.addEventListener('pointerenter', e => {
+          if (e.pointerType === 'mouse') dodge(no);
+        });
+        no.addEventListener('pointerdown', e => {
+          if (e.pointerType !== 'mouse' && tries < 3 && !reduceMotion) {
+            e.preventDefault();
+            if (dodge(no)) lastTouchDodge = Date.now();
+          }
+        });
+        no.addEventListener('click', e => {
+          // A synthesized click after a touch-dodge must not count as acceptance of No.
+          if (Date.now() - lastTouchDodge < 600) return;
+          if (e.detail === 0 || reduceMotion || tries >= 3) { nav('decline'); return; }
+          dodge(no);
+        });
+        row.append(yes,no); actions.append(row);
+      }
+      function makeSummary() {
+        const summary=document.createElement('div'); summary.className='summary';
+        const entries = [
+          ['The idea',picks.outing],
+          ['Your preference',picks.detail],
+          ['Convenient area',picks.meetArea],
+          ['Day',picks.day && formatDay(picks.day)],
+          ['Time',picks.time]
+        ];
+        for (const q of answeredExtraQuestions()) entries.push([fillQuestion(q.heading),extraAnswers[q.id]]);
+        entries.filter(([,value])=>value).forEach(([label,value]) => {
+          const line=document.createElement('div');line.className='summary-row';
+          const heading=document.createElement('b');heading.textContent=label+':';
+          const detail=document.createElement('span');detail.textContent=value;
+          line.append(heading,detail);summary.append(line);
+        });
+        return summary;
+      }
+      function answeredExtraQuestions() {
+        return flows.map(key=>extraQuestions.find(q=>q.id===key)).filter(q=>q && extraAnswers[q.id]);
+      }
+      const timingAnswer = () => [picks.day && formatDay(picks.day),picks.time].filter(Boolean).join(' · ');
+      function message() {
+        const lines = [
+          ['Idea',picks.outing],['Preference',picks.detail],['Convenient area',picks.meetArea],
+          ['Day',picks.day && formatDay(picks.day)],['Time',picks.time],
+          ...answeredExtraQuestions().map(q=>[fillQuestion(q.heading),extraAnswers[q.id]])
+        ];
+        return ['Hi '+sender+'! 🐰','Yes, I would like to go out.','',
+          ...lines.filter(([,value])=>value).map(([label,value])=>label+': '+value),'','— '+person].join('\n');
+      }
+      async function copyAnswer() {
+        try {
+          await navigator.clipboard.writeText(message());
+          feedback.textContent = 'Copied! Send it whenever you like. ♡';
+        } catch {
+          const el = document.createElement('textarea'); el.value = message();
+          el.style.position = 'fixed'; el.style.opacity = '0'; document.body.append(el); el.select();
+          const copied = document.execCommand('copy'); el.remove();
+          feedback.textContent = copied ? 'Copied! Send it whenever you like. ♡' : 'Copy is unavailable here. Try Share instead.';
+        }
+      }
+      async function shareAnswer() {
+        if (navigator.share) {
+          try { await navigator.share({ text: message(), title: 'A little bunny message' }); feedback.textContent = 'Shared using your chosen app. ♡'; }
+          catch (error) { if (error.name !== 'AbortError') feedback.textContent = 'Couldn’t open sharing. Try Copy instead.'; }
+        } else {
+          const url = 'https://wa.me/?text=' + encodeURIComponent(message());
+          const win = window.open(url, '_blank', 'noopener,noreferrer');
+          if (!win) feedback.textContent = 'Open WhatsApp to send it, or use Copy.';
+        }
+      }
+      async function submitAnswer() {
+        const btn = document.getElementById('send-answer');
+        if (!btn || btn.disabled) return;
+        btn.disabled = true;
+        feedback.textContent = 'Sending your choices…';
+        const params = new URLSearchParams({
+          'form-name': 'going-out-develop', 'bot-field':'', 'invite': inviteId, 'recipient': person,
+          'outing': picks.outing, 'energy': picks.detail, 'timing': timingAnswer(),
+          'detail': picks.detail, 'meet_area': picks.meetArea,
+          'day': picks.day, 'time': picks.time,
+          'decision': 'yes', 'subject': 'Alex received a bunny invitation answer',
+          'extra_answers': JSON.stringify(answeredExtraQuestions().map(q=>({question:fillQuestion(q.heading),answer:extraAnswers[q.id]})))
+        });
+        try {
+          const res = await fetch('/', {method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body:params.toString()});
+          if (!res.ok) throw new Error('Could not save the response');
+          feedback.textContent = 'Sent! Alex can see your choices now. ♡';
+          btn.textContent = 'Sent ♡';
+        } catch (err) {
+          feedback.textContent = 'That did not send. You can still use Share or Copy.';
+          btn.disabled = false;
+        }
+      }
+      function confettiOn(enabled) {
+        confetti.replaceChildren();
+        confetti.classList.toggle('hidden', !enabled || reduceMotion);
+        if (!enabled || reduceMotion) return;
+        const shades = ['#f47f97','#eac475','#9fcfa2','#bd97db','#f6aec0'];
+        for (let i = 0; i < 28; i++) {
+          const piece = document.createElement('i');
+          piece.style.left = `${(i * 43 + 17) % 97}%`;
+          piece.style.background = shades[i % shades.length];
+          piece.style.animationDelay = `${(i * 0.19) % 2.7}s`;
+          piece.style.animationDuration = `${2.1 + ((i * 7) % 11) / 10}s`;
+          confetti.append(piece);
+        }
+      }
+      function render() {
+        document.body.dataset.step=step;
+        const data=screens[step];
+        if(!data) { nav('ask'); return; }
+        if(step==='detail') {
+          const question=activityQuestions[picks.activityKey] || activityQuestions.surprise;
+          screens.detail.heading=question.heading;
+          screens.detail.speech=question.speech;
+        }
+        title.textContent=fillQuestion(step==='ask' ? configuredAskTemplate : data.heading);
+        description.textContent=fillQuestion(data.subheading);
+        dialogue.open = false;
+        bubble.textContent = step === 'detail' && !editedVoiceClips.has(sceneTrackKey())
+          ? 'What sounds most like you?' : data.speech;
+        chapter.textContent=data.chapter;
+        bunny.dataset.mood=data.mood;
+        confettiOn(step==='success');
+        actions.replaceChildren();
+        copy.classList.remove('enter'); void copy.offsetWidth; copy.classList.add('enter');
+        dots.replaceChildren();
+        const current = flows.indexOf(step);
+        if(current>=0)for(let i=0;i<flows.length;i++) {
+          const dot=document.createElement('span');dot.className='dot'+(i===current?' active':'');
+          dot.setAttribute('aria-hidden','true');dots.append(dot);
+        }
+        back.classList.toggle('hidden',!(['ask','outing','detail','area','schedule'].includes(step)||step.startsWith('extra-')));
+        if(step==='intro')actions.append(makeButton('Open the envelope ✉','btn-primary',()=>nav('ask')));
+        if(step==='ask')addAsk();
+        if(step==='outing'){
+          const grid=document.createElement('div');grid.className='choices';
+          data.options.forEach(([symbol,label,key])=>grid.append(addChoice(symbol,label,()=>{
+            if (picks.activityKey!==key) picks.detail='';
+            picks.activityKey=key;
+            picks.outing=symbol+' '+fillQuestion(label);
+            advance();
+          })));
+          actions.append(grid);
+        }
+        if(step==='detail'){
+          const grid=document.createElement('div');grid.className='choices';
+          (activityQuestions[picks.activityKey] || activityQuestions.surprise).options.forEach(([symbol,label])=>{
+            grid.append(addChoice(symbol,label,()=>{ picks.detail=symbol+' '+fillQuestion(label);advance(); }));
+          });
+          actions.append(grid);
+        }
+        if(step==='area'){
+          const grid=document.createElement('div');grid.className='choices';
+          data.options.forEach(([symbol,label]) => grid.append(addChoice(symbol,label,()=>{
+            picks.meetArea=symbol+' '+fillQuestion(label);
+            calendarMonth=picks.day && picks.day!=='Choose together'
+              ? new Date(localDay(picks.day).getFullYear(),localDay(picks.day).getMonth(),1)
+              : new Date(new Date().getFullYear(),new Date().getMonth(),1);
+            advance();
+          })));
+          actions.append(grid);
+        }
+        if(step==='schedule')addSchedule();
+        if(step.startsWith('extra-')){
+          const ix=Number(step.slice(6));
+          const q=extraQuestions[ix];
+          if(q){
+            const grid=document.createElement('div');grid.className='choices';
+            for(const label of q.options)grid.append(addChoice('💫',label,()=>{
+              extraAnswers[q.id]=fillQuestion(label);
+              advance();
+            }));
+            actions.append(grid);
+          }
+        }
+        if(step==='success'){
+          const summary=makeSummary();
+          if (summary.childElementCount) actions.append(summary);
+          actions.append(makeButton('Send my choices to Alex 💌','btn-primary',submitAnswer,'send-answer'));
+          const note=document.createElement('p');note.className='gate-help';
+          note.textContent='Nothing is sent unless you choose Send. Your selections are shared with Alex.';
+          actions.append(note);
+          const row=document.createElement('div');row.className='button-row';
+          row.append(makeButton('Share ↗','btn-primary',shareAnswer),makeButton('Copy ✦','btn-secondary',copyAnswer));
+          actions.append(row);
+          actions.append(makeButton('Play again ↺','btn-quiet',()=>{resetAnswers();nav('intro');}));
+        }
+        if(unlocked)say(data.speech,sceneTrackKey());
+      }
+
+      function applyOwnerSettings(value){
+        if(!value||typeof value!=='object')return;
+        availableDays = new Set(Array.isArray(value.availableDays) ? value.availableDays.filter(key => typeof key==='string' && /^\d{4}-\d{2}-\d{2}$/.test(key)) : []);
+        sender=typeof value.senderName==='string'&&value.senderName.trim()?value.senderName.trim().slice(0,48):'Alex';
+        if (sender !== 'Alex') {
+          screens.ask.speech = 'Would you like to go out with ' + sender + '?';
+          screens.success.speech = 'Lovely. Your plans are ready to share with ' + sender + '.';
+          editedVoiceClips.add('ask');
+          editedVoiceClips.add('success');
+        }
+        const brand=document.querySelector('.brand');
+        if(brand&&brand.lastChild?.nodeType===3)brand.lastChild.textContent=' '+(value.siteLabel||'tiny bunny mission');
+        configuredAskTemplate=value.screens?.ask?.heading||'{name}, would you like to go out with {sender}?';
+        for(const [key,v] of Object.entries(value.screens||{})){
+          if(!screens[key]||!v)continue;
+          if(v.heading&&key!=='ask')screens[key].heading=v.heading;
+          if(v.subheading)screens[key].subheading=v.subheading;
+          const spoken=v.speech||v.heading;
+          if(spoken&&spoken!==screens[key].speech){
+            screens[key].speech=spoken;
+            editedVoiceClips.add(key);
+          }
+        }
+        screens.success.subheading = value.screens?.success?.subheading || 'You said yes to going out with '+sender+'. I think this deserves a tiny celebration.';
+        for(const choice of screens.outing.options){
+          const updated=value.outingLabels?.[choice[2]];
+          if(updated)choice[1]=updated;
+        }
+        for(const [key,v] of Object.entries(value.detail||{})){
+          const q=activityQuestions[key];if(!q||!v)continue;
+          if(v.heading)q.heading=v.heading;
+          const spoken=v.speech||v.heading;
+          if(spoken&&spoken!==q.speech){q.speech=spoken;editedVoiceClips.add('detail-'+key);}
+          if(Array.isArray(v.options))v.options.forEach((label,index)=>{
+            if(label&&q.options[index])q.options[index][1]=label;
+          });
+        }
+        if(Array.isArray(value.areaLabels))value.areaLabels.forEach((label,index)=>{
+          if(label&&screens.area.options[index])screens.area.options[index][1]=label;
+        });
+        if(value.timeHeading)timeQuestion=value.timeHeading;
+        value.timeLabels?.forEach((label,index)=>{
+          if(label&&calendarTimes[index])calendarTimes[index][1]=label;
+        });
+        const extras=Array.isArray(value.extraQuestions)?value.extraQuestions.slice(0,5):[];
+        for(let i=0;i<extras.length;i++){
+          const q=extras[i];
+          if(!q.heading||!Array.isArray(q.options)||q.options.length<2)continue;
+          const key='extra-'+i;
+          extraQuestions.push({id:key,heading:q.heading,speech:q.speech||q.heading,options:q.options});
+          screens[key]={chapter:'one more tiny question',heading:q.heading,subheading:'Pick the answer you like best.',speech:q.speech||q.heading,mood:'wink'};
+
+        }
+        const available=[...planningSteps,...extraQuestions.map(question=>question.id)];
+        const configured=Array.isArray(value.workflow)?value.workflow:available;
+        flows=['ask',...configured.filter(key=>available.includes(key)),'success'];
+      }
+      back.addEventListener('click', () => {
+        const previous=step==='ask' ? 'intro' : flows[flows.indexOf(step)-1];
+        if (previous) nav(previous);
+      });
+      render();
+    })();
+  </script>
+</body>
+</html>

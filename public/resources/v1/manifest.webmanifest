@@ -1,0 +1,17 @@
+{
+  "name": "A Tiny Bunny Mission — Go Out with Alex",
+  "short_name": "Bunny Mission",
+  "start_url": "/",
+  "scope": "/",
+  "display": "fullscreen",
+  "background_color": "#fff7ed",
+  "theme_color": "#fff7ed",
+  "icons": [
+    {
+      "src": "/video/poster.png",
+      "sizes": "520x520",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
