@@ -85,8 +85,8 @@
     </section>
   </main>
   <!-- Netlify detects this at build time and stores only responses explicitly submitted by a visitor. -->
-  <form name="going-out" data-netlify="true" netlify-honeypot="bot-field" hidden>
-    <input name="form-name" value="going-out" type="hidden">
+  <form name="going-out-develop" data-netlify="true" netlify-honeypot="bot-field" hidden>
+    <input name="form-name" value="going-out-develop" type="hidden">
     <input name="bot-field" type="text">
     <input name="invite" type="text">
     <input name="recipient" type="text">
@@ -694,7 +694,7 @@
         btn.disabled = true;
         feedback.textContent = 'Sending your choices…';
         const params = new URLSearchParams({
-          'form-name': 'going-out', 'bot-field':'', 'invite': inviteId, 'recipient': person,
+          'form-name': 'going-out-develop', 'bot-field':'', 'invite': inviteId, 'recipient': person,
           'outing': picks.outing, 'energy': picks.detail, 'timing': timingAnswer(),
           'detail': picks.detail, 'meet_area': picks.meetArea,
           'day': picks.day, 'time': picks.time,
