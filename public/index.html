@@ -3,295 +3,87 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#fff8f1">
-  <link rel="icon" href="/icon.svg" type="image/svg+xml">
+  <meta name="theme-color" content="#fff7ed">
+  <link rel="icon" href="/video/flow/poster.webp" type="image/png">
   <link rel="manifest" href="/manifest.webmanifest">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="robots" content="noindex,nofollow,noarchive">
   <meta name="description" content="A tiny adventure with a very important bunny.">
   <title>A tiny bunny mission ✦</title>
-  <style>
-    :root {
-      color-scheme: light;
-      --ink: #302b3d;
-      --soft-ink: #777082;
-      --rose: #ec6889;
-      --rose-dark: #cf4c70;
-      --cream: #fff8f1;
-      --paper: #fffdfa;
-      --lilac: #f1e7ff;
-      --mint: #e2f4df;
-      --line: #ece3e8;
-      --shadow: 0 30px 80px rgba(88, 67, 75, .16), 0 3px 15px rgba(88, 67, 75, .07);
-    }
-    * { box-sizing: border-box; }
-    html { min-height: 100%; }
-    body {
-      margin: 0;
-      min-height: 100vh;
-      min-height: 100dvh;
-      background: radial-gradient(ellipse 650px 650px at 3% 4%, #f8dfe5 0%, transparent 67%),
-        radial-gradient(ellipse 650px 650px at 95% 100%, #e5f0de 0%, transparent 70%),
-        #fff8f1;
-      color: var(--ink);
-      font-family: ui-rounded, "SF Pro Rounded", "Arial Rounded MT Bold", "Trebuchet MS", system-ui, sans-serif;
-      -webkit-font-smoothing: antialiased;
-      overflow-x: hidden;
-    }
-    button, a { -webkit-tap-highlight-color: transparent; }
-    button { font: inherit; cursor: pointer; }
-    button:focus-visible, a:focus-visible { outline: 3px solid #8364b9; outline-offset: 4px; }
-    .decor { position: fixed; inset: 0; overflow: hidden; pointer-events: none; z-index: 0; }
-    .decor .d { position: absolute; opacity: .55; animation: floaty 9s ease-in-out infinite; }
-    .d.one { top: 15%; left: 8%; font-size: 29px; color: #da8ca5; }
-    .d.two { top: 64%; left: 5%; font-size: 19px; animation-delay: -3s; color: #a19acb; }
-    .d.three { top: 19%; right: 9%; font-size: 30px; animation-delay: -2s; color: #b99bc8; }
-    .d.four { bottom: 11%; right: 8%; font-size: 22px; animation-delay: -5s; color: #e5a7a8; }
-    @keyframes floaty { 0%, 100% { transform: translateY(0) rotate(-5deg); } 50% { transform: translateY(-14px) rotate(6deg); } }
-    .layout { min-height: 100dvh; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: clamp(18px, 4vh, 45px) 18px 22px; position: relative; z-index: 1; }
-    .topline { width: min(100%, 900px); display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 19px; padding: 0 4px; }
-    .brand { display: flex; align-items: center; gap: 9px; font-size: 14px; font-weight: 900; letter-spacing: -.3px; }
-    .brand-icon { width: 32px; height: 32px; border-radius: 12px; display: grid; place-items: center; background: white; box-shadow: 0 2px 12px #cba8ae30; font-size: 18px; }
-    .tiny-note { color: #8c8190; font-size: 12px; font-weight: 700; }
-    .shell { width: min(100%, 900px); min-height: 560px; border: 1px solid rgba(255,255,255,.86); border-radius: 34px; overflow: hidden; background: var(--paper); display: grid; grid-template-columns: .92fr 1.08fr; box-shadow: var(--shadow); }
-    .art-pane { background: linear-gradient(160deg, #fae8f0 0%, #f9ebdf 51%, #eceddc 100%); min-height: 560px; position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; isolation: isolate; overflow: hidden; }
-    .art-pane::before { content: ''; position: absolute; width: 380px; height: 380px; border-radius: 50%; background: #fff8eb9c; top: 22%; left: 50%; transform: translateX(-50%); }
-    .art-pane::after { content: ''; position: absolute; width: 650px; height: 280px; border-radius: 50%; background: #c8e1c56d; bottom: -190px; }
-    .sticker { z-index: 1; position: absolute; border: 1px solid #ffffffc9; background: #ffffffaa; backdrop-filter: blur(9px); border-radius: 99px; padding: 9px 15px; font-size: 12px; font-weight: 900; box-shadow: 0 8px 22px #7d506014; }
-    .sticker.top { top: 42px; left: 28px; transform: rotate(-6deg); }
-    .sticker.bottom { right: 20px; bottom: 47px; transform: rotate(6deg); }
-    .ribbon { font-size: 11px; font-weight: 900; letter-spacing: 1.9px; text-transform: uppercase; color: #bd6684; position: absolute; bottom: 29px; left: 30px; z-index: 2; }
-    .bunny-wrap { width: min(88%, 370px); position: relative; z-index: 2; margin-top: 10px; filter: drop-shadow(0 17px 14px rgba(98, 69, 77, .12)); animation: bob 3.4s ease-in-out infinite; transform-origin: 50% 95%; }
-    @keyframes bob { 0%,100% { transform: translateY(3px) rotate(-1deg); } 50% { transform: translateY(-5px) rotate(1.1deg); } }
-    .bunny-svg { display: block; width: 100%; height: auto; }
-    #face-smile, #face-wink, #face-blep, #face-happy { transition: opacity .18s; }
-    .bunny-svg #face-wink, .bunny-svg #face-blep, .bunny-svg #face-happy { opacity: 0; }
-    .bunny-wrap[data-mood="wink"] #face-smile, .bunny-wrap[data-mood="blep"] #face-smile, .bunny-wrap[data-mood="happy"] #face-smile { opacity: 0; }
-    .bunny-wrap[data-mood="wink"] #face-wink, .bunny-wrap[data-mood="blep"] #face-blep, .bunny-wrap[data-mood="happy"] #face-happy { opacity: 1; }
-    .mini-spark { position: absolute; z-index: 3; font-size: 28px; color: #c38ea1; }
-    .mini-spark.s1 { top: 27%; left: 8%; transform: rotate(-17deg); }
-    .mini-spark.s2 { right: 13%; top: 23%; color: #dc9c70; transform: rotate(12deg); }
-    .mini-spark.s3 { right: 5%; bottom: 25%; font-size: 21px; color: #b49ec7; }
-    .content-pane { padding: 35px clamp(25px, 4.2vw, 59px) 31px; display: flex; flex-direction: column; justify-content: space-between; min-width: 0; }
-    .status { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 24px; }
-    .chapter { font-size: 10px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; color: #bd8197; }
-    .dots { display: flex; gap: 5px; align-items: center; }
-    .dot { height: 7px; width: 7px; background: #eee5e8; border-radius: 8px; transition: width .3s,background .3s; }
-    .dot.active { width: 24px; background: #e77a96; }
-    .copy { margin-top: 22px; }
-    h1 { margin: 0; font-size: clamp(32px, 3.5vw, 45px); font-weight: 900; letter-spacing: -1.9px; line-height: 1.17; max-width: 490px; text-wrap: balance; }
-    h1 .accent { color: var(--rose-dark); }
-    .description { margin: 19px 0 0; font-size: 15px; line-height: 1.75; color: #776f7e; max-width: 380px; }
-    .bubble { margin-top: 23px; display: inline-flex; width: fit-content; max-width: 100%; color: #8a5273; background: #fceef2; border: 1px solid #f7e0e8; border-radius: 15px 15px 15px 4px; padding: 10px 14px; font-weight: 800; font-size: 12px; line-height: 1.5; transition: background .2s; }
-    .actions { margin-top: 27px; display: flex; flex-direction: column; gap: 11px; }
-    .btn { min-height: 54px; border: 0; border-radius: 17px; padding: 13px 18px; font-size: 15px; font-weight: 900; transition: transform .18s, box-shadow .18s, background .18s; display: inline-flex; align-items: center; justify-content: center; gap: 10px; text-align: center; }
-    .btn:hover { transform: translateY(-2px); }
-    .btn:active { transform: translateY(1px); }
-    .btn-primary { background: linear-gradient(120deg, #ef7892, #e45e81); color: #fff; box-shadow: 0 11px 19px #e575922e, inset 0 1px 0 #ffffff33; }
-    .btn-secondary { border: 1px solid #e9dde5; background: #fff; color: #514b5c; }
-    .btn-quiet { background: #f4eff0; color: #675e69; border: 1px solid #ede4e8; }
-    .ask-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 13px; align-items: center; min-height: 110px; padding: 18px 8px; overflow: visible; }
-    .ask-buttons .btn { width: 100%; }
-    #no-btn { position: relative; z-index: 2; --dx: 0px; --dy: 0px; transition: transform .24s cubic-bezier(.2,1.6,.5,1), box-shadow .18s; transform: translate(var(--dx),var(--dy)); }
-    #no-btn:hover { transform: translate(var(--dx),var(--dy)); }
-    .choices { display: grid; grid-template-columns: 1fr; gap: 11px; }
-    .choice { display: flex; width: 100%; min-height: 65px; align-items: center; gap: 13px; border: 1px solid #eee5e8; border-radius: 17px; background: #fff; padding: 13px 15px; text-align: left; color: #413a4e; font-weight: 800; font-size: 14px; transition: .18s ease; }
-    .choice:hover { background: #fff6f8; border-color: #edbdca; transform: translateY(-2px); box-shadow: 0 8px 16px #e3a7b320; }
-    .choice:active { transform: translateY(1px); }
-    .choice-icon { display: grid; place-items: center; flex: 0 0 auto; width: 39px; height: 39px; border-radius: 13px; background: #f7ecf1; font-size: 21px; }
-    .choice-arrow { margin-left: auto; color: #c6b5c0; font-size: 18px; }
-    .summary { border-radius: 18px; background: #fff4f5; border: 1px solid #f7e4e9; padding: 16px 18px; display: flex; flex-direction: column; gap: 9px; font-size: 13px; color: #594f5c; }
-    .summary-row { display: flex; gap: 8px; align-items: flex-start; line-height: 1.5; }
-    .summary-row b { color: #af5d7d; }
-    .button-row { display: flex; gap: 10px; }
-    .button-row .btn { flex: 1; }
-    .navline { min-height: 22px; margin-top: 19px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-    .back { color: #8b808c; background: transparent; border: 0; font-size: 12px; font-weight: 900; padding: 5px 0; }
-    .footer { margin-top: 16px; text-align: center; color: #8e8290; font-size: 11px; font-weight: 700; }
-    .footer a { color: #986a87; text-underline-offset: 3px; }
-    .hidden { display: none !important; }
-    .enter { animation: in .33s ease both; }
-    @keyframes in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-    .confetti { position: absolute; inset: 0; z-index: 5; pointer-events: none; overflow: hidden; }
-    .confetti > i { position: absolute; width: 9px; height: 16px; border-radius: 3px; opacity: 0; top: -25px; animation: fall 2.8s linear infinite; }
-    @keyframes fall { 0% { transform: translateY(-20px) rotate(0deg); opacity: .9; } 100% { transform: translateY(630px) rotate(360deg); opacity: 0; } }
-    .feedback { min-height: 18px; font-size: 12px; color: #7b6573; font-weight: 800; }
-    @media (max-width: 700px) {
-      .layout { justify-content: flex-start; padding-top: 16px; padding-bottom: 18px; }
-      .topline { max-width: 500px; margin-bottom: 13px; }
-      .shell { max-width: 500px; min-height: 0; border-radius: 28px; grid-template-columns: 1fr; }
-      .art-pane { min-height: 236px; height: 236px; }
-      .art-pane::before { width: 238px; height: 238px; top: 3%; }
-      .art-pane::after { bottom: -215px; }
-      .bunny-wrap { width: 190px; margin: 7px 0 0; }
-      .sticker.top { top: 21px; left: 17px; font-size: 10px; padding: 7px 11px; }
-      .sticker.bottom { right: 15px; bottom: 15px; font-size: 10px; padding: 7px 11px; }
-      .ribbon { display: none; }
-      .mini-spark.s1 { left: 15%; }
-      .content-pane { padding: 24px 23px 18px; }
-      .copy { margin-top: 17px; }
-      h1 { font-size: clamp(29px, 8vw, 39px); letter-spacing: -1.5px; }
-      .description { margin-top: 13px; font-size: 14px; }
-      .bubble { margin-top: 15px; }
-      .actions { margin-top: 20px; }
-      .ask-buttons { min-height: 85px; }
-      .footer { margin-top: 12px; }
-    }
-    @media (max-width: 365px) { .content-pane { padding: 22px 18px 16px; } .art-pane { height: 213px; min-height: 213px; } .bunny-wrap { width: 173px; } .tiny-note { font-size: 10px; } .choice { font-size: 13px; } }
-    @media (prefers-reduced-motion: reduce) { *,*::before,*::after { animation-duration: .001ms !important; transition-duration: .001ms !important; } }
-
-    /* Soft launch / secure invitation gate */
-    body[data-locked="true"] .layout, body[data-locked="true"] .decor { visibility:hidden; }
-    .gate { position:fixed; z-index:40; inset:0; display:grid; place-items:center; padding:20px; background:radial-gradient(circle at 20% 10%,#fbe0ed,transparent 45%),radial-gradient(circle at 85% 85%,#e9e2fa,transparent 45%),#fff8f1; }
-    .gate-card { width:min(100%,440px); background:#fffefa; border:1px solid #fff; border-radius:32px; text-align:center; padding:38px 28px 28px; box-shadow:var(--shadow); }
-    .gate-emoji { display:block; font-size:62px; margin:0 0 14px; animation:bob 2.5s ease-in-out infinite; }
-    .gate-title { font-size:clamp(28px,7vw,38px); letter-spacing:-1.1px; line-height:1.15; margin:0 0 10px; }
-    .gate-desc { line-height:1.65; color:var(--soft-ink); margin:0 0 22px; }
-    .gate-label { display:block; font-weight:800; text-align:left; font-size:13px; margin:0 0 8px; }
-    .gate-code { display:block; width:100%; height:58px; border:1px solid #d8cdd7; background:#fff; border-radius:16px; text-align:center; letter-spacing:2px; text-transform:uppercase; font:800 19px ui-monospace,monospace; margin-bottom:13px; outline-offset:4px; }
-    .gate-code:focus-visible { outline:3px solid #e68ba6; }
-    .gate-card .btn { width:100%; }
-    .gate-hint { margin-top:14px; min-height:24px; color:#9a526a; font-weight:750; font-size:12px; line-height:1.5; }
-    .gate-help { font-size:12px; line-height:1.65; color:#7c7480; margin:11px 0 0; }
-    .gate-screen[hidden] { display:none!important; }
-    .voice-replay { display:block; margin-top:10px; background:transparent; border:0; padding:4px 0; color:#a65a7b; font-size:12px; font-weight:850; text-align:left; }
-    .voice-control { color:#8a5970; background:#fff; border:1px solid #eddae3; border-radius:999px; padding:8px 12px; font-weight:850; font-size:12px; }
-    .ask-buttons { overflow:visible; }
-    .ask-buttons .btn { display:flex; flex-direction:column; gap:3px; padding:13px 8px; min-height:82px; }
-    .face { display:inline-grid; place-items:center; font-size:30px; height:34px; line-height:1; transform-origin:center; transition:transform .2s; }
-    #yes-btn { position:relative; background:linear-gradient(115deg,#e86e96,#e85a80); }
-    #yes-btn:hover .face { transform:scale(1.19) rotate(-8deg); }
-    #yes-btn.in-love { animation:lovePulse .35s ease-in-out infinite alternate; }
-    #no-btn.mischief .face { animation:sillyNo .32s ease-in-out infinite alternate; }
-    @keyframes sillyNo { to { transform:rotate(-20deg) translateX(6px) scale(1.18); } }
-    @keyframes lovePulse { to { transform:scale(1.08) rotate(2deg); box-shadow:0 15px 35px #f18baa80; } }
-    .bunny-wrap.talking { animation:bunnyTalk .38s ease-in-out infinite alternate; }
-    @keyframes bunnyTalk { to { transform:translateY(-6px) rotate(2deg); } }
-    .bunny-svg #face-speaking { opacity:0; }
-    .bunny-wrap.talking .bunny-svg #face-speaking { opacity:1; }
-    .bunny-wrap.talking .bunny-svg #face-smile, .bunny-wrap.talking .bunny-svg #face-wink, .bunny-wrap.talking .bunny-svg #face-blep, .bunny-wrap.talking .bunny-svg #face-happy { opacity:0; }
-    .talk-mouth { transform-box:fill-box; transform-origin:center; animation:mouthTalk .25s ease-in-out infinite alternate; }
-    @keyframes mouthTalk { to { transform:scaleY(.36); } }
-    .love-sparkles { position:absolute; pointer-events:none; inset:-8px; font-size:24px; }
-    .love-sparkles span { position:absolute; animation:loveFloat 1.1s ease-out forwards; }
-    @keyframes loveFloat { to { opacity:0; transform:translateY(-75px) scale(1.8) rotate(18deg); } }
-    @media(max-width:380px) { .gate-card {padding:30px 19px 22px;} .ask-buttons {gap:9px;padding:12px 0;} }
-  </style>
+  <link rel="stylesheet" href="/invitation.css">
+  <script src="/resources/v2/preview.js"></script>
 </head>
 <body data-locked="true">
+  <div class="decor" aria-hidden="true"><span class="d one">♡</span><span class="d two">✧</span><span class="d three">✦</span><span class="d four">♡</span></div>
   <div class="gate" id="gate" role="dialog" aria-modal="true" aria-labelledby="gate-heading">
-    <div class="gate-card">
-      <section class="gate-screen" id="full-screen-gate">
-        <span class="gate-emoji" aria-hidden="true">🐰</span>
-        <h1 class="gate-title" id="gate-heading">A tiny surprise awaits.</h1>
-        <p class="gate-desc">Bunny has one little request first. Make this screen as big as possible so the magic feels extra special.</p>
-        <button class="btn btn-primary" id="request-fullscreen" type="button">⛶ Enter fullscreen</button>
-        <p class="gate-help" id="fullscreen-help">On some phones, you may need to add the page to your Home Screen or hide the browser toolbar.</p>
-        <button class="btn btn-secondary gate-screen" id="manual-fullscreen" type="button" hidden style="margin-top:12px">I've expanded my screen →</button>
-      </section>
-      <section class="gate-screen" id="password-gate" hidden>
-        <span class="gate-emoji" aria-hidden="true">✉️</span>
-        <h1 class="gate-title">Secret bunny entrance</h1>
-        <p class="gate-desc">This little surprise was made just for you. Enter your invitation password to open it.</p>
+    <section class="gate-screen" id="entry-gate">
+      <div class="gate-art" aria-hidden="true">
+        <div class="gate-film">
+          <video class="gate-character" playsinline webkit-playsinline preload="none" poster="/video/flow/poster.webp"></video>
+        </div>
+      </div>
+      <div class="gate-copy">
+        <h1 id="gate-heading">A little surprise for you.</h1>
+        <p class="gate-desc">Enter the invitation code Alex shared with you.</p>
+      </div>
+      <div class="gate-actions">
         <form id="unlock-form" autocomplete="off">
-          <label class="gate-label" for="invite-code">Your secret password</label>
-          <input class="gate-code" id="invite-code" type="password" inputmode="text" spellcheck="false" autocapitalize="characters" autocomplete="off" placeholder="••••••••••" maxlength="32" required>
-          <button class="btn btn-primary" id="unlock-button" type="submit">Open my surprise ♡</button>
+          <label class="gate-label" for="invite-code">Invitation code</label>
+          <input class="gate-code" id="invite-code" type="password" inputmode="text" spellcheck="false" autocapitalize="characters" autocomplete="off" placeholder="Enter code" maxlength="32" required>
+          <button class="btn btn-primary" id="unlock-button" type="submit">Unlock invitation</button>
         </form>
         <p class="gate-hint" id="gate-error" role="status"></p>
-      </section>
-    </div>
+      </div>
+    </section>
   </div>
 
-  <div class="decor" aria-hidden="true"><span class="d one">♡</span><span class="d two">✳</span><span class="d three">✦</span><span class="d four">♡</span></div>
   <main class="layout" id="app-main">
     <header class="topline">
-      <div class="brand"><span class="brand-icon" aria-hidden="true">🐰</span> tiny bunny mission</div>
-      <button id="voice-control" class="voice-control" type="button" aria-pressed="true">🔊 Bunny voice on</button>
+      <div class="brand"><span class="brand-icon" aria-hidden="true">♡</span> tiny bunny mission</div>
+      <button id="voice-control" class="voice-control" type="button" aria-label="Mute Nibbles" aria-pressed="true">🔊</button>
     </header>
     <section class="shell" aria-label="Bunny's tiny invitation">
       <div class="art-pane">
-        <span class="sticker top" id="top-sticker">a tiny surprise ✉</span>
-        <span class="mini-spark s1" aria-hidden="true">✧</span>
-        <span class="mini-spark s2" aria-hidden="true">♡</span>
-        <span class="mini-spark s3" aria-hidden="true">✳</span>
-        <div class="bunny-wrap" data-mood="smile" id="bunny" role="img" aria-label="A little cream-colored cartoon bunny holding a pink envelope">
-          <svg class="bunny-svg" viewBox="0 0 340 346" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-            <defs><filter id="softShadow"><feGaussianBlur stdDeviation="6" /></filter></defs>
-            <ellipse cx="170" cy="327" rx="108" ry="12" fill="#cfa5ad" opacity=".28" filter="url(#softShadow)"/>
-            <g transform="rotate(-11 130 102)"><ellipse cx="125" cy="86" rx="34" ry="77" fill="#fdf9f3" stroke="#e5d7cf" stroke-width="3"/><ellipse cx="127" cy="88" rx="19" ry="56" fill="#f8bbc6" /></g>
-            <g transform="rotate(11 213 102)"><ellipse cx="216" cy="86" rx="34" ry="77" fill="#fdf9f3" stroke="#e5d7cf" stroke-width="3"/><ellipse cx="214" cy="88" rx="19" ry="56" fill="#f8bbc6" /></g>
-            <ellipse cx="172" cy="270" rx="93" ry="67" fill="#fffaf4" stroke="#e9d8cd" stroke-width="3" />
-            <ellipse cx="99" cy="279" rx="31" ry="24" fill="#fffaf4" stroke="#e9d8cd" stroke-width="3" transform="rotate(-20 99 279)" />
-            <ellipse cx="245" cy="279" rx="31" ry="24" fill="#fffaf4" stroke="#e9d8cd" stroke-width="3" transform="rotate(20 245 279)" />
-            <ellipse cx="172" cy="180" rx="111" ry="102" fill="#fffaf4" stroke="#e9d8cd" stroke-width="3"/>
-            <ellipse cx="80" cy="202" rx="19" ry="14" fill="#ffd4d4" opacity=".85" />
-            <ellipse cx="264" cy="202" rx="19" ry="14" fill="#ffd4d4" opacity=".85" />
-            <path d="M162 186 Q170 193 178 186 Q170 177 162 186" fill="#ba8296" />
-            <g id="face-speaking">
-              <path d="M110 174 Q122 164 134 174 M210 174 Q222 164 234 174" fill="none" stroke="#473946" stroke-width="5" stroke-linecap="round" />
-              <ellipse class="talk-mouth" cx="171" cy="207" rx="12" ry="14" fill="#614353" />
-              <ellipse cx="170" cy="213" rx="7" ry="5" fill="#ec8fab" />
-            </g>
-            <g id="face-smile" fill="none" stroke="#473946" stroke-width="5" stroke-linecap="round">
-              <path d="M110 173 Q121 161 131 174" /><path d="M211 174 Q222 161 232 173" />
-              <path d="M170 194 Q155 216 143 203" /><path d="M170 194 Q185 216 197 203" />
-            </g>
-            <g id="face-wink" fill="none" stroke="#473946" stroke-width="5" stroke-linecap="round">
-              <path d="M110 172 Q122 160 134 172" /><ellipse cx="221" cy="170" rx="6" ry="10" fill="#473946" stroke="none" />
-              <path d="M170 194 Q154 219 142 204" /><path d="M170 194 Q186 219 198 204" />
-            </g>
-            <g id="face-blep">
-              <path d="M110 173 Q121 162 131 173 M211 173 Q222 162 232 173" fill="none" stroke="#473946" stroke-width="5" stroke-linecap="round"/>
-              <path d="M149 198 Q170 221 191 198 Q190 226 170 234 Q150 225 149 198" fill="#4d3948" />
-              <path d="M160 212 Q170 203 181 212 L181 230 Q171 241 160 229 Z" fill="#fb8ba6" />
-              <path d="M170 217 L170 227" stroke="#e65e88" stroke-width="2.5" stroke-linecap="round" />
-            </g>
-            <g id="face-happy" fill="none" stroke="#473946" stroke-width="5" stroke-linecap="round">
-              <path d="M105 177 Q122 152 138 176 M205 176 Q222 152 238 176" />
-              <path d="M141 199 Q170 238 199 199" />
-            </g>
-            <g transform="rotate(-7 174 258)">
-              <rect x="127" y="234" width="95" height="65" rx="12" fill="#fa9fb4" stroke="#de7d9b" stroke-width="3" />
-              <path d="M129 241 L174 272 L220 241" fill="none" stroke="#e27d9b" stroke-width="3" />
-              <path d="M167 270 C158 258 147 275 174 287 C199 275 189 258 181 270 L174 276Z" fill="#fff7f7" />
-            </g>
-            <ellipse cx="118" cy="263" rx="27" ry="18" fill="#fffaf4" stroke="#e9d8cd" stroke-width="3" transform="rotate(28 118 263)" />
-            <ellipse cx="225" cy="263" rx="27" ry="18" fill="#fffaf4" stroke="#e9d8cd" stroke-width="3" transform="rotate(-28 225 263)" />
-            <g transform="translate(222 120) rotate(12)"><path d="M0 12 C-17 -1 -28 22 0 37 C27 22 16 -1 0 12" fill="#f9a1b3" stroke="#eb7d98" stroke-width="2" /></g>
-          </svg>
+        <div class="bunny-wrap" data-mood="smile" id="bunny" role="button" tabindex="0" aria-label="Replay Nibbles">
+          <video id="bunny-video" class="bunny-film" playsinline webkit-playsinline preload="metadata"
+                 poster="/video/flow/poster.webp" aria-hidden="true"></video>
         </div>
-        <span class="sticker bottom" id="bottom-sticker">100% bunny approved ♡</span>
-        <span class="ribbon">officially very important</span>
         <div class="confetti hidden" id="confetti" aria-hidden="true"></div>
       </div>
       <div class="content-pane">
-        <div class="status"><span class="chapter" id="chapter">the invitation</span><div class="dots" id="dots" aria-label="Progress"></div></div>
-        <div class="copy enter" id="copy" aria-live="polite" aria-atomic="true">
-          <h1 id="title">A little bunny has a question.</h1>
-          <p class="description" id="description">Psst… a tiny mission is waiting for you.</p>
-          <div class="bubble" id="bubble">No pressure. Just a little fun. ♡</div>
-          <button id="voice-replay" class="voice-replay" type="button">▶ Hear the bunny</button>
+        <div class="copy enter" id="copy">
+          <div class="status"><span class="chapter" id="chapter"></span><div class="dots" id="dots" aria-hidden="true"></div></div>
+          <div aria-live="polite" aria-atomic="true">
+            <h1 id="title">A little bunny has a question.</h1>
+            <p class="description" id="description"></p>
+          </div>
+          <button id="voice-replay" class="voice-replay" type="button" aria-label="Replay Nibbles">▶</button>
+          <details class="dialogue"><summary>Read bunny’s line</summary><p class="bubble" id="bubble"></p></details>
         </div>
-        <div>
+        <div class="interaction">
           <div class="actions" id="actions"></div>
-          <div class="navline"><button class="back hidden" id="back" type="button">← go back</button><span class="feedback" id="feedback" role="status"></span></div>
+          <div class="navline"><button class="back hidden" id="back" type="button" aria-label="Go back">←</button><span class="feedback" id="feedback" role="status"></span></div>
         </div>
       </div>
     </section>
-    <footer class="footer">A little kindness goes a long way. <span aria-hidden="true">♡</span></footer>
   </main>
   <!-- Netlify detects this at build time and stores only responses explicitly submitted by a visitor. -->
-  <form name="going-out" data-netlify="true" netlify-honeypot="bot-field" hidden>
-    <input name="form-name" value="going-out" type="hidden">
+  <form name="going-out-develop" data-netlify="true" netlify-honeypot="bot-field" hidden>
+    <input name="form-name" value="going-out-develop" type="hidden">
     <input name="bot-field" type="text">
     <input name="invite" type="text">
     <input name="recipient" type="text">
     <input name="outing" type="text">
     <input name="energy" type="text">
     <input name="timing" type="text">
+    <input name="detail" type="text">
+    <input name="meet_area" type="text">
+    <input name="day" type="text">
+    <input name="time" type="text">
     <input name="decision" type="text">
+    <input name="extra_answers" type="text">
+    <input name="subject" type="hidden" value="Alex received a bunny invitation response">
   </form>
   <script>
     (() => {
@@ -300,7 +92,7 @@
       const clean = (value, fallback) => (typeof value === 'string' && value.trim() ? value.trim().slice(0, 48).replace(/[<>]/g, '') : fallback);
       let person = 'you';
       let inviteId = '';
-      const sender = 'Alex';
+      let sender = 'Alex';
       const title = document.getElementById('title');
       const description = document.getElementById('description');
       const bubble = document.getElementById('bubble');
@@ -310,68 +102,124 @@
       const back = document.getElementById('back');
       const feedback = document.getElementById('feedback');
       const copy = document.getElementById('copy');
+      const dialogue = copy.querySelector('.dialogue');
       const bunny = document.getElementById('bunny');
-      const topSticker = document.getElementById('top-sticker');
+      const bunnyVideo = document.getElementById('bunny-video');
+      const gateVideo = document.querySelector('#entry-gate .gate-character');
+      const portraitVersion = document.documentElement.dataset.mediaVersion === '2';
+      const audioClips = Object.create(null);
+      if (portraitVersion) {
+        document.querySelectorAll('video').forEach(video => {
+          video.poster = '/resources/v2/nibbles-portrait.webp';
+        });
+      }
+      const flowReady = fetch(portraitVersion ? '/resources/v2/manifest.json' : '/video/flow/manifest.json')
+        .then(response => response.ok ? response.json() : {})
+        .then(data => {
+          if (data.version !== (portraitVersion ? 2 : 1)) return;
+          if (portraitVersion) {
+            for (const [key, path] of Object.entries(data.audio || {})) {
+              if (/^\/resources\/v2\/audio\/[a-z-]+\.mp3$/.test(path)) audioClips[key] = path;
+            }
+          }
+          for (const [key, path] of Object.entries(data.clips || {})) {
+            if (/^\/(?:video\/flow|resources\/v2\/video)\/[a-z-]+\.mp4$/.test(path)) flowClips[key] = path;
+          }
+        })
+        .catch(() => { /* Device speech is available if the recordings fail to load. */ });
       const confetti = document.getElementById('confetti');
       const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      let step = 'intro';
+      let step = 'ask';
       let tries = 0;
       let escapeTimer = null;
+      let lastTouchDodge = 0;
       let voiceOn = true;
       let unlocked = false;
-      const picks = { outing: '', energy: '', timing: '' };
-      const flows = ['intro', 'ask', 'outing', 'energy', 'timing', 'success'];
+      const picks = { outing: '', activityKey: '', detail: '', meetArea: '', day: '', time: '' };
+      const planningSteps = ['outing','schedule'];
+      let availableSlots = Object.create(null);
+      let flows = ['ask',...planningSteps];
+      let timeQuestion = 'What time of day suits you?';
+      const calendarTimes = [['☀️','Morning'],['🌤️','Afternoon'],['🌙','Evening']];
+      const extraQuestions = [];
+      const extraAnswers = {};
+      const editedVoiceClips = new Set();
+      let configuredAskTemplate = '{name}, would you like to go out with {sender}?';
+      const fillQuestion = text => String(text).replace(/\{(name|sender)\}/g, (_,key) => key==='name' ? person : sender);
+      const advance = () => nav(flows[flows.indexOf(step)+1] || 'schedule');
+      function resetAnswers() {
+        for (const key of Object.keys(picks)) picks[key]='';
+        for (const key of Object.keys(extraAnswers)) delete extraAnswers[key];
+      }
+      const activityQuestions = {
+        coffee: { heading: 'What kind of coffee stop?', speech: 'Coffee? Excellent! I like mine with two carrots. I know, I know... weird.', options: [['🛋️','A cosy café and a good chat'], ['🚶','Takeaway coffee and a stroll'], ['🍵','Tea or a different drink'], ['✨','You two can choose']] },
+        walk: { heading: 'Where should we wander?', speech: 'I am extremely good at walking. Except when there is a carrot shop nearby.', options: [['🌳','A park and some nature'], ['🏙️','Exploring the city'], ['🌊','Somewhere by the water'], ['✨','You two can choose']] },
+        food: { heading: 'What food sounds good?', speech: 'Food? Now we are speaking my language. Does the menu have carrot cake?', options: [['🍝','Italian'], ['🍜','Asian food'], ['🌮','Street food or casual bites'], ['✨','You two can choose']] },
+        sweet: { heading: 'Which sweet treat?', speech: 'Sweet treats! I have been training for this question my entire bunny life.', options: [['🥐','Bakery or pastries'], ['🍦','Ice cream or gelato'], ['🧇','Waffles or pancakes'], ['✨','You two can choose']] },
+        surprise: { heading: 'What should the surprise feel like?', speech: 'A surprise! Ooh, I love a mystery. Especially when nobody hides my carrots.', options: [['🛋️','Calm and cosy'], ['🎳','Playful and fun'], ['🌿','Outside and exploring'], ['✨','Alex can come up with something']] }
+      };
       const screens = {
         intro: {
           chapter: 'a tiny surprise',
           heading: `Hey, ${person}!`,
           subheading: 'A very small bunny has been sent on a very important mission. It takes about 20 seconds.',
-          speech: 'I brought an envelope. And courage. Mostly an envelope. ✉',
+          speech: 'Well, hello there! My name’s Bunny. I brought a letter, a bow tie, and absolutely zero qualifications for this job.',
           mood: 'smile'
         },
         ask: {
           chapter: 'the big question',
           heading: `${person}, would you like to go out with ${sender}?`,
           subheading: 'That’s the whole big, very important question. What do you think?',
-          speech: 'I was told to ask politely. So… pretty please? 🐰',
+          speech: 'Would you like to go out with Alex?',
           mood: 'wink'
         },
         outing: {
-          chapter: 'question 01 / 03',
-          heading: 'Okay! What sounds like fun?',
-          subheading: 'You pick the plan. Bunny is taking very serious notes.',
-          speech: 'My notebook is tiny, but my enthusiasm is HUGE.',
+          chapter: 'one little choice',
+          heading: 'What sounds nice?',
+          subheading: 'Choose a simple plan, or leave the idea to Alex.',
+          speech: 'What would you like to do together?',
           mood: 'smile',
-          options: [ ['☕','Coffee & a good chat'], ['🌿','A walk & a little exploring'], ['🍰','Something sweet'], ['✨','Surprise me'] ]
+          options: [
+            ['☕','Something simple','simple'], ['✨','Surprise me','surprise']
+          ]
         },
-        energy: {
-          chapter: 'question 02 / 03',
-          heading: 'And what kind of vibe?',
-          subheading: 'There are no wrong answers. Just good energy.',
-          speech: 'Personally, I vote for lots of laughing.',
-          mood: 'wink',
-          options: [ ['🌼','Easygoing & relaxed'], ['🎈','Playful & silly'], ['🧭','A little adventurous'], ['💫','Whatever feels natural'] ]
+        detail: {
+          chapter: 'step 2 of 4',
+          heading: 'Just one tiny detail...',
+          subheading: 'So Alex can plan something you would actually like.',
+          speech: 'This is where I pretend to be a very professional rabbit assistant.',
+          mood: 'wink'
         },
-        timing: {
-          chapter: 'question 03 / 03',
-          heading: 'One last tiny thing…',
-          subheading: 'When might be good to go out?',
-          speech: 'I promise this is the final question. Pinky paw swear.',
+        area: {
+          chapter: 'step 3 of 4',
+          heading: 'Where would be convenient?',
+          subheading: 'No need to pick a specific place yet.',
+          speech: 'Where would you feel most comfortable meeting?',
           mood: 'smile',
-          options: [ ['🗓️','This weekend'], ['🌷','Next week'], ['💬','Let’s figure it out together'] ]
+          options: [
+            ['📍','Somewhere near me'], ['🧭','Somewhere near Alex'],
+            ['🤝','Meet halfway'], ['💬','Choose a place together']
+          ]
+        },
+        schedule: {
+          chapter: 'step 4 of 4',
+          heading: 'Which day works for you?',
+          subheading: 'Pick a day from the calendar and a time of day, or decide together later.',
+          speech: 'Pick a day and time, or decide together later.',
+          mood: 'wink'
         },
         success: {
           chapter: 'mission complete',
           heading: 'Bunny is doing happy little jumps!',
           subheading: `You said yes to going out with ${sender}. I think this deserves a tiny celebration.`,
-          speech: 'I KNEW I should wear my lucky bow! 🎉',
+          speech: 'Lovely. Your plans are ready to share with Alex.',
           mood: 'happy'
         },
         decline: {
-          chapter: 'still bunny approved',
-          heading: 'Absolutely no worries.',
-          subheading: 'Thank you for answering. You’re lovely, and this bunny wishes you a wonderful day.',
-          speech: 'No hard feelings. Please accept a tiny imaginary flower. 🌷',
+          chapter: '',
+          heading: 'No worries at all',
+          subheading: '',
+          speech: 'No worries at all. Have a nice day.',
           mood: 'smile'
         }
       };
@@ -384,58 +232,183 @@
         btn.addEventListener('click', handler);
         return btn;
       }
-      function nav(next) { step = next; tries = 0; clearTimeout(escapeTimer); feedback.textContent = ''; render(); }
+      function nav(next) {
+        step = next;
+        tries = 0;
+        clearTimeout(escapeTimer);
+        feedback.textContent = '';
+        render();
+        window.scrollTo(0, 0);
+      }
+      const flowClips = Object.create(null);
+      const narration = new Audio();
+      const voiceControl = document.getElementById('voice-control');
+      let stopPlayback = null;
+      let voiceSession = 0;
+      let speechUtterance;
+      let gateSpeechKey = 'password';
+      let gateSpeech = 'Psst. Enter your invitation password to open the surprise.';
+      const sceneTrackKey = () => step === 'detail' ? 'detail-'+picks.activityKey : step;
+
       function stopVoice() {
-        bunny.classList.remove('talking');
-        try { window.speechSynthesis?.cancel(); } catch (_) { /* no voice API */ }
+        ++voiceSession;
+        stopPlayback?.();
+        narration.pause();
+        bunnyVideo.pause();
+        gateVideo.pause();
+        bunnyVideo.classList.remove('is-transitioning');
+        gateVideo.classList.remove('is-transitioning');
+        speechUtterance = null;
+        try { window.speechSynthesis?.cancel(); } catch (_) { /* Older mobile browsers. */ }
       }
-      function say(text) {
-        stopVoice();
-        if (!unlocked || !voiceOn || !('speechSynthesis' in window) || !('SpeechSynthesisUtterance' in window)) return;
-        const msg = new SpeechSynthesisUtterance(text.replace(/[♡✉🐰🌷🎉]/gu, ''));
-        msg.lang = 'en-GB'; msg.rate = 1.09; msg.pitch = 1.28; msg.volume = 0.95;
-        const voices = window.speechSynthesis.getVoices();
-        const suitable = voices.find(v => /en-GB/i.test(v.lang) && /female|samantha|serena|libby|sonia/i.test(v.name)) || voices.find(v => /en-GB/i.test(v.lang)) || voices.find(v => /^en/i.test(v.lang));
-        if (suitable) msg.voice = suitable;
-        msg.onstart = () => bunny.classList.add('talking');
-        msg.onend = () => bunny.classList.remove('talking');
-        msg.onerror = () => bunny.classList.remove('talking');
-        try { window.speechSynthesis.speak(msg); } catch (_) { bunny.classList.remove('talking'); }
-      }
-      document.getElementById('voice-replay').addEventListener('click', () => { voiceOn = true; const ctl = document.getElementById('voice-control'); ctl.textContent = '🔊 Bunny voice on'; ctl.setAttribute('aria-pressed','true'); say(screens[step].speech); });
-      document.getElementById('voice-control').addEventListener('click', event => {
-        voiceOn = !voiceOn;
-        event.currentTarget.textContent = voiceOn ? '🔊 Bunny voice on' : '🔇 Bunny voice off';
-        event.currentTarget.setAttribute('aria-pressed', String(voiceOn));
-        if (voiceOn) say(screens[step].speech); else stopVoice();
-      });
-      function showPassword() {
-        document.getElementById('full-screen-gate').hidden = true;
-        document.getElementById('password-gate').hidden = false;
-        document.getElementById('invite-code').focus();
-      }
-      const fullscreenBtn = document.getElementById('request-fullscreen');
-      const manualBtn = document.getElementById('manual-fullscreen');
-      fullscreenBtn.addEventListener('click', async () => {
-        if (!document.documentElement.requestFullscreen) {
-          document.getElementById('fullscreen-help').textContent = 'Your browser cannot switch into fullscreen automatically. On iPhone, use Share → Add to Home Screen; otherwise maximize the page and tap below.';
-          manualBtn.hidden = false;
+
+      function speakWithDevice(text, token, onComplete) {
+        if (token !== voiceSession || !voiceOn) return;
+        if (!('speechSynthesis' in window) || !('SpeechSynthesisUtterance' in window)) {
+          onComplete?.();
           return;
         }
-        try {
-          await document.documentElement.requestFullscreen({navigationUI:'hide'});
-          showPassword();
-        } catch (_) {
-          document.getElementById('fullscreen-help').textContent = 'Fullscreen was blocked by your browser. Expand the page manually, then tap below.';
-          manualBtn.hidden = false;
+        const msg = new SpeechSynthesisUtterance(text);
+        speechUtterance = msg;
+        const voices = window.speechSynthesis.getVoices();
+        const soft = voices.find(v => /^en-US$/i.test(v.lang) && /samantha|ava|jenny|aria|allison|michelle|karen|susan|victoria/i.test(v.name))
+          || voices.find(v => /^en-US$/i.test(v.lang));
+        if (soft) msg.voice = soft;
+        msg.lang = soft?.lang || 'en-US';
+        msg.rate = .88;
+        msg.pitch = 1.25;
+        const finish = () => {
+          if (token !== voiceSession) return;
+          speechUtterance = null;
+          onComplete?.();
+        };
+        msg.onend = finish;
+        msg.onerror = finish;
+        try { window.speechSynthesis.speak(msg); } catch (_) { finish(); }
+      }
+
+      function playFlowClip(media, path, token, onComplete, onFailure) {
+        const isVideo = media instanceof HTMLVideoElement;
+        function reveal() {
+          if (token === voiceSession && isVideo) media.classList.remove('is-transitioning');
         }
+        function cleanup() {
+          media.removeEventListener('ended', done);
+          media.removeEventListener('error', failed);
+          if (isVideo) media.removeEventListener('loadeddata', reveal);
+          stopPlayback = null;
+        }
+        function done() {
+          if (token !== voiceSession || stopPlayback !== cleanup) return;
+          cleanup();
+          onComplete?.();
+        }
+        function failed() {
+          if (token !== voiceSession || stopPlayback !== cleanup) return;
+          cleanup();
+          if (isVideo) media.classList.remove('is-transitioning');
+          onFailure();
+        }
+        stopPlayback = cleanup;
+        media.addEventListener('ended', done);
+        media.addEventListener('error', failed);
+        if (isVideo) {
+          media.classList.add('is-transitioning');
+          media.addEventListener('loadeddata', reveal, {once:true});
+        }
+        media.src = path;
+        media.play().catch(failed);
+      }
+
+      function enableNarration() {
+        if (!voiceOn) return;
+        stopVoice();
+        // Grant the persistent video and its audio fallback playback on the tap
+        // that submits the password, before the asynchronous server response.
+        if (!portraitVersion) {
+          bunnyVideo.src = '/video/flow/start.mp4';
+          bunnyVideo.play().catch(() => {});
+        }
+        narration.src = '/audio/narration-start.mp3';
+        narration.play().catch(() => {});
+      }
+
+      function say(text,clipKey=sceneTrackKey(),onComplete) {
+        text=fillQuestion(text);
+        stopVoice();
+        if (!voiceOn) return false;
+        const token = voiceSession;
+        const key = clipKey?.startsWith('detail-') ? 'detail' : clipKey;
+        const path = !editedVoiceClips.has(clipKey) && flowClips[key];
+        if (!path) {
+          const recording = !editedVoiceClips.has(clipKey) && audioClips[key];
+          if (recording) {
+            playFlowClip(narration, recording, token, onComplete, () => speakWithDevice(text, token, onComplete));
+            return true;
+          }
+          speakWithDevice(text, token, onComplete);
+          return false;
+        }
+        const fallback = () => speakWithDevice(text, token, onComplete);
+        const playAudio = () => playFlowClip(narration, path, token, onComplete, fallback);
+        if (reduceMotion) playAudio();
+        else playFlowClip(unlocked ? bunnyVideo : gateVideo, path, token, onComplete, playAudio);
+        return true;
+      }
+
+      function updateVoiceControl() {
+        voiceControl.textContent = voiceOn ? '🔊' : '🔇';
+        voiceControl.setAttribute('aria-label', voiceOn ? 'Mute Nibbles' : 'Unmute Nibbles');
+        voiceControl.setAttribute('aria-pressed', String(voiceOn));
+      }
+      function replay() {
+        if (!unlocked) return;
+        voiceOn = true;
+        updateVoiceControl();
+        say(screens[step].speech, sceneTrackKey());
+      }
+      bunny.addEventListener('click', replay);
+      bunny.addEventListener('keydown', event => {
+        if (event.key !== 'Enter' && event.key !== ' ') return;
+        event.preventDefault();
+        replay();
       });
-      manualBtn.addEventListener('click', showPassword);
+      document.getElementById('voice-replay').addEventListener('click', replay);
+      voiceControl.addEventListener('click', () => {
+        voiceOn = !voiceOn;
+        updateVoiceControl();
+        if (voiceOn) replay();
+        else stopVoice();
+      });
+      function fitPasswordAboveKeyboard() {
+        const vv = window.visualViewport;
+        if (vv) document.documentElement.style.setProperty('--visible-height', Math.round(vv.height) + 'px');
+        const gate = document.getElementById('gate');
+        if (!gate) return;
+        gate.classList.toggle('keyboard-open', Boolean(vv && window.innerHeight - vv.height > 100));
+      }
+      window.visualViewport?.addEventListener('resize', fitPasswordAboveKeyboard);
+      window.visualViewport?.addEventListener('scroll', fitPasswordAboveKeyboard);
+      window.addEventListener('orientationchange', () => window.setTimeout(fitPasswordAboveKeyboard, 120));
+      document.getElementById('invite-code').addEventListener('focus', fitPasswordAboveKeyboard);
+      function requestInvitationFullscreen() {
+        const root = document.documentElement;
+        if (document.fullscreenElement || typeof root.requestFullscreen !== 'function') return;
+        try {
+          const request = root.requestFullscreen({navigationUI:'hide'});
+          request?.catch(() => {});
+        } catch (_) {
+          // Fullscreen is optional when the browser or device does not support it.
+        }
+      }
+      document.getElementById('invite-code').addEventListener('focus', requestInvitationFullscreen, {once:true});
       document.getElementById('unlock-form').addEventListener('submit', async event => {
         event.preventDefault();
         const code = document.getElementById('invite-code').value.trim();
         const button = document.getElementById('unlock-button');
         const error = document.getElementById('gate-error');
+        requestInvitationFullscreen();
+        enableNarration();
         error.textContent = ''; button.disabled = true; button.textContent = 'Checking your envelope…';
         try {
           const response = await fetch('/.netlify/functions/unlock', {
@@ -446,83 +419,261 @@
           if (!response.ok || !data.ok) throw new Error(data.message || 'This invitation could not be opened.');
           person = clean(data.guestName, 'you');
           inviteId = clean(data.inviteId, 'invite');
-          screens.ask.heading = `${person === 'you' ? 'Would you' : `${person}, would you`} like to go out with Alex?`;
+          applyOwnerSettings(data.settings || {});
+          await flowReady;
           document.body.dataset.locked = 'false';
           document.getElementById('gate').remove();
+          gateVideo.pause();
           unlocked = true;
           nav('ask');
         } catch (failure) {
           error.textContent = failure.message || 'Something went wrong. Try again.';
-          button.disabled = false; button.textContent = 'Open my surprise ♡';
+          gateSpeechKey = 'password-error';
+          gateSpeech = 'Oops! That code does not look quite right. Try another one!';
+          say(gateSpeech, gateSpeechKey);
+          button.disabled = false; button.textContent = 'Unlock invitation';
         }
       });
 
-      function addChoice(symbol, label, next, key) {
+      function addChoice(symbol, label, choose) {
         const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = 'choice';
+        btn.type = 'button'; btn.className = 'choice';
         const icon = document.createElement('span'); icon.className = 'choice-icon'; icon.textContent = symbol;
-        const text = document.createElement('span'); text.textContent = label;
-        const arrow = document.createElement('span'); arrow.className = 'choice-arrow'; arrow.setAttribute('aria-hidden', 'true'); arrow.textContent = '→';
-        btn.append(icon, text, arrow);
-        btn.addEventListener('click', () => { picks[key] = `${symbol} ${label}`; nav(next); });
+        icon.setAttribute('aria-hidden', 'true');
+        const text = document.createElement('span'); text.textContent = fillQuestion(label);
+        btn.append(icon,text);
+        btn.addEventListener('click',choose);
         return btn;
       }
+      const dayKey = (date) => [date.getFullYear(),String(date.getMonth()+1).padStart(2,'0'),String(date.getDate()).padStart(2,'0')].join('-');
+      const localDay = (key) => {
+        const [y,m,d] = key.split('-').map(Number);
+        return new Date(y,m-1,d);
+      };
+      const formatDay = (key) => key ? key === 'Choose together' ? key
+        : new Intl.DateTimeFormat('en',{weekday:'short',month:'short',day:'numeric',year:'numeric'}).format(localDay(key)) : 'Not selected';
+      let calendarMonth = new Date(new Date().getFullYear(),new Date().getMonth(),1);
+      function addSchedule() {
+        const wrap = document.createElement('div'); wrap.className = 'calendar-wrap';
+        const calendar = document.createElement('div'); calendar.className = 'planning-calendar';
+        calendar.setAttribute('aria-label','Choose an available day');
+        const availabilityHint = document.createElement('p');
+        availabilityHint.className='schedule-hint availability-hint';
+        availabilityHint.setAttribute('role','status');
+        availabilityHint.textContent = Object.keys(availableSlots).length
+          ? 'Choose an open day and one of its available times.'
+          : 'No dates are open yet. You can ask Alex to choose a day with you.';
+        const selectedText = document.createElement('div'); selectedText.className='schedule-hint'; selectedText.setAttribute('role','status');
+        const timeLabel = document.createElement('div'); timeLabel.className='gate-label'; timeLabel.textContent='What time of day suits you?';
+        const times = document.createElement('div'); times.className='time-options';
+        times.setAttribute('role','group'); times.setAttribute('aria-label','Available times of day');
+        const sendButton = makeButton('Send my choices to Alex 💌','btn-primary',() => submitAnswer('yes'),'send-answer');
+        const togetherButton = makeButton('Choose a day together later','btn-secondary',() => {
+          picks.day='Choose together';
+          picks.time='';
+          updateSelected();
+        });
+        const updateSelected = () => {
+          const offered = picks.day && picks.day !== 'Choose together' ? (availableSlots[picks.day] || []) : [];
+          times.replaceChildren();
+          for (const [icon,value] of calendarTimes) {
+            if (!offered.includes(value)) continue;
+            const btn = document.createElement('button');
+            btn.type = 'button'; btn.className = 'time-option'; btn.dataset.value = value;
+            btn.textContent = icon + ' ' + value;
+            btn.setAttribute('aria-pressed',String(picks.time===value));
+            btn.classList.toggle('selected',picks.time===value);
+            btn.addEventListener('click',() => { picks.time=value; updateSelected(); });
+            times.append(btn);
+          }
+          timeLabel.hidden = !picks.day || picks.day === 'Choose together';
+          times.hidden = timeLabel.hidden;
+          if (picks.day === 'Choose together') selectedText.textContent='You and Alex can choose a day together.';
+          else if (picks.day) selectedText.textContent=formatDay(picks.day)+(picks.time ? ' · '+picks.time : ' · choose a time');
+          else selectedText.textContent='Choose an available day above';
+          sendButton.disabled = picks.day === 'Choose together' ? false : !picks.day || !picks.time || !offered.includes(picks.time);
+          [...calendar.querySelectorAll('.calendar-day:not(.blank)')].forEach(btn => {
+            const candidate=btn.dataset.day;
+            btn.classList.toggle('selected',candidate===picks.day);
+            if(candidate===picks.day)btn.setAttribute('aria-pressed','true');
+            else btn.removeAttribute('aria-pressed');
+          });
+        };
+        function drawCalendar() {
+          calendar.replaceChildren();
+          const header = document.createElement('div'); header.className='calendar-header';
+          const monthTitle = document.createElement('div'); monthTitle.className='calendar-month';
+          monthTitle.textContent = new Intl.DateTimeFormat('en',{month:'long',year:'numeric'}).format(calendarMonth);
+          const previous = document.createElement('button'); previous.className='calendar-arrow'; previous.type='button'; previous.textContent='‹'; previous.setAttribute('aria-label','Previous month');
+          const next = document.createElement('button'); next.className='calendar-arrow'; next.type='button'; next.textContent='›'; next.setAttribute('aria-label','Next month');
+          const now = new Date();
+          const firstAllowedMonth = new Date(now.getFullYear(),now.getMonth(),1);
+          const lastAllowedMonth = new Date(now.getFullYear(),now.getMonth()+3,1);
+          previous.disabled = calendarMonth <= firstAllowedMonth;
+          next.disabled = calendarMonth >= lastAllowedMonth;
+          previous.addEventListener('click',() => { calendarMonth = new Date(calendarMonth.getFullYear(),calendarMonth.getMonth()-1,1); drawCalendar(); });
+          next.addEventListener('click',() => { calendarMonth = new Date(calendarMonth.getFullYear(),calendarMonth.getMonth()+1,1); drawCalendar(); });
+          header.append(previous,monthTitle,next); calendar.append(header);
+          const grid = document.createElement('div'); grid.className='calendar-grid'; grid.setAttribute('role','group'); grid.setAttribute('aria-label',monthTitle.textContent);
+          ['M','T','W','T','F','S','S'].forEach((w,i) => {
+            const cell = document.createElement('span'); cell.className='calendar-weekday'; cell.textContent=w;
+            cell.setAttribute('aria-label',['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'][i]);grid.append(cell);
+          });
+          const y = calendarMonth.getFullYear(), m = calendarMonth.getMonth();
+          const leading = (new Date(y,m,1).getDay()+6)%7;
+          for(let i=0;i<leading;i++) {const blank=document.createElement('span');blank.className='calendar-day blank';grid.append(blank);}
+          const today = dayKey(now), maxDate = dayKey(new Date(now.getFullYear(),now.getMonth()+4,0));
+          for(let d=1;d<=new Date(y,m+1,0).getDate();d++) {
+            const candidate = new Date(y,m,d), key = dayKey(candidate);
+            const offered = availableSlots[key] || [];
+            const btn = document.createElement('button');
+            btn.type='button'; btn.className='calendar-day'; btn.textContent=String(d); btn.dataset.day=key;
+            btn.setAttribute('aria-label',new Intl.DateTimeFormat('en',{weekday:'long',month:'long',day:'numeric',year:'numeric'}).format(candidate)+(offered.length ? ', '+offered.join(', ')+' available' : ', unavailable'));
+            btn.disabled = key < today || key > maxDate || offered.length===0;
+            btn.classList.toggle('available',offered.length>0 && !btn.disabled);
+            btn.classList.toggle('today',key===today);
+            btn.addEventListener('click',()=>{
+              if (btn.disabled) return;
+              picks.day=key;
+              if(!offered.includes(picks.time))picks.time='';
+              drawCalendar();
+              updateSelected();
+            });
+            grid.append(btn);
+          }
+          calendar.append(grid);
+        }
+        drawCalendar();
+        updateSelected();
+        const controls=document.createElement('div');controls.className='schedule-actions';
+        controls.append(sendButton,togetherButton);
+        wrap.append(calendar,availabilityHint,timeLabel,times,selectedText,controls);
+        actions.append(wrap);
+      }
+      let lastDodgeAt = 0;
       function dodge(no) {
-        if (tries >= 2 || reduceMotion) return false;
-        tries++;
-        no.style.setProperty('--dx', tries === 1 ? '23px' : '-21px');
+        if (tries >= 3 || reduceMotion) return false;
+        if (Date.now() - lastDodgeAt < 750) return false;
+        lastDodgeAt = Date.now();
+        const count = ++tries;
+        const arena = no.closest('.ask-buttons');
+        const travelX = Math.max(0, no.offsetLeft - 12);
+        const travelY = Math.max(0, (arena.clientHeight - no.offsetHeight) / 2 - 10);
+        // Three long hops: upper-left, lower-middle, lower-left.
+        const poses = [
+          {x:-travelX*.97, y:-travelY*.94, turn:19, face:'😛'},
+          {x:-travelX*.48, y:travelY*.96, turn:-19, face:'🤪'},
+          {x:-travelX*.96, y:travelY*.92, turn:14, face:'😜'}
+        ];
+        const pose = poses[count - 1];
+        no.style.setProperty('--dx', Math.round(pose.x) + 'px');
+        no.style.setProperty('--dy', Math.round(pose.y) + 'px');
+        no.style.setProperty('--twist', pose.turn + 'deg');
         no.classList.add('mischief');
-        const noFace = no.querySelector('.face');
-        if (noFace) noFace.textContent = tries === 1 ? '😛' : '😜';
-        no.style.setProperty('--dy', tries === 1 ? '-16px' : '15px');
+        const face = no.querySelector('.face');
+        if (face) face.textContent = pose.face;
         bunny.dataset.mood = 'blep';
-        bubble.textContent = tries === 1 ? 'Blehhh! This button is a little ticklish. 😛' : 'Okay okay, I’ll behave now. You can choose either one. ♡';
-        feedback.textContent = tries === 2 ? 'Both choices are available.' : '';
+        // The No joke has no extra text, only expressions and movement.
         clearTimeout(escapeTimer);
-        escapeTimer = window.setTimeout(() => { no.style.setProperty('--dx', '0px'); no.style.setProperty('--dy', '0px'); no.classList.remove('mischief'); bunny.dataset.mood = 'wink'; }, 600);
+        escapeTimer = window.setTimeout(() => {
+          no.style.setProperty('--dx','0px');
+          no.style.setProperty('--dy','0px');
+          no.style.setProperty('--twist','0deg');
+          no.classList.remove('mischief');
+          if (count === 3) {
+            no.classList.add('gave-up');
+            if (face) face.textContent = '😌';
+          }
+          bunny.dataset.mood = 'wink';
+        }, 840);
         return true;
       }
       function addAsk() {
         const row = document.createElement('div'); row.className = 'ask-buttons';
-        const yes = makeButton('Yes', 'btn-primary', () => {
+        const yes = makeButton('', 'btn-primary emoji-choice', () => {
+          if (yes.disabled) return;
           yes.disabled = true;
           yes.classList.add('in-love');
           const face = yes.querySelector('.face'); if (face) face.textContent = '😍';
           bunny.dataset.mood = 'happy';
-          bubble.textContent = 'Aww! Even my little bunny heart is doing cartwheels! ♡';
-          const spark = document.createElement('span'); spark.className = 'love-sparkles'; spark.innerHTML = '<span style="left:12%;top:0">💖</span><span style="right:12%;top:8%">💕</span>';
+          const spark = document.createElement('span'); spark.className = 'love-sparkles';
+          spark.setAttribute('aria-hidden','true');
+          spark.innerHTML = '<span style="left:12%;top:0">💖</span><span style="right:12%;top:8%">💕</span>';
           yes.append(spark);
-          say('Oh my goodness! This calls for a happy bunny dance!');
-          setTimeout(() => nav('outing'), 1350);
+          let movedOn = false;
+          const afterCelebration = () => {
+            if (movedOn || step !== 'ask') return;
+            movedOn = true;
+            advance();
+          };
+          const recorded = say('Oh, lovely! A tiny happy dance!','yes',afterCelebration);
+          if (!recorded) setTimeout(afterCelebration, reduceMotion ? 350 : 1350);
+          else setTimeout(afterCelebration, 10000); // Never trap visitors if a media event is lost.
         }, 'yes-btn');
-        const yesFace = document.createElement('span'); yesFace.className = 'face'; yesFace.setAttribute('aria-hidden','true'); yesFace.textContent = '🥹';
-        yes.prepend(yesFace);
-        const no = makeButton('No', 'btn-secondary', () => nav('decline'), 'no-btn');
-        const noFace = document.createElement('span'); noFace.className = 'face'; noFace.setAttribute('aria-hidden','true'); noFace.textContent = '😏';
-        no.prepend(noFace);
-        // Mischievous twice on pointer interaction. It remains selectable afterward.
-        no.addEventListener('pointerenter', e => { if (e.pointerType === 'mouse') dodge(no); });
+        yes.setAttribute('aria-label', 'Yes, I would like to go out with '+sender);
+        yes.title = 'Yes';
+        const yesFace = document.createElement('span'); yesFace.className = 'face'; yesFace.setAttribute('aria-hidden','true'); yesFace.textContent = '🥰';
+        yes.append(yesFace);
+        const yesSignal = document.createElement('span'); yesSignal.className = 'choice-signal';
+        yesSignal.setAttribute('aria-hidden','true'); yesSignal.textContent = '✅'; yes.append(yesSignal);
+        const yesLabel = document.createElement('span'); yesLabel.className = 'choice-label';
+        yesLabel.textContent = 'Yes'; yes.append(yesLabel);
+        const no = makeButton('', 'btn-secondary emoji-choice', () => {}, 'no-btn');
+        no.setAttribute('aria-label', 'No, thank you');
+        no.title = 'No';
+        const noFace = document.createElement('span'); noFace.className = 'face'; noFace.setAttribute('aria-hidden','true'); noFace.textContent = '😌';
+        no.append(noFace);
+        const noSignal = document.createElement('span'); noSignal.className = 'choice-signal';
+        noSignal.setAttribute('aria-hidden','true'); noSignal.textContent = '❌'; no.append(noSignal);
+        const noLabel = document.createElement('span'); noLabel.className = 'choice-label';
+        noLabel.textContent = 'No'; no.append(noLabel);
+        no.addEventListener('pointerenter', e => {
+          if (e.pointerType === 'mouse') dodge(no);
+        });
         no.addEventListener('pointerdown', e => {
-          if (e.pointerType !== 'mouse' && tries < 2 && !reduceMotion) { e.preventDefault(); dodge(no); }
+          if (e.pointerType !== 'mouse' && tries < 3 && !reduceMotion) {
+            e.preventDefault();
+            if (dodge(no)) lastTouchDodge = Date.now();
+          }
         });
         no.addEventListener('click', e => {
-          if (tries > 0 && tries < 2 && !reduceMotion && e.detail !== 0) { e.stopImmediatePropagation(); e.preventDefault(); }
-        }, true);
-        row.append(yes, no); actions.append(row);
+          // A synthesized click after a touch-dodge must not count as acceptance of No.
+          if (Date.now() - lastTouchDodge < 600) return;
+          if (e.detail === 0 || reduceMotion || tries >= 3) { nav('decline'); submitAnswer('no'); return; }
+          dodge(no);
+        });
+        row.append(yes,no); actions.append(row);
       }
       function makeSummary() {
-        const summary = document.createElement('div'); summary.className = 'summary';
-        for (const [key, label] of [['outing', 'The plan'], ['energy', 'The vibe'], ['timing', 'The timing']]) {
-          const line = document.createElement('div'); line.className = 'summary-row';
-          const heading = document.createElement('b'); heading.textContent = `${label}:`;
-          const value = document.createElement('span'); value.textContent = picks[key];
-          line.append(heading, value); summary.append(line);
-        }
+        const summary=document.createElement('div'); summary.className='summary';
+        const entries = [
+          ['The idea',picks.outing],
+          ['Your preference',picks.detail],
+          ['Convenient area',picks.meetArea],
+          ['Day',picks.day && formatDay(picks.day)],
+          ['Time',picks.time]
+        ];
+        for (const q of answeredExtraQuestions()) entries.push([fillQuestion(q.heading),extraAnswers[q.id]]);
+        entries.filter(([,value])=>value).forEach(([label,value]) => {
+          const line=document.createElement('div');line.className='summary-row';
+          const heading=document.createElement('b');heading.textContent=label+':';
+          const detail=document.createElement('span');detail.textContent=value;
+          line.append(heading,detail);summary.append(line);
+        });
         return summary;
       }
+      function answeredExtraQuestions() {
+        return flows.map(key=>extraQuestions.find(q=>q.id===key)).filter(q=>q && extraAnswers[q.id]);
+      }
+      const timingAnswer = () => [picks.day && formatDay(picks.day),picks.time].filter(Boolean).join(' · ');
       function message() {
-        return `Hi ${sender}! 🐰\nThe tiny bunny delivered your question.\n\nMy answer: YES, I'd love to go out! ♡\n\n${picks.outing}\n${picks.energy}\n${picks.timing}\n\n— ${person}`;
+        const lines = [
+          ['Idea',picks.outing],['Preference',picks.detail],['Convenient area',picks.meetArea],
+          ['Day',picks.day && formatDay(picks.day)],['Time',picks.time],
+          ...answeredExtraQuestions().map(q=>[fillQuestion(q.heading),extraAnswers[q.id]])
+        ];
+        return ['Hi '+sender+'! 🐰','Yes, I would like to go out.','',
+          ...lines.filter(([,value])=>value).map(([label,value])=>label+': '+value),'','— '+person].join('\n');
       }
       async function copyAnswer() {
         try {
@@ -545,24 +696,41 @@
           if (!win) feedback.textContent = 'Open WhatsApp to send it, or use Copy.';
         }
       }
-      async function submitAnswer() {
+      let submissionInFlight = false;
+      let submittedDecision = '';
+      async function submitAnswer(decision='yes') {
         const btn = document.getElementById('send-answer');
-        if (!btn || btn.disabled) return;
-        btn.disabled = true;
-        feedback.textContent = 'Sending your choices…';
+        if (submissionInFlight || submittedDecision) return;
+        if (decision === 'yes' && (!btn || btn.disabled)) return;
+        if (decision === 'no' && step !== 'decline') return;
+        submissionInFlight = true;
+        if (btn) btn.disabled = true;
+        feedback.textContent = decision === 'no' ? 'Sending your reply…' : 'Sending your choices…';
         const params = new URLSearchParams({
-          'form-name': 'going-out', 'bot-field':'', 'invite': inviteId, 'recipient': person,
-          'outing': picks.outing, 'energy': picks.energy, 'timing': picks.timing,
-          'decision': 'yes'
+          'form-name': 'going-out-develop', 'bot-field':'', 'invite': inviteId, 'recipient': person,
+          'outing': picks.outing, 'energy': picks.detail, 'timing': timingAnswer(),
+          'detail': picks.detail, 'meet_area': picks.meetArea,
+          'day': picks.day, 'time': picks.time,
+          'decision': decision,
+          'subject': decision === 'no' ? 'Alex received a bunny invitation decline' : 'Alex received a bunny invitation answer',
+          'extra_answers': JSON.stringify(answeredExtraQuestions().map(q=>({question:fillQuestion(q.heading),answer:extraAnswers[q.id]})))
         });
         try {
           const res = await fetch('/', {method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body:params.toString()});
           if (!res.ok) throw new Error('Could not save the response');
-          feedback.textContent = 'Sent! Alex can see your choices now. ♡';
-          btn.textContent = 'Sent ♡';
-        } catch (err) {
-          feedback.textContent = 'That did not send. You can still use Share or Copy.';
-          btn.disabled = false;
+          submittedDecision = decision;
+          feedback.textContent = decision === 'no' ? 'Your reply has been sent.' : 'Sent! Alex has your choices. ♡';
+          if (btn) btn.textContent = 'Sent ♡';
+        } catch (_) {
+          feedback.textContent = decision === 'no'
+            ? 'Your reply could not send just now.'
+            : 'That did not send. Please try again.';
+          if (btn) btn.disabled = false;
+          if (decision === 'no' && !document.getElementById('retry-decline')) {
+            actions.append(makeButton('Try sending again','btn-secondary',() => submitAnswer('no'),'retry-decline'));
+          }
+        } finally {
+          submissionInFlight = false;
         }
       }
       function confettiOn(enabled) {
@@ -580,45 +748,143 @@
         }
       }
       function render() {
-        const data = screens[step];
-        title.textContent = data.heading;
-        description.textContent = data.subheading;
-        bubble.textContent = data.speech;
-        chapter.textContent = data.chapter;
-        bunny.dataset.mood = data.mood;
-        topSticker.textContent = step === 'success' ? 'mission accomplished ♡' : step === 'decline' ? 'sending good vibes ♡' : 'a tiny surprise ✉';
-        confettiOn(step === 'success');
+        document.body.dataset.step=step;
+        const data=screens[step];
+        if(!data) { nav('ask'); return; }
+        if(step==='detail') {
+          const question=activityQuestions[picks.activityKey] || activityQuestions.surprise;
+          screens.detail.heading=question.heading;
+          screens.detail.speech=question.speech;
+        }
+        title.textContent=fillQuestion(step==='ask' ? configuredAskTemplate : data.heading);
+        description.textContent=fillQuestion(data.subheading);
+        dialogue.open = false;
+        bubble.textContent = step === 'detail' && !editedVoiceClips.has(sceneTrackKey())
+          ? 'What sounds most like you?' : data.speech;
+        const current = flows.indexOf(step);
+        chapter.textContent=step==='ask'?data.chapter:'step '+(current+1)+' of '+flows.length;
+        bunny.dataset.mood=data.mood;
+        confettiOn(step==='success');
         actions.replaceChildren();
         copy.classList.remove('enter'); void copy.offsetWidth; copy.classList.add('enter');
         dots.replaceChildren();
-        const idx = flows.indexOf(step);
-        if (idx >= 0) for (let i = 0; i < flows.length; i++) {
-          const dot = document.createElement('span'); dot.className = 'dot' + (i === idx ? ' active' : '');
-          dot.setAttribute('aria-hidden', 'true'); dots.append(dot);
+        if(current>=0)for(let i=0;i<flows.length;i++) {
+          const dot=document.createElement('span');dot.className='dot'+(i===current?' active':'');
+          dot.setAttribute('aria-hidden','true');dots.append(dot);
         }
-        back.classList.toggle('hidden', !['ask','outing','energy','timing'].includes(step));
-        if (step === 'intro') actions.append(makeButton('Open the envelope ✉', 'btn-primary', () => nav('ask')));
-        if (step === 'ask') addAsk();
-        if (step === 'outing' || step === 'energy' || step === 'timing') {
-          const grid = document.createElement('div'); grid.className = 'choices';
-          const next = { outing: 'energy', energy: 'timing', timing: 'success' }[step];
-          data.options.forEach(([symbol,label]) => grid.append(addChoice(symbol,label,next,step)));
+        back.classList.toggle('hidden',!(['outing','schedule'].includes(step)||step.startsWith('extra-')));
+        if(step==='ask')addAsk();
+        if(step==='outing'){
+          const grid=document.createElement('div');grid.className='choices';
+          data.options.forEach(([symbol,label,key])=>grid.append(addChoice(symbol,label,()=>{
+            if (picks.activityKey!==key) picks.detail='';
+            picks.activityKey=key;
+            picks.outing=symbol+' '+fillQuestion(label);
+            advance();
+          })));
           actions.append(grid);
         }
-        if (step === 'success') {
-          actions.append(makeSummary());
-          actions.append(makeButton('Send my choices to Alex 💌', 'btn-primary', submitAnswer, 'send-answer'));
-          const note = document.createElement('p'); note.className = 'gate-help'; note.textContent = 'Only sent if you tap the button. Alex receives these three preferences. Nothing is sent automatically.'; actions.append(note);
-          const row = document.createElement('div'); row.className = 'button-row';
-          row.append(makeButton('Share my answer ↗', 'btn-primary', shareAnswer), makeButton('Copy ✦', 'btn-secondary', copyAnswer));
-          actions.append(row);
-          actions.append(makeButton('Play again ↺', 'btn-quiet', () => nav('intro')));
+        if(step==='detail'){
+          const grid=document.createElement('div');grid.className='choices';
+          (activityQuestions[picks.activityKey] || activityQuestions.surprise).options.forEach(([symbol,label])=>{
+            grid.append(addChoice(symbol,label,()=>{ picks.detail=symbol+' '+fillQuestion(label);advance(); }));
+          });
+          actions.append(grid);
         }
-        if (step === 'decline') actions.append(makeButton('Send bunny home ♡', 'btn-secondary', () => nav('ask')));
-        if (unlocked) say(data.speech);
+        if(step==='area'){
+          const grid=document.createElement('div');grid.className='choices';
+          data.options.forEach(([symbol,label]) => grid.append(addChoice(symbol,label,()=>{
+            picks.meetArea=symbol+' '+fillQuestion(label);
+            calendarMonth=picks.day && picks.day!=='Choose together'
+              ? new Date(localDay(picks.day).getFullYear(),localDay(picks.day).getMonth(),1)
+              : new Date(new Date().getFullYear(),new Date().getMonth(),1);
+            advance();
+          })));
+          actions.append(grid);
+        }
+        if(step==='schedule')addSchedule();
+        if(step.startsWith('extra-')){
+          const ix=Number(step.slice(6));
+          const q=extraQuestions[ix];
+          if(q){
+            const grid=document.createElement('div');grid.className='choices';
+            for(const label of q.options)grid.append(addChoice('💫',label,()=>{
+              extraAnswers[q.id]=fillQuestion(label);
+              advance();
+            }));
+            actions.append(grid);
+          }
+        }
+
+        if(unlocked)say(data.speech,sceneTrackKey());
+      }
+
+      function applyOwnerSettings(value){
+        if(!value||typeof value!=='object')return;
+        if (value.availableSlots && typeof value.availableSlots === 'object' && !Array.isArray(value.availableSlots)) {
+          availableSlots = Object.fromEntries(Object.entries(value.availableSlots).filter(([day,slots]) =>
+            /^\d{4}-\d{2}-\d{2}$/.test(day) && Array.isArray(slots))
+            .map(([day,slots]) => [day, [...new Set(slots.filter(slot => calendarTimes.some(([,label]) => label===slot)))]])
+            .filter(([,slots]) => slots.length));
+        } else {
+          availableSlots = Object.fromEntries((Array.isArray(value.availableDays) ? value.availableDays : [])
+            .filter(day => typeof day==='string' && /^\d{4}-\d{2}-\d{2}$/.test(day))
+            .map(day => [day, calendarTimes.map(([,label]) => label)]));
+        }
+        sender=typeof value.senderName==='string'&&value.senderName.trim()?value.senderName.trim().slice(0,48):'Alex';
+        if (sender !== 'Alex') {
+          screens.ask.speech = 'Would you like to go out with ' + sender + '?';
+          screens.success.speech = 'Lovely. Your plans are ready to share with ' + sender + '.';
+          editedVoiceClips.add('ask');
+          editedVoiceClips.add('success');
+        }
+        const brand=document.querySelector('.brand');
+        if(brand&&brand.lastChild?.nodeType===3)brand.lastChild.textContent=' '+(value.siteLabel||'tiny bunny mission');
+        configuredAskTemplate=value.screens?.ask?.heading||'{name}, would you like to go out with {sender}?';
+        for(const [key,v] of Object.entries(value.screens||{})){
+          if(!screens[key]||!v)continue;
+          if(v.heading&&key!=='ask')screens[key].heading=v.heading;
+          if(v.subheading)screens[key].subheading=v.subheading;
+          const spoken=v.speech||v.heading;
+          if(spoken&&spoken!==screens[key].speech){
+            screens[key].speech=spoken;
+            editedVoiceClips.add(key);
+          }
+        }
+        screens.success.subheading = value.screens?.success?.subheading || 'You said yes to going out with '+sender+'. I think this deserves a tiny celebration.';
+        for(const choice of screens.outing.options){
+          const updated=value.outingLabels?.[choice[2]];
+          if(updated)choice[1]=updated;
+        }
+        for(const [key,v] of Object.entries(value.detail||{})){
+          const q=activityQuestions[key];if(!q||!v)continue;
+          if(v.heading)q.heading=v.heading;
+          const spoken=v.speech||v.heading;
+          if(spoken&&spoken!==q.speech){q.speech=spoken;editedVoiceClips.add('detail-'+key);}
+          if(Array.isArray(v.options))v.options.forEach((label,index)=>{
+            if(label&&q.options[index])q.options[index][1]=label;
+          });
+        }
+        if(Array.isArray(value.areaLabels))value.areaLabels.forEach((label,index)=>{
+          if(label&&screens.area.options[index])screens.area.options[index][1]=label;
+        });
+        if(value.timeHeading)timeQuestion=value.timeHeading;
+        const extras=Array.isArray(value.extraQuestions)?value.extraQuestions.slice(0,5):[];
+        for(let i=0;i<extras.length;i++){
+          const q=extras[i];
+          if(!q.heading||!Array.isArray(q.options)||q.options.length<2)continue;
+          const key='extra-'+i;
+          extraQuestions.push({id:key,heading:q.heading,speech:q.speech||q.heading,options:q.options});
+          screens[key]={chapter:'one more tiny question',heading:q.heading,subheading:'Pick the answer you like best.',speech:q.speech||q.heading,mood:'wink'};
+
+        }
+        const available=[...planningSteps,...extraQuestions.map(question=>question.id)];
+        const configured=Array.isArray(value.workflow)?value.workflow:available;
+        const configuredExtras=configured.filter(key=>extraQuestions.some(question=>question.id===key));
+        flows=['ask','outing',...configuredExtras,'schedule'];
       }
       back.addEventListener('click', () => {
-        const previous = { ask: 'intro', outing: 'ask', energy: 'outing', timing: 'energy' }[step];
+        const previous=flows[flows.indexOf(step)-1];
         if (previous) nav(previous);
       });
       render();

@@ -1,7 +1,13 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const { createHash } = require('node:crypto');
-const { handler } = require('../netlify/functions/unlock.cjs');
+async function handler({httpMethod,body}) {
+  const {default:unlock}=await import('../netlify/functions/unlock.mjs');
+  const response=await unlock(new Request('https://example.test/unlock',{
+    method:httpMethod,...(httpMethod==='POST'?{body}:{})
+  }));
+  return {statusCode:response.status,body:await response.text()};
+}
 // The tests inject a sample credential; they NEVER include an actual invite password.
 const code = 'TESTPASSCODE123';
 process.env.GO_OUT_INVITES_JSON = JSON.stringify([
@@ -28,4 +34,18 @@ test('unrelated methods denied',async()=>{
 });
 test('oversized request denied',async()=>{
   const result=await handler({httpMethod:'POST',body:'x'.repeat(502)});assert.equal(result.statusCode,413);
+});
+
+test('four-character test invitations are accepted', async () => {
+  const shortCode = 'FOUR';
+  process.env.GO_OUT_INVITES_JSON = JSON.stringify([
+    { id:'short-invite', name:'Test Girl', hash:createHash('sha256').update(shortCode).digest('hex') }
+  ]);
+  const result = await handler({httpMethod:'POST',body:JSON.stringify({code:shortCode.toLowerCase()})});
+  assert.equal(result.statusCode,200);
+  assert.equal(JSON.parse(result.body).guestName,'Test Girl');
+});
+test('passwords shorter than four characters are rejected', async () => {
+  const result = await handler({httpMethod:'POST',body:JSON.stringify({code:'abc'})});
+  assert.equal(result.statusCode,401);
 });

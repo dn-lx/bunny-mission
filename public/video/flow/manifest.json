@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "clips": {
+    "ask": "/video/flow/ask.mp4",
+    "outing": "/video/flow/outing.mp4",
+    "schedule": "/video/flow/schedule.mp4",
+    "detail": "/video/flow/detail.mp4",
+    "area": "/video/flow/area.mp4",
+    "yes": "/video/flow/yes.mp4",
+    "success": "/video/flow/success.mp4",
+    "decline": "/video/flow/decline.mp4",
+    "password": "/video/flow/password.mp4"
+  }
+}

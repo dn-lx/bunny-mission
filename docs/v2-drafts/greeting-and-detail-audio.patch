@@ -1,0 +1,53 @@
+diff --git a/public/index.html b/public/index.html
+index 3f95797..4c5cf27 100644
+--- a/public/index.html
++++ b/public/index.html
+@@ -152,6 +152,7 @@
+       let lastTouchDodge = 0;
+       let voiceOn = true;
+       let unlocked = false;
++      let portraitGreetingPlayed = false;
+       const picks = { outing: '', activityKey: '', detail: '', meetArea: '', day: '', time: '' };
+       const planningSteps = ['outing','detail','area','schedule'];
+       let availableDays = new Set();
+@@ -360,7 +361,7 @@
+         const key = clipKey?.startsWith('detail-') ? 'detail' : clipKey;
+         const path = !editedVoiceClips.has(clipKey) && flowClips[key];
+         if (!path) {
+-          const recording = !editedVoiceClips.has(clipKey) && audioClips[key];
++          const recording = !editedVoiceClips.has(clipKey) && (audioClips[clipKey] || audioClips[key]);
+           if (recording) {
+             playFlowClip(narration, recording, token, onComplete, () => speakWithDevice(text, token, onComplete));
+             return true;
+@@ -836,7 +837,16 @@
+           actions.append(row);
+           actions.append(makeButton('Play again ↺','btn-quiet',()=>{resetAnswers();nav('intro');}));
+         }
+-        if(unlocked)say(data.speech,sceneTrackKey());
++        if (unlocked) {
++          if (portraitVersion && step === 'ask' && !portraitGreetingPlayed) {
++            portraitGreetingPlayed = true;
++            say('Hi there, how are you?', 'greeting', () => {
++              if (step === 'ask') say(data.speech, sceneTrackKey());
++            });
++          } else {
++            say(data.speech, sceneTrackKey());
++          }
++        }
+       }
+ 
+       function applyOwnerSettings(value){
+diff --git a/scripts/browser-smoke.cjs b/scripts/browser-smoke.cjs
+index 48a8b13..c8c61c3 100644
+--- a/scripts/browser-smoke.cjs
++++ b/scripts/browser-smoke.cjs
+@@ -238,7 +238,9 @@ async function bypassFullscreenPrompt(page) {
+     await portrait.goto(origin+'/?version=2',{waitUntil:'domcontentloaded'});
+     await bypassFullscreenPrompt(portrait);
+     await portrait.locator('#invite-code').fill('TEST');
++    const greetingRequest=portrait.waitForRequest('**/resources/v2/audio/greeting.mp3');
+     await portrait.locator('#unlock-button').click();
++    await greetingRequest;
+     await portrait.locator('#yes-btn').waitFor({state:'visible'});
+     await portrait.waitForFunction(()=>document.querySelector('#bunny-video').poster.endsWith('/resources/v2/nibbles-portrait.webp'));
+     const portraitLayout=await portrait.evaluate(()=>{

@@ -1,0 +1,86 @@
+/* Version 2 portrait stage. Original resources are archived in /resources/v1. */
+:root {
+  --ink: #243d35;
+  --muted: #465d51;
+  --berry: #284c40;
+  --rose: #456d58;
+  --cream: #dde7dc;
+  --line: #819c89;
+  --glass: rgb(255 249 238 / .94);
+  --focus: #284c40;
+}
+body { background: #dde7dc; }
+.decor { display: none; }
+.shell, .gate-screen { min-height: 100dvh; }
+.art-pane, .gate-art { position: absolute; inset: 0; }
+.bunny-wrap, .gate-film, body[data-step="ask"] .bunny-wrap,
+body[data-step="schedule"] .bunny-wrap, body[data-step="success"] .bunny-wrap {
+  inset: 0;
+  left: 50%;
+  width: min(100vw, 56.25dvh);
+  height: 100dvh;
+  aspect-ratio: auto;
+  transform: translateX(-50%);
+  border-radius: 0;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent), linear-gradient(transparent, #000 6%, #000 94%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent), linear-gradient(transparent, #000 6%, #000 94%, transparent);
+  -webkit-mask-composite: source-in;
+  mask-composite: intersect;
+}
+.bunny-film, .gate-character {
+  object-fit: cover;
+  object-position: center;
+  filter: none;
+}
+.content-pane, body[data-step="ask"] .content-pane {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 480px);
+  min-height: 100dvh;
+  justify-self: center;
+  margin: 0;
+  padding: calc(var(--top-inset) + 40px) 18px var(--bottom-inset);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: stretch;
+}
+h1, .copy h1 { font-size: clamp(28px, 7.5vw, 44px); }
+.interaction, body[data-step="ask"] .content-pane .interaction {
+  width: 100%;
+  margin: auto 0 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+.btn-primary { background: #284c40; border-color: #284c40; box-shadow: 0 4px 14px #243d3525; }
+.btn-primary:hover:not(:disabled) { background: #1f3e33; }
+.btn-secondary, .choice, .time-option, .calendar-day:not(:disabled) { background: rgb(255 249 238 / .94); }
+.btn-secondary:hover, .choice:hover { background: #eaf0e4; }
+.calendar-day.selected, .time-option.selected { background: #284c40; color: #fff9ee; }
+.ask-buttons { min-height: 122px; }
+.ask-buttons #yes-btn, .ask-buttons #no-btn { height: 84px; min-height: 84px; border-radius: 24px; }
+.ask-buttons .face { font-size: 36px; }
+.gate-screen {
+  grid-template-columns: minmax(0, 444px);
+  grid-template-rows: auto 1fr auto;
+  justify-content: center;
+  align-content: stretch;
+  padding: max(24px, env(safe-area-inset-top)) 18px var(--bottom-inset);
+}
+.gate-copy { grid-row: 1; }
+.gate-actions { grid-row: 3; background: transparent; border: 0; box-shadow: none; backdrop-filter: none; padding: 0; }
+body[data-step="schedule"] h1, .copy h1 { font-size: 28px; }
+body[data-step="schedule"] .calendar-wrap { gap: 5px; }
+body[data-step="schedule"] .calendar-day { height: 28px; }
+body[data-step="schedule"] .time-option { min-height: 34px; }
+body[data-step="success"] .summary { background: rgb(255 249 238 / .94); border-radius: 16px; }
+.gate:focus-within.keyboard-open #password-gate .gate-film { inset: 0; width: 100%; height: 100%; }
+@media (max-height: 650px) {
+  .content-pane, body[data-step="ask"] .content-pane { padding-top: 34px; }
+  .choices { gap: 5px; }
+  .choice { min-height: 40px; }
+  .ask-buttons { min-height: 102px; }
+}
