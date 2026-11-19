@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 
 const TIMES = [
   { icon: "☀️", label: "Morning" },
@@ -18,7 +19,7 @@ const DEFAULT_CLIPS = {
   decline: "/video/flow/decline.mp4"
 };
 const NO_FACES = ["😛", "🤪", "😜"];
-const NO_MOVES = [{ x: 24, y: -42 }, { x: -24, y: 34 }, { x: 28, y: -18 }];
+
 
 function textValue(value, fallback, maxLength = 180) {
   return typeof value === "string" && value.trim()
@@ -93,6 +94,40 @@ export default function Invitation() {
   const [noDodges, setNoDodges] = useState(0);
   const [selectedOuting, setSelectedOuting] = useState("");
   const videoRef = useRef(null);
+  const [holding, setHolding] = useState("");
+  const [noPosition, setNoPosition] = useState(null);
+  const [viewport, setViewport] = useState(null);
+  const holdTimer = useRef(null);
+  const activeHold = useRef("");
+  const noButton = useRef(null);
+
+  useEffect(() => {
+    const vv = window.visualViewport;
+    const fullHeight = window.innerHeight;
+    const update = () => setViewport({
+      height: vv?.height || window.innerHeight,
+      top: vv?.offsetTop || 0,
+      keyboard: (vv?.height || window.innerHeight) < fullHeight * .78
+    });
+    update();
+    vv?.addEventListener("resize", update);
+    vv?.addEventListener("scroll", update);
+    window.addEventListener("resize", update);
+    return () => {
+      vv?.removeEventListener("resize", update);
+      vv?.removeEventListener("scroll", update);
+      window.removeEventListener("resize", update);
+    };
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      window.clearTimeout(holdTimer.current);
+      holdTimer.current = null;
+      activeHold.current = "";
+    };
+  }, [step]);
+
 
   const sender = textValue(settings.senderName, "Alex", 48);
   const slots = useMemo(() => getAvailableSlots(settings), [settings]);
@@ -289,32 +324,34 @@ export default function Invitation() {
       const timing = selectedDate === "Choose together"
         ? "Choose a day together later"
         : [selectedDate ? formatDateKey(selectedDate) : "", selectedTime].filter(Boolean).join(" · ");
+      const extraLines = activeExtraIds.filter(id => answers[id]).map(id => {
+        const question = getExtraQuestion(settings, id);
+        return (question?.heading || id) + ": " + answers[id];
+      });
+      const summary = [
+        "🐰 BUNNY MISSION",
+        "",
+        decision === "yes" ? "💖 " + guest + " said yes!" : "💌 " + guest + " kindly declined.",
+        "",
+        ...(decision === "yes" ? [
+          "PLAN",
+          selectedOuting === "surprise"
+            ? textValue(settings.outingLabels?.surprise, "Surprise me", 75)
+            : textValue(settings.outingLabels?.simple, "Something simple", 75),
+          "",
+          "WHEN",
+          timing,
+          ...(extraLines.length ? ["", "THEIR CHOICES", ...extraLines] : [])
+        ] : ["No outing or date was selected."]),
+        "",
+        "Invitation: " + inviteId
+      ].join("\n");
       const params = new URLSearchParams({
         "form-name": "going-out-develop",
         "bot-field": "",
-        invite: inviteId,
-        recipient: guest,
-        outing: decision === "yes"
-          ? (selectedOuting === "surprise"
-            ? textValue(settings.outingLabels?.surprise, "Surprise me", 75)
-            : textValue(settings.outingLabels?.simple, "Something simple", 75))
-          : "",
-        energy: "",
-        timing: decision === "yes" ? timing : "",
-        detail: "",
-        meet_area: "",
-        day: decision === "yes" ? (selectedDate === "Choose together" ? "Choose together" : selectedDate) : "",
-        time: decision === "yes" ? selectedTime : "",
+        reply: summary,
         decision,
-        extra_answers: JSON.stringify(activeExtraIds
-          .filter(id => answers[id])
-          .map(id => {
-            const question = getExtraQuestion(settings, id);
-            return { question: question?.heading || id, answer: answers[id] };
-          })),
-        subject: decision === "no"
-          ? "Alex received a bunny invitation decline"
-          : "Alex received a bunny invitation answer"
+        subject: "Bunny Mission · " + guest + (decision === "yes" ? " said yes 💖" : " declined 💌")
       });
       const response = await fetch("/__forms.html", {
         method: "POST",
@@ -331,12 +368,49 @@ export default function Invitation() {
     }
   }
 
-  function chooseNo(event) {
-    if (event.detail === 0 || reducedMotion || noDodges >= 3) {
-      submitAnswer("no");
-      return;
+  function cancelHold() {
+    window.clearTimeout(holdTimer.current);
+    holdTimer.current = null;
+    activeHold.current = "";
+    setHolding("");
+  }
+
+  function startHold(choice, event) {
+    if (pending || activeHold.current || (event.button !== undefined && event.button !== 0)) return;
+    activeHold.current = choice;
+    setHolding(choice);
+    setError("");
+    const dodge = choice === "no" && !reducedMotion && !event.key && noDodges < 3;
+    holdTimer.current = window.setTimeout(() => {
+      holdTimer.current = null;
+      activeHold.current = "";
+      setHolding("");
+      if (dodge) {
+        const width = window.visualViewport?.width || window.innerWidth;
+        const height = window.visualViewport?.height || window.innerHeight;
+        const size = Math.min(140, width * .36);
+        const old = noButton.current?.getBoundingClientRect();
+        const left = old && old.left > width / 2 ? 16 : Math.max(16, width - size - 16);
+        const top = [height * .32, height * .63, height * .43][noDodges];
+        setNoPosition({ left, top: Math.max(64, Math.min(height - size - 16, top)) });
+        setNoDodges(count => count + 1);
+        return;
+      }
+      setNoPosition(null);
+      if (choice === "yes") {
+        setSelectedOuting("");
+        setStep("outing");
+      } else {
+        submitAnswer("no");
+      }
+    }, dodge ? 700 : 2000);
+  }
+
+  function holdKey(choice, event) {
+    if (event.key === " " || event.key === "Enter") {
+      event.preventDefault();
+      if (!event.repeat) startHold(choice, event);
     }
-    setNoDodges(current => current + 1);
   }
   function chooseDay(day) {
     setSelectedDate(day);
@@ -392,8 +466,23 @@ export default function Invitation() {
         ? textValue(settings.screens?.schedule?.subheading, "Choose an open date and time, or ask Alex to choose a day together.")
         : "";
 
+  function renderNoButton() {
+    return (
+      <button ref={noButton} className={"bm-emoji-choice bm-no-button" + (noPosition ? " bm-no-floating" : "")}
+        style={noPosition ? { left: noPosition.left, top: noPosition.top } : undefined}
+        type="button" aria-label="No, thank you" aria-describedby="choice-hold-hint" disabled={pending}
+        onPointerDown={event => startHold("no", event)}
+        onPointerUp={cancelHold} onPointerLeave={cancelHold} onPointerCancel={cancelHold}
+        onKeyDown={event => holdKey("no", event)} onKeyUp={cancelHold} onBlur={cancelHold}
+        onContextMenu={event => event.preventDefault()} onClick={event => event.preventDefault()}>
+        <span aria-hidden="true">{NO_FACES[noDodges % NO_FACES.length]}</span>
+        {holding === "no" && <span className="bm-choice-spinner" aria-hidden="true" />}
+      </button>
+    );
+  }
+
   return (
-    <div className={"bm-app" + (screenType ? " bm-app--" + screenType : "")}>
+    <div className={"bm-app" + (screenType ? " bm-app--" + screenType : "") + (viewport?.keyboard ? " bm-keyboard-open" : "")} style={viewport ? { "--bm-visible-height": viewport.height + "px", "--bm-viewport-top": viewport.top + "px" } : undefined}>
       {!isDecline && (
         <header className={"bm-header" + (isAsk ? " bm-header--minimal" : "")}>
           <div className="bm-brand"><span aria-hidden="true">🐰</span> Bunny Mission</div>
@@ -451,6 +540,7 @@ export default function Invitation() {
                     maxLength={32}
                     placeholder="Enter code"
                     value={code}
+                    enterKeyHint="go"
                     onFocus={replayBunny}
                     onChange={event => setCode(event.target.value)}
                     required
@@ -471,20 +561,19 @@ export default function Invitation() {
             <>
               <h1>{askHeading}</h1>
               <div className="bm-answer-row" role="group" aria-label="Your answer">
-                <button className="bm-primary-button bm-answer-button" type="button" disabled={pending} onClick={() => { setSelectedOuting(""); setStep("outing"); setError(""); }}>
-                  <span aria-hidden="true">💖</span> Yes
+                <button className="bm-emoji-choice bm-yes-button" type="button"
+                  aria-label="Yes" aria-describedby="choice-hold-hint" disabled={pending}
+                  onPointerDown={event => startHold("yes", event)}
+                  onPointerUp={cancelHold} onPointerLeave={cancelHold} onPointerCancel={cancelHold}
+                  onKeyDown={event => holdKey("yes", event)} onKeyUp={cancelHold} onBlur={cancelHold}
+                  onContextMenu={event => event.preventDefault()} onClick={event => event.preventDefault()}>
+                  <span aria-hidden="true">😍</span>
+                  {holding === "yes" && <span className="bm-choice-spinner" aria-hidden="true" />}
                 </button>
-                <button
-                  className="bm-secondary-button bm-answer-button bm-no-button"
-                  type="button"
-                  disabled={pending}
-                  style={noDodges ? { transform: "translate(" + NO_MOVES[(noDodges - 1) % NO_MOVES.length].x + "px," + NO_MOVES[(noDodges - 1) % NO_MOVES.length].y + "px)" } : undefined}
-                  aria-label="No, thank you"
-                  onClick={chooseNo}
-                >
-                  <span aria-hidden="true">{noDodges ? NO_FACES[Math.min(noDodges - 1, 2)] : "🐰"}</span> No
-                </button>
+                {!noPosition && renderNoButton()}
               </div>
+              <p className="bm-hold-hint" id="choice-hold-hint">Press and hold the button of your choice for 2 seconds.</p>
+              <p className="bm-choice-status" role="status" aria-live="polite">{holding ? <><span className="bm-inline-spinner" aria-hidden="true" /> Next page is loading…</> : "\u00a0"}</p>
               {pending && <p className="bm-feedback" role="status">Sending your reply…</p>}
               {error && <p className="bm-feedback" role="alert">{error}</p>}
             </>
@@ -620,6 +709,7 @@ export default function Invitation() {
           )}
         </section>
       </main>
+      {isAsk && noPosition && createPortal(renderNoButton(), document.body)}
 
     </div>
   );

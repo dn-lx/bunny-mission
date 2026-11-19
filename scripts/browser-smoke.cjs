@@ -66,7 +66,13 @@ async function openInvitation(page,origin){
     await nextPage.locator('#invitation-code').fill('TEST');
     await nextPage.getByRole('button',{name:'Unlock my invitation'}).click();
     await nextPage.getByRole('heading',{name:/Test Girl, would you like to go out with Alex/}).waitFor({timeout:5000});
-    await nextPage.getByRole('button',{name:'Yes'}).click();
+    const yesChoice=nextPage.getByRole('button',{name:'Yes',exact:true});
+    await yesChoice.hover(); await nextPage.mouse.down();
+    await nextPage.waitForTimeout(450);
+    assert.ok(await nextPage.locator('.bm-choice-spinner').isVisible(),'Spinner appears during hold');
+    await nextPage.mouse.up();
+    assert.ok(await yesChoice.isVisible(),'Early release must cancel');
+    await yesChoice.hover(); await nextPage.mouse.down(); await nextPage.waitForTimeout(2100); await nextPage.mouse.up();
     await nextPage.getByRole('heading',{name:'What sounds nice?'}).waitFor({timeout:5000});
     await nextPage.getByRole('button',{name:/Something simple/}).click();
     await nextPage.getByRole('heading',{name:'Which day works for you?'}).waitFor({timeout:5000});
@@ -75,9 +81,35 @@ async function openInvitation(page,origin){
     await nextPage.getByRole('button',{name:/Send my choices to Alex/}).click();
     await nextPage.getByRole('heading',{name:'Your choices are on their way to Alex.'}).waitFor({timeout:5000});
     assert.equal(submissions.at(-1)?.decision,'yes','Next.js flow should submit the accepted answer');
-    assert.ok(submissions.at(-1)?.day&&submissions.at(-1)?.time==='Afternoon','Next.js flow should submit the chosen date and time');
+    assert.match(submissions.at(-1)?.reply,/PLAN[\s\S]*Something simple[\s\S]*WHEN[\s\S]*Afternoon/,'Readable summary includes plan and time');
+    assert.equal(submissions.at(-1)?.extra_answers,undefined,'Email must not contain raw JSON');
     assert.deepEqual(nextErrors,[],'Next.js page JavaScript errors');
     console.log('PASS: Next.js static export invitation and reply flow');
+    await nextPage.goto(origin,{waitUntil:'domcontentloaded'});
+    await nextPage.locator('#invitation-code').fill('TEST');
+    await nextPage.setViewportSize({width:390,height:420});
+    await nextPage.waitForTimeout(150);
+    const unlockBox=await nextPage.getByRole('button',{name:'Unlock my invitation'}).boundingBox();
+    assert.ok(unlockBox.y>=0&&unlockBox.y+unlockBox.height<=420,'Unlock remains visible with keyboard-sized viewport');
+    await nextPage.setViewportSize({width:390,height:844});
+    await nextPage.getByRole('button',{name:'Unlock my invitation'}).click();
+    await nextPage.getByRole('button',{name:'No, thank you',exact:true}).waitFor();
+    for(let i=0;i<3;i++){
+      const no=nextPage.getByRole('button',{name:'No, thank you',exact:true});
+      const before=await no.boundingBox();
+      await no.hover(); await nextPage.mouse.down(); await nextPage.waitForTimeout(850); await nextPage.mouse.up();
+      const after=await no.boundingBox();
+      assert.ok(Math.abs(before.x-after.x)+Math.abs(before.y-after.y)>80,'No must dodge a meaningful distance');
+      assert.ok(after.x>=0&&after.y>=0&&after.x+after.width<=390&&after.y+after.height<=844,'No remains in view');
+    }
+    const caught=nextPage.getByRole('button',{name:'No, thank you',exact:true});
+    await caught.hover(); await nextPage.mouse.down(); await nextPage.waitForTimeout(2100); await nextPage.mouse.up();
+    await nextPage.getByText('No worries at all.',{exact:true}).waitFor();
+    assert.ok(await nextPage.locator('.bm-art').isVisible(),'Decline keeps the bunny visible');
+    assert.ok(await nextPage.locator('.bm-art video').isVisible(),'Decline shows bunny video');
+    assert.equal(submissions.at(-1)?.decision,'no');
+    assert.match(submissions.at(-1)?.reply,/Test Girl kindly declined/);
+    assert.doesNotMatch(submissions.at(-1)?.reply,/PLAN|THEIR CHOICES|\[\]/);
     await nextPage.close();
     for(const viewport of [{width:360,height:780},{width:390,height:844},{width:1280,height:850}]){
       const page=await browser.newPage({viewport});
@@ -176,3 +208,4 @@ async function openInvitation(page,origin){
     await new Promise(resolve=>server.close(resolve));
   }
 })().catch(err=>{console.error(err);process.exitCode=1;});
+

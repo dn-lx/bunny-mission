@@ -16,17 +16,8 @@ export default function HomePage() {
       >
         <input type="hidden" name="form-name" value="going-out-develop" />
         <input type="text" name="bot-field" />
-        <input type="text" name="invite" />
-        <input type="text" name="recipient" />
-        <input type="text" name="outing" />
-        <input type="text" name="energy" />
-        <input type="text" name="timing" />
-        <input type="text" name="detail" />
-        <input type="text" name="meet_area" />
-        <input type="text" name="day" />
-        <input type="text" name="time" />
-        <input type="text" name="decision" />
-        <input type="text" name="extra_answers" />
+        <textarea name="reply" defaultValue="" />
+        <input type="hidden" name="decision" />
         <input type="hidden" name="subject" value="Alex received a bunny invitation response" />
       </form>
     </>

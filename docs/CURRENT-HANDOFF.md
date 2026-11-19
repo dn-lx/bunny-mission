@@ -39,3 +39,15 @@ At the owner's request, version 1 is active again. The early preview script sets
 All V1 archived resources and V2 draft assets remain untouched. The revised greeting/detail integration is preserved as a patch, and the unverified local Qwen CPU generator as a draft, in docs/v2-drafts. There are no completed LongCat videos or verified new child-voice recordings. Existing V2 audio was rejected as too adult. The latest LongCat retry reported exhausted ZeroGPU allowance (480 seconds requested, -240 remaining). Media work is paused; do not resume generation without a new request.
 
 The execution plan and acceptance criteria are in docs/VERSION-2-PLAN.md. Start with proof of free GPU access and one voice/video sample before batching all scenes. Verify a successful develop deployment and inspect the Next.js UI before calling it live.
+
+
+## Mobile decision and reply fixes (19 November 2026)
+
+Current develop uses visualViewport resize/scroll state to fit the welcome form above the mobile keyboard. The decline screen keeps the existing Flow bunny video visible above the goodbye text.
+
+Yes and No are facial emoji controls with accessible names. The shared note says “Press and hold the button of your choice for 2 seconds.” A rotating ring and “Next page is loading…” appear during a hold; early release cancels. Yes advances after two seconds. No escapes during the hold up to three times and then accepts a complete hold. Keyboard and reduced-motion use the complete hold without escapes. No dodge instructions are shown to guests.
+
+The existing going-out-develop form and its notification configuration remain in use. Active form payloads now contain a readable reply summary plus the decision and subject, removing empty obsolete fields and JSON from new Next guest replies. No new email service was introduced; this is a plain-text notification summary. The preserved version-1.html still has its historical payload.
+
+Local Next production build and all seven unlock tests passed. Local Chromium smoke execution was blocked by the runtime denying socket creation, so the committed browser smoke covers keyboard-sized viewports, early cancellation, the two-second Yes hold, bounded No escapes, decline video visibility and readable Yes/No reply bodies in CI. No real guest response or test email was sent.
+
