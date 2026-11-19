@@ -33,6 +33,23 @@ const server=http.createServer((req,res)=>{
   res.writeHead(200,{'Content-Type':type});fs.createReadStream(filename).pipe(res);
 });
 function listen(){return new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));}
+async function characterRect(page){
+  const rect=await page.locator('.bm-character').boundingBox();
+  assert.ok(rect,'Bunny container must be visible');
+  return rect;
+}
+function assertSameCharacter(actual,expected,label){
+  for(const key of ['x','y','width','height'])
+    assert.ok(Math.abs(actual[key]-expected[key])<1,label+' keeps bunny '+key+' unchanged');
+}
+async function assertTopCopy(page,label){
+  const bunny=await characterRect(page);
+  const copy=await page.locator('.bm-copy-layer').evaluate(layer=>{
+    const rects=[...layer.children].map(child=>child.getBoundingClientRect());
+    return rects.length?{bottom:Math.max(...rects.map(rect=>rect.bottom))}:null;
+  });
+  assert.ok(copy&&copy.bottom<bunny.y,label+' copy sits above the centered bunny');
+}
 async function openInvitation(page,origin){
   await page.addInitScript(()=>{
     window.__fullscreenRequests=0;
@@ -63,16 +80,24 @@ async function openInvitation(page,origin){
     await nextPage.goto(origin,{waitUntil:'domcontentloaded'});
     await nextPage.getByRole('heading',{name:'A little surprise for you.'}).waitFor({timeout:10000});
     assert.equal(await nextPage.locator('#invitation-code').count(),1,'Next.js root must render the invitation gate');
+    const gateBunny=await characterRect(nextPage);
+    assert.ok(Math.abs(gateBunny.x+gateBunny.width/2-195)<1&&Math.abs(gateBunny.y+gateBunny.height/2-422)<1,
+      'Bunny starts centered on the gate');
+    await assertTopCopy(nextPage,'Gate');
     await nextPage.locator('#invitation-code').fill('TEST');
     await nextPage.getByRole('button',{name:'Unlock my invitation'}).click();
     const inviteHeading=nextPage.getByRole('heading',{name:/Test Girl, would you like to go out with Alex/});
     await inviteHeading.waitFor({timeout:5000});
+    assertSameCharacter(await characterRect(nextPage),gateBunny,'Question');
+    await assertTopCopy(nextPage,'Question');
     const yesChoice=nextPage.getByRole('button',{name:'Yes',exact:true});
     const noChoice=nextPage.getByRole('button',{name:'No, thank you',exact:true});
     for(const viewport of [{width:390,height:844},{width:1280,height:850},{width:230,height:600}]){
       await nextPage.setViewportSize(viewport);
       const headingBox=await inviteHeading.boundingBox();
-      const bunnyBox=await nextPage.locator('.bm-character').boundingBox();
+      const bunnyBox=await characterRect(nextPage);
+      assert.ok(Math.abs(bunnyBox.x+bunnyBox.width/2-viewport.width/2)<1&&Math.abs(bunnyBox.y+bunnyBox.height/2-viewport.height/2)<1,
+        'Bunny stays centered at '+viewport.width+'x'+viewport.height);
       assert.ok(headingBox.y+headingBox.height < bunnyBox.y,
         'Invitation sentence must sit above the bunny at '+viewport.width+'x'+viewport.height);
       const yesText=await yesChoice.innerText();
@@ -89,12 +114,18 @@ async function openInvitation(page,origin){
     assert.ok(await yesChoice.isVisible(),'Early release must cancel');
     await yesChoice.hover(); await nextPage.mouse.down(); await nextPage.waitForTimeout(2100); await nextPage.mouse.up();
     await nextPage.getByRole('heading',{name:'What sounds nice?'}).waitFor({timeout:5000});
+    assertSameCharacter(await characterRect(nextPage),gateBunny,'Outing question');
+    await assertTopCopy(nextPage,'Outing question');
     await nextPage.getByRole('button',{name:/Something simple/}).click();
     await nextPage.getByRole('heading',{name:'Which day works for you?'}).waitFor({timeout:5000});
+    assertSameCharacter(await characterRect(nextPage),gateBunny,'Calendar');
+    await assertTopCopy(nextPage,'Calendar');
     await nextPage.locator('.bm-day-button:not([disabled])').first().click();
     await nextPage.getByRole('button',{name:/Afternoon/}).click();
     await nextPage.getByRole('button',{name:/Send my choices to Alex/}).click();
     await nextPage.getByRole('heading',{name:'Your choices are on their way to Alex.'}).waitFor({timeout:5000});
+    assertSameCharacter(await characterRect(nextPage),gateBunny,'Success');
+    await assertTopCopy(nextPage,'Success');
     assert.equal(submissions.at(-1)?.decision,'yes','Next.js flow should submit the accepted answer');
     assert.match(submissions.at(-1)?.reply,/PLAN[\s\S]*Something simple[\s\S]*WHEN[\s\S]*Afternoon/,'Readable summary includes plan and time');
     assert.equal(submissions.at(-1)?.extra_answers,undefined,'Email must not contain raw JSON');
@@ -109,6 +140,7 @@ async function openInvitation(page,origin){
     await nextPage.setViewportSize({width:390,height:844});
     await nextPage.getByRole('button',{name:'Unlock my invitation'}).click();
     await nextPage.getByRole('button',{name:'No, thank you',exact:true}).waitFor();
+    const declineFlowBunny=await characterRect(nextPage);
     for(let i=0;i<3;i++){
       const no=nextPage.getByRole('button',{name:'No, thank you',exact:true});
       const before=await no.boundingBox();
@@ -127,6 +159,8 @@ async function openInvitation(page,origin){
     const caught=nextPage.getByRole('button',{name:'No, thank you',exact:true});
     await caught.hover(); await nextPage.mouse.down(); await nextPage.waitForTimeout(2100); await nextPage.mouse.up();
     await nextPage.getByText('No worries at all.',{exact:true}).waitFor();
+    assertSameCharacter(await characterRect(nextPage),declineFlowBunny,'Decline');
+    await assertTopCopy(nextPage,'Decline');
     assert.ok(await nextPage.locator('.bm-art').isVisible(),'Decline keeps the bunny visible');
     assert.ok(await nextPage.locator('.bm-art video').isVisible(),'Decline shows bunny video');
     assert.equal(submissions.at(-1)?.decision,'no');

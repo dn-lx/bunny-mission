@@ -523,11 +523,48 @@ export default function Invitation() {
       </div>
 
       <main className={"bm-screen bm-screen--" + step}>
-        <section className={"bm-panel" + (isAsk ? " bm-panel--ask" : "") + (isDecline ? " bm-panel--decline" : "") + (currentExtra ? " bm-panel--question" : "")}>
+        <div className={"bm-copy-layer" + (isDecline ? " bm-copy-layer--decline" : "")}>
           {isGate && (
             <>
               <h1>A little surprise for you.</h1>
               <p className="bm-description">Enter the invitation code Alex shared with you.</p>
+            </>
+          )}
+          {isAsk && <h1>{askHeading}</h1>}
+          {step === "outing" && (
+            <>
+              <p className="bm-eyebrow">One little choice</p>
+              <h1>{questionHeading}</h1>
+              <p className="bm-description">{questionDescription}</p>
+            </>
+          )}
+          {currentExtra && (
+            <>
+              <p className="bm-eyebrow">One more little question</p>
+              <h1>{questionHeading}</h1>
+              <p className="bm-description">{questionDescription}</p>
+            </>
+          )}
+          {step === "calendar" && (
+            <>
+              <p className="bm-eyebrow">Choose an available time</p>
+              <h1>{questionHeading}</h1>
+              <p className="bm-description">{questionDescription}</p>
+            </>
+          )}
+          {isSuccess && (
+            <>
+              <p className="bm-eyebrow">Mission accomplished</p>
+              <h1>Your choices are on their way to {sender}.</h1>
+              <p className="bm-description">Bunny is doing a very tiny happy dance. ♡</p>
+            </>
+          )}
+          {isDecline && <p className="bm-goodbye">No worries at all.</p>}
+        </div>
+
+        <section className={"bm-panel" + (isAsk ? " bm-panel--ask" : "") + (isDecline ? " bm-panel--decline" : "") + (currentExtra ? " bm-panel--question" : "") + (isSuccess ? " bm-panel--success" : "")}>
+          {isGate && (
+            <>
               <form className="bm-code-form" onSubmit={unlock}>
                 <label htmlFor="invitation-code">Invitation code</label>
                 <div className="bm-code-row">
@@ -560,7 +597,6 @@ export default function Invitation() {
 
           {isAsk && (
             <>
-              <h1>{askHeading}</h1>
               <div className="bm-answer-row" role="group" aria-label="Your answer">
                 <button className="bm-emoji-choice bm-yes-button" type="button"
                   aria-label="Yes" aria-describedby="choice-hold-hint" disabled={pending}
@@ -583,9 +619,6 @@ export default function Invitation() {
 
           {step === "outing" && (
             <>
-              <p className="bm-eyebrow">One little choice</p>
-              <h1>{questionHeading}</h1>
-              <p className="bm-description">{questionDescription}</p>
               <div className="bm-option-grid" role="group" aria-label="Choose an outing">
                 {defaultOutings.map(([icon, label, value]) => (
                   <button
@@ -603,9 +636,6 @@ export default function Invitation() {
 
           {currentExtra && (
             <>
-              <p className="bm-eyebrow">One more little question</p>
-              <h1>{questionHeading}</h1>
-              <p className="bm-description">{questionDescription}</p>
               <div className="bm-option-grid bm-option-grid--questions" role="group" aria-label={questionHeading}>
                 {currentExtra.options.map((option, index) => (
                   <button
@@ -625,9 +655,6 @@ export default function Invitation() {
 
           {step === "calendar" && (
             <>
-              <p className="bm-eyebrow">Choose an available time</p>
-              <h1>{questionHeading}</h1>
-              <p className="bm-description">{questionDescription}</p>
               <p className="bm-availability" role="status">
                 {Object.keys(slots).length
                   ? "Choose a date Alex has opened, then choose an available time."
@@ -693,16 +720,6 @@ export default function Invitation() {
               {error && <p className="bm-feedback" role="alert">{error}</p>}
             </>
           )}
-
-          {isSuccess && (
-            <>
-              <p className="bm-eyebrow">Mission accomplished</p>
-              <h1>Your choices are on their way to {sender}.</h1>
-              <p className="bm-description">Bunny is doing a very tiny happy dance. ♡</p>
-            </>
-          )}
-
-          {isDecline && <p className="bm-goodbye">No worries at all.</p>}
 
           {!isGate && !isAsk && !isDecline && !isSuccess && step !== "outing" && step !== "calendar" && (
             <div className="bm-calendar-actions">
