@@ -98,7 +98,7 @@ async function openInvitation(page,origin){
         await page.locator('#yes-btn').click();
         await page.getByRole('heading',{name:'What sounds nice?'}).waitFor({timeout:15000});
         const choice=viewport.width===360?'Something simple':'Surprise me';
-        await page.getByRole('button',{name:choice}).click();
+        await page.locator('.choices .choice').filter({hasText:choice}).click();
         await page.getByRole('heading',{name:'Which day works for you?'}).waitFor();
         await page.locator('#chapter').waitFor();
         assert.equal(await page.locator('#chapter').innerText(),'step 3 of 3');
@@ -127,9 +127,9 @@ async function openInvitation(page,origin){
     await openInvitation(customPage,origin);
     await customPage.locator('#yes-btn').click();
     await customPage.getByRole('heading',{name:/What sounds nice\?/}).waitFor({timeout:15000});
-    await customPage.getByRole('button',{name:'Something simple'}).click();
+    await customPage.locator('.choices .choice').filter({hasText:'Something simple'}).click();
     await customPage.getByRole('heading',{name:'Which little treat?'}).waitFor();
-    await customPage.getByRole('button',{name:'A carrot cake'}).click();
+    await customPage.locator('.choices .choice').filter({hasText:'A carrot cake'}).click();
     await customPage.getByRole('heading',{name:'Which day works for you?'}).waitFor();
     await customPage.getByRole('button',{name:/Choose a day together later/}).click();
     assert.equal(await customPage.locator('#send-answer').isEnabled(),true);
