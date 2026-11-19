@@ -168,8 +168,8 @@
     return [date.getFullYear(),String(date.getMonth()+1).padStart(2,'0'),String(date.getDate()).padStart(2,'0')].join('-');
   }
   function normalizeAvailability(config){
-    if(config?.availabilitySlots&&typeof config.availabilitySlots==='object'&&!Array.isArray(config.availabilitySlots)){
-      return Object.fromEntries(Object.entries(config.availabilitySlots)
+    if(config?.availableSlots&&typeof config.availableSlots==='object'&&!Array.isArray(config.availableSlots)){
+      return Object.fromEntries(Object.entries(config.availableSlots)
         .filter(([key,slots])=>/^\d{4}-\d{2}-\d{2}$/.test(key)&&Array.isArray(slots))
         .map(([key,slots])=>[key,[...new Set(slots.filter(slot=>timeDefaults.includes(slot)))]])
         .filter(([,slots])=>slots.length));

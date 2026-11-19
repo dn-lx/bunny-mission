@@ -591,7 +591,6 @@ export default function Invitation() {
             <>
               <p className="bm-eyebrow">Mission accomplished</p>
               <h1>Your choices are on their way to {sender}.</h1>
-              <p className="bm-description">Bunny is doing a very tiny happy dance. ♡</p>
             </>
           )}
           {isDecline && <p className="bm-goodbye">No worries at all.</p>}

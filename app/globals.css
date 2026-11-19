@@ -628,3 +628,26 @@ button:disabled { cursor: default; opacity: .58; }
   .bm-copy-layer > h1 { font-size: 20px; line-height: 1.05; }
   .bm-copy-layer > .bm-description { margin-top: 6px; font-size: 11px; line-height: 1.2; }
 }
+
+/* Keep the calendar in a compact bottom zone so Nibbles stays visible above it. */
+.bm-screen--calendar {
+  align-items: flex-end;
+  justify-content: center;
+  padding: max(160px, calc(env(safe-area-inset-top) + 140px)) 12px max(10px, env(safe-area-inset-bottom) + 10px);
+}
+.bm-screen--calendar .bm-panel {
+  width: min(100%, 640px);
+  max-height: min(50svh, calc(100svh - 200px));
+  overflow-y: auto;
+  padding: 14px 12px;
+}
+.bm-screen--calendar .bm-calendar-grid { gap: 3px; }
+.bm-screen--calendar .bm-day-button,
+.bm-screen--calendar .bm-calendar-empty { min-height: 32px; }
+.bm-screen--calendar .bm-availability { margin: 4px 0 8px; }
+.bm-screen--calendar .bm-calendar-actions {
+  position: sticky;
+  bottom: -14px;
+  padding: 8px 0 0;
+  background: var(--bm-glass);
+}
