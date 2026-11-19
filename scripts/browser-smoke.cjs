@@ -157,8 +157,8 @@ async function openInvitation(page,origin){
         assert.ok(optionState.actions?.includes(choice),'Expected visible outing choice '+choice+': '+JSON.stringify(optionState));
         await page.locator('.choices .choice').filter({hasText:choice}).click({timeout:5000});
         await page.getByRole('heading',{name:'Which day works for you?'}).waitFor();
-        await page.locator('#chapter').waitFor();
-        assert.equal(await page.locator('#chapter').innerText(),'step 3 of 3');
+        await page.locator('#chapter').waitFor({state:'attached'});
+        assert.equal(await page.locator('#chapter').textContent(),'step 3 of 3');
         assert.equal(await page.locator('#send-answer').isEnabled(),false,'Calendar must wait for a valid selection');
         await page.locator('.calendar-day:not([disabled]):not(.blank)').first().click();
         await page.getByRole('button',{name:/Afternoon/}).click();
