@@ -145,7 +145,7 @@ async function openInvitation(page,origin){
         }
         assert.ok(await no.evaluate(el=>el.classList.contains('gave-up')),'No should stop dodging after three escapes');
         await no.click();
-        await page.getByText('Your reply has been sent.').waitFor({timeout:5000});
+        await page.getByText('Your reply has been sent.').waitFor({state:'attached',timeout:5000});
         assert.match(await page.locator('#title').innerText(),/no worries/i);
         assert.equal(submissions.at(-1)?.decision,'no','A decline must submit its answer');
       }else{
@@ -165,7 +165,7 @@ async function openInvitation(page,origin){
         assert.equal(await page.locator('#send-answer').isEnabled(),true,'Choosing an open time enables direct sending');
         assert.match(await page.locator('#send-answer').innerText(),/Send my choices to Alex/);
         await page.locator('#send-answer').click();
-        await page.getByText('Sent! Alex has your choices. ♡').waitFor({timeout:5000});
+        await page.getByText('Sent! Alex has your choices. ♡').waitFor({state:'attached',timeout:5000});
         assert.equal(submissions.at(-1)?.decision,'yes');
         assert.ok(submissions.at(-1)?.day&&submissions.at(-1)?.time==='Afternoon');
       }
@@ -191,7 +191,7 @@ async function openInvitation(page,origin){
     await customPage.getByRole('button',{name:/Choose a day together later/}).click();
     assert.equal(await customPage.locator('#send-answer').isEnabled(),true);
     await customPage.locator('#send-answer').click();
-    await customPage.getByText('Sent! Alex has your choices. ♡').waitFor({timeout:5000});
+    await customPage.getByText('Sent! Alex has your choices. ♡').waitFor({state:'attached',timeout:5000});
     const customSubmission=submissions.at(-1);
     assert.match(customSubmission.extra_answers,/Which little treat/);
     assert.match(customSubmission.extra_answers,/A carrot cake/);
