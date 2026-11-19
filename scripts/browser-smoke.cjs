@@ -98,7 +98,10 @@ async function openInvitation(page,origin){
         await page.locator('#yes-btn').click();
         await page.getByRole('heading',{name:'What sounds nice?'}).waitFor({timeout:15000});
         const choice=viewport.width===360?'Something simple':'Surprise me';
-        await page.locator('.choices .choice').filter({hasText:choice}).click();
+        const optionState=await page.evaluate(()=>({step:document.body.dataset.step,title:document.querySelector('#title')?.textContent,actions:document.querySelector('#actions')?.innerText,html:document.querySelector('#actions')?.innerHTML}));
+        console.log('OPTION STATE '+JSON.stringify(optionState));
+        assert.ok(optionState.actions?.includes(choice),'Expected visible outing choice '+choice+': '+JSON.stringify(optionState));
+        await page.locator('.choices .choice').filter({hasText:choice}).click({timeout:5000});
         await page.getByRole('heading',{name:'Which day works for you?'}).waitFor();
         await page.locator('#chapter').waitFor();
         assert.equal(await page.locator('#chapter').innerText(),'step 3 of 3');
