@@ -356,6 +356,14 @@ export default function Invitation() {
   const isAsk = step === "ask";
   const isDecline = step === "decline";
   const isSuccess = step === "success";
+  const screenType = isGate ? "gate"
+    : isAsk ? "ask"
+      : step === "outing" ? "outing"
+        : currentExtra ? "extra"
+          : step === "calendar" ? "calendar"
+            : isSuccess ? "success"
+              : isDecline ? "decline"
+                : "";
   const monthLabel = calendarMonth
     ? new Intl.DateTimeFormat("en", { month: "long", year: "numeric" }).format(calendarMonth)
     : "Loading calendar";
@@ -385,7 +393,7 @@ export default function Invitation() {
         : "";
 
   return (
-    <div className={"bm-app" + (isDecline ? " bm-app--decline" : "")}>
+    <div className={"bm-app" + (screenType ? " bm-app--" + screenType : "")}>
       {!isDecline && (
         <header className={"bm-header" + (isAsk ? " bm-header--minimal" : "")}>
           <div className="bm-brand"><span aria-hidden="true">🐰</span> Bunny Mission</div>
