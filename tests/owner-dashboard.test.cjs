@@ -5,7 +5,7 @@ const fs=require('node:fs');
 const {Script}=require('node:vm');
 const adminJs=fs.readFileSync('public/admin.js','utf8');
 const adminHtml=fs.readFileSync('public/admin.html','utf8');
-const guest=fs.readFileSync('public/index.html','utf8');
+const guest=fs.readFileSync('public/version-1.html','utf8');
 const ownerCode=fs.readFileSync('netlify/functions/owner.mjs','utf8');
 
 test('owner dashboard is private, responsive, and JavaScript parses',()=>{

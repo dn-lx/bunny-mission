@@ -1,16 +1,14 @@
 [build]
-  publish = "public"
+  command = "npm run build"
   functions = "netlify/functions"
 
 [functions]
   node_bundler = "esbuild"
 
-# Development deploy settings. Enable the develop branch in Netlify > Continuous deployment > Branch deploys.
-# The assigned deploy URL follows the Netlify site slug, which is separate from the GitHub repository name.
-[context.develop]
-  publish = "public"
-  [context.develop.environment]
-    DEPLOY_CHANNEL = "develop"
+# Netlify's managed OpenNext adapter detects Next.js and configures its runtime.
+# Keep the develop branch deploy isolated from the main production branch.
+[context.develop.environment]
+  DEPLOY_CHANNEL = "develop"
 
 [[headers]]
   for = "/*"
