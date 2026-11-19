@@ -233,7 +233,7 @@ test('paused version 2 links retain invitation parameters while selecting versio
 test('Next.js static export publishes a root page on Netlify', () => {
   const nextConfig = readFileSync('next.config.mjs', 'utf8');
   const netlifyConfig = readFileSync('netlify.toml', 'utf8');
-  assert.match(nextConfig, /output:\\s*["']export["']/);
-  assert.match(netlifyConfig, /publish\\s*=\\s*"out"/);
-  assert.match(netlifyConfig, /NETLIFY_NEXT_PLUGIN_SKIP\\s*=\\s*"true"/);
+  assert.match(nextConfig, /output:\s*["']export["']/);
+  assert.match(netlifyConfig, /publish\s*=\s*"out"/);
+  assert.match(netlifyConfig, /NETLIFY_NEXT_PLUGIN_SKIP\s*=\s*"true"/);
 });
