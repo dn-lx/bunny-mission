@@ -113,6 +113,8 @@ test('No keeps the 🥲 emoji and the first two dodges show different messages',
   assert.match(invitation,/noDodges < 2/);
   assert.match(invitation,/const showDodgeMessage = noDodges < 2/);
   assert.match(invitation,/setOopsMessage\(noDodges === 0 \? "Oops, it slipped!" : "Oh, it slipped again!"\)/);
-  assert.match(appCss,/\.bm-screen--ask \.bm-panel--ask \{\s*position: fixed/);
+  const askPanelCss=appCss.match(/\.bm-screen--ask \.bm-panel--ask \{([^}]*)\}/)?.[1]||'';
+  assert.match(askPanelCss,/position: fixed/);
+  assert.doesNotMatch(askPanelCss,/transform/);
 });
 
