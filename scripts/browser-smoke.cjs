@@ -82,15 +82,6 @@ async function openInvitation(page,origin){
       assert.doesNotMatch(await noChoice.innerText(),/😛|🤪|😜/,'No must not start with a tongue-out face');
     }
     await nextPage.setViewportSize({width:390,height:844});
-    const noBefore=await noChoice.boundingBox();
-    await noChoice.hover(); await nextPage.mouse.down();
-    await nextPage.waitForFunction(({x,y})=>{
-      const no=document.querySelector('.bm-no-button')?.getBoundingClientRect();
-      return no && Math.abs(no.x-x)+Math.abs(no.y-y)>80;
-    },{x:noBefore.x,y:noBefore.y},{timeout:1500});
-    assert.ok(await nextPage.locator('.bm-choice-spinner').isVisible(),'No shows its spinner as it dodges on touch');
-    await nextPage.mouse.up();
-    assert.equal(await nextPage.locator('.bm-choice-spinner').count(),0,'Early release cancels the No hold');
     await yesChoice.hover(); await nextPage.mouse.down();
     await nextPage.waitForTimeout(450);
     assert.ok(await nextPage.locator('.bm-choice-spinner').isVisible(),'Spinner appears during hold');
@@ -121,7 +112,14 @@ async function openInvitation(page,origin){
     for(let i=0;i<3;i++){
       const no=nextPage.getByRole('button',{name:'No, thank you',exact:true});
       const before=await no.boundingBox();
-      await no.hover(); await nextPage.mouse.down(); await nextPage.waitForTimeout(850); await nextPage.mouse.up();
+      await no.hover(); await nextPage.mouse.down();
+      await nextPage.waitForFunction(({x,y})=>{
+        const button=document.querySelector('.bm-no-button')?.getBoundingClientRect();
+        return button && Math.abs(button.x-x)+Math.abs(button.y-y)>80;
+      },{x:before.x,y:before.y},{timeout:1500});
+      assert.ok(await nextPage.locator('.bm-choice-spinner').isVisible(),'No shows its spinner while it dodges on touch');
+      await nextPage.mouse.up();
+      assert.equal(await nextPage.locator('.bm-choice-spinner').count(),0,'Early release cancels the No hold');
       const after=await no.boundingBox();
       assert.ok(Math.abs(before.x-after.x)+Math.abs(before.y-after.y)>80,'No must dodge a meaningful distance');
       assert.ok(after.x>=0&&after.y>=0&&after.x+after.width<=390&&after.y+after.height<=844,'No remains in view');
