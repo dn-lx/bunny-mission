@@ -137,7 +137,6 @@
   });
   function renderSettings(){
     const config=state.settings||{};
-    availableDays=Array.isArray(config.availableDays)?[...new Set(config.availableDays)].sort():[];
     $('sender-name').value=config.senderName||'Alex';
     $('site-label').value=config.siteLabel||'tiny bunny mission';
     const screens=$('screen-fields');screens.replaceChildren();
@@ -344,3 +343,4 @@
   });
   refresh();
 })();
+

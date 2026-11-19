@@ -91,12 +91,15 @@ export default function Invitation() {
   const [selectedTime, setSelectedTime] = useState("");
   const [answers, setAnswers] = useState({});
   const [noDodges, setNoDodges] = useState(0);
+  const [oopsPosition, setOopsPosition] = useState(null);
+  const [showOops, setShowOops] = useState(false);
   const [selectedOuting, setSelectedOuting] = useState("");
   const videoRef = useRef(null);
   const [holding, setHolding] = useState("");
   const [noPosition, setNoPosition] = useState(null);
   const [viewport, setViewport] = useState(null);
   const holdTimer = useRef(null);
+  const oopsTimer = useRef(null);
   const activeHold = useRef("");
   const noButton = useRef(null);
 
@@ -123,6 +126,8 @@ export default function Invitation() {
     return () => {
       window.clearTimeout(holdTimer.current);
       holdTimer.current = null;
+      window.clearTimeout(oopsTimer.current);
+      oopsTimer.current = null;
       activeHold.current = "";
     };
   }, [step]);
@@ -207,7 +212,12 @@ export default function Invitation() {
     const play = video.play();
     if (play?.catch) {
       play.catch(() => {
-        if (customVoice) speakWithDevice(screenSpeech);
+        // Mobile browsers commonly block autoplay when a clip has audio.
+        // Retry silently so Nibbles still starts moving as soon as the page opens.
+        video.muted = true;
+        video.play().catch(() => {
+          if (customVoice) speakWithDevice(screenSpeech);
+        });
       });
     }
     if (customVoice) speakWithDevice(screenSpeech);
@@ -391,7 +401,26 @@ export default function Invitation() {
     setHolding(choice);
     setError("");
     const dodge = choice === "no" && !reducedMotion && !event.key && noDodges < 3;
-    if (dodge) dodgeNoButton();
+    if (dodge) {
+      const firstDodge = noDodges === 0;
+      const bounds = noButton.current?.getBoundingClientRect();
+      if (firstDodge) {
+        const width = window.visualViewport?.width || window.innerWidth;
+        const height = window.visualViewport?.height || window.innerHeight;
+        const bubbleWidth = Math.min(190, width - 16);
+        setOopsPosition({
+          left: Math.max(8, Math.min(width - bubbleWidth - 8, (bounds?.left ?? width / 2) + (bounds?.width ?? 0) / 2 - bubbleWidth / 2)),
+          top: Math.max(64, (bounds?.top ?? height * .68) - 42)
+        });
+        setShowOops(true);
+        window.clearTimeout(oopsTimer.current);
+        oopsTimer.current = window.setTimeout(() => {
+          setShowOops(false);
+          oopsTimer.current = null;
+        }, 1100);
+      }
+      dodgeNoButton();
+    }
     holdTimer.current = window.setTimeout(() => {
       holdTimer.current = null;
       activeHold.current = "";
@@ -403,7 +432,7 @@ export default function Invitation() {
       } else {
         submitAnswer("no");
       }
-    }, dodge ? 700 : 2000);
+    }, 1000);
   }
 
   function holdKey(choice, event) {
@@ -522,6 +551,12 @@ export default function Invitation() {
         </button>
       </div>
 
+      {isAsk && showOops && (
+        <div className="bm-no-oops" role="status" style={oopsPosition || undefined}>
+          Oops, it slipped!
+        </div>
+      )}
+
       <main className={"bm-screen bm-screen--" + step}>
         <div className={"bm-copy-layer" + (isDecline ? " bm-copy-layer--decline" : "")}>
           {isGate && (
@@ -610,7 +645,7 @@ export default function Invitation() {
                 </button>
                 {renderNoButton()}
               </div>
-              <p className="bm-hold-hint" id="choice-hold-hint">Press and hold the button of your choice for 2 seconds.</p>
+              <p className="bm-hold-hint" id="choice-hold-hint">Press and hold the button of your choice for 1 second.</p>
               <p className="bm-choice-status" role="status" aria-live="polite">{holding ? <><span className="bm-inline-spinner" aria-hidden="true" /> Next page is loading…</> : "\u00a0"}</p>
               {pending && <p className="bm-feedback" role="status">Sending your reply…</p>}
               {error && <p className="bm-feedback" role="alert">{error}</p>}
