@@ -103,7 +103,7 @@ async function openInvitation(page,origin){
       const yesText=await yesChoice.innerText();
       const noText=await noChoice.innerText();
       assert.ok(yesText.includes('😍')&&yesText.includes('Yes'),'Yes keeps its emoji and visible label');
-      assert.ok(noText.includes('🤭')&&noText.includes('No'),'No starts with a non-tongue emoji and visible label');
+      assert.ok(noText.includes('🥲')&&noText.includes('No'),'No keeps the requested emoji and visible label');
       assert.doesNotMatch(await noChoice.innerText(),/😛|🤪|😜/,'No must not start with a tongue-out face');
     }
     await nextPage.setViewportSize({width:390,height:844});
@@ -141,6 +141,7 @@ async function openInvitation(page,origin){
     await nextPage.getByRole('button',{name:'Unlock my invitation'}).click();
     await nextPage.getByRole('button',{name:'No, thank you',exact:true}).waitFor();
     const declineFlowBunny=await characterRect(nextPage);
+    const dodgeMessages=['Oops, it slipped!','Oh, it slipped again!'];
     for(let i=0;i<3;i++){
       const no=nextPage.getByRole('button',{name:'No, thank you',exact:true});
       const before=await no.boundingBox();
@@ -150,6 +151,11 @@ async function openInvitation(page,origin){
         return button && Math.abs(button.x-x)+Math.abs(button.y-y)>80;
       },{x:before.x,y:before.y},{timeout:1500});
       assert.ok(await nextPage.locator('.bm-choice-spinner').isVisible(),'No shows its spinner while it dodges on touch');
+      if(i<2){
+        assert.equal(await nextPage.locator('.bm-no-oops').innerText(),dodgeMessages[i],`No dodge ${i+1} shows its matching message`);
+      }else{
+        await nextPage.waitForFunction(()=>!document.querySelector('.bm-no-oops'));
+      }
       await nextPage.mouse.up();
       assert.equal(await nextPage.locator('.bm-choice-spinner').count(),0,'Early release cancels the No hold');
       const after=await no.boundingBox();

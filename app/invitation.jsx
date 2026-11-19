@@ -405,6 +405,8 @@ export default function Invitation() {
     if (dodge) {
       const showDodgeMessage = noDodges < 2;
       const bounds = noButton.current?.getBoundingClientRect();
+      window.clearTimeout(oopsTimer.current);
+      oopsTimer.current = null;
       if (showDodgeMessage) {
         const width = window.visualViewport?.width || window.innerWidth;
         const height = window.visualViewport?.height || window.innerHeight;
@@ -415,11 +417,12 @@ export default function Invitation() {
         });
         setOopsMessage(noDodges === 0 ? "Oops, it slipped!" : "Oh, it slipped again!");
         setShowOops(true);
-        window.clearTimeout(oopsTimer.current);
         oopsTimer.current = window.setTimeout(() => {
           setShowOops(false);
           oopsTimer.current = null;
         }, 1100);
+      } else {
+        setShowOops(false);
       }
       dodgeNoButton();
     }
