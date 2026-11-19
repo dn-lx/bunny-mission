@@ -4,7 +4,7 @@ const fs=require('node:fs');
 const http=require('node:http');
 const path=require('node:path');
 const {chromium}=require('playwright');
-const root=path.resolve(__dirname,'..','public');
+const root=path.resolve(__dirname,'..','out');
 const submissions=[];
 const server=http.createServer((req,res)=>{
   const pathname=new URL(req.url,'http://localhost').pathname;
@@ -15,7 +15,7 @@ const server=http.createServer((req,res)=>{
     res.end(JSON.stringify({ok:true,guestName:'Test Girl',inviteId:'e2e-test',settings:{availableSlots:{[day]:['Morning','Afternoon','Evening']},workflow:['outing','schedule']}}));
     return;
   }
-  if(pathname==='/'&&req.method==='POST'){
+  if((pathname==='/'||pathname==='/__forms.html')&&req.method==='POST'){
     let body='';
     req.setEncoding('utf8');
     req.on('data',chunk=>body+=chunk);
@@ -29,7 +29,7 @@ const server=http.createServer((req,res)=>{
   if(name.includes('..')){res.writeHead(403);res.end();return;}
   const filename=path.join(root,name);
   if(!fs.existsSync(filename)){res.writeHead(404);res.end();return;}
-  const type=filename.endsWith('.css')?'text/css':filename.endsWith('.woff2')?'font/woff2':filename.endsWith('.svg')?'image/svg+xml':filename.endsWith('.webmanifest')?'application/manifest+json':filename.endsWith('.mp3')?'audio/mpeg':filename.endsWith('.mp4')?'video/mp4':filename.endsWith('.png')?'image/png':filename.endsWith('.webp')?'image/webp':filename.endsWith('.json')?'application/json':'text/html';
+  const type=filename.endsWith('.css')?'text/css':filename.endsWith('.js')?'text/javascript':filename.endsWith('.woff2')?'font/woff2':filename.endsWith('.svg')?'image/svg+xml':filename.endsWith('.webmanifest')?'application/manifest+json':filename.endsWith('.mp3')?'audio/mpeg':filename.endsWith('.mp4')?'video/mp4':filename.endsWith('.png')?'image/png':filename.endsWith('.webp')?'image/webp':filename.endsWith('.json')?'application/json':'text/html';
   res.writeHead(200,{'Content-Type':type});fs.createReadStream(filename).pipe(res);
 });
 function listen(){return new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));}
@@ -57,10 +57,32 @@ async function openInvitation(page,origin){
     const options={headless:true,args:['--no-sandbox']};
     if(process.env.CHROME_BIN)options.executablePath=process.env.CHROME_BIN;else options.channel='chrome';
     browser=await chromium.launch(options);
+
+    const nextPage=await browser.newPage({viewport:{width:390,height:844}});
+    const nextErrors=[];nextPage.on('pageerror',err=>nextErrors.push(String(err)));
+    await nextPage.goto(origin,{waitUntil:'domcontentloaded'});
+    await nextPage.getByRole('heading',{name:'A little surprise for you.'}).waitFor({timeout:10000});
+    assert.equal(await nextPage.locator('#invitation-code').count(),1,'Next.js root must render the invitation gate');
+    await nextPage.locator('#invitation-code').fill('TEST');
+    await nextPage.getByRole('button',{name:'Unlock my invitation'}).click();
+    await nextPage.getByRole('heading',{name:/Test Girl, would you like to go out with Alex/}).waitFor({timeout:5000});
+    await nextPage.getByRole('button',{name:'Yes'}).click();
+    await nextPage.getByRole('heading',{name:'What sounds nice?'}).waitFor({timeout:5000});
+    await nextPage.getByRole('button',{name:/Something simple/}).click();
+    await nextPage.getByRole('heading',{name:'Which day works for you?'}).waitFor({timeout:5000});
+    await nextPage.locator('.bm-day-button:not([disabled])').first().click();
+    await nextPage.getByRole('button',{name:/Afternoon/}).click();
+    await nextPage.getByRole('button',{name:/Send my choices to Alex/}).click();
+    await nextPage.getByRole('heading',{name:'Your choices are on their way to Alex.'}).waitFor({timeout:5000});
+    assert.equal(submissions.at(-1)?.decision,'yes','Next.js flow should submit the accepted answer');
+    assert.ok(submissions.at(-1)?.day&&submissions.at(-1)?.time==='Afternoon','Next.js flow should submit the chosen date and time');
+    assert.deepEqual(nextErrors,[],'Next.js page JavaScript errors');
+    console.log('PASS: Next.js static export invitation and reply flow');
+    await nextPage.close();
     for(const viewport of [{width:360,height:780},{width:390,height:844},{width:1280,height:850}]){
       const page=await browser.newPage({viewport});
       const errors=[];page.on('pageerror',err=>errors.push(String(err)));
-      await openInvitation(page,origin);
+      await openInvitation(page,origin+'/version-1.html');
       const layout=await page.evaluate(()=>{
         const arena=document.querySelector('.ask-buttons').getBoundingClientRect();
         const yes=document.querySelector('#yes-btn').getBoundingClientRect();
@@ -127,7 +149,7 @@ async function openInvitation(page,origin){
         workflow:['extra-0','outing','schedule'],
         extraQuestions:[{id:'extra-0',heading:'Which little treat?',speech:'I vote for carrots.',options:['A cupcake','A carrot cake']}]
       }})}));
-    await openInvitation(customPage,origin);
+    await openInvitation(customPage,origin+'/version-1.html');
     await customPage.locator('#yes-btn').click();
     await customPage.getByRole('heading',{name:/What sounds nice\?/}).waitFor({timeout:15000});
     await customPage.locator('.choices .choice').filter({hasText:'Something simple'}).click();
@@ -143,7 +165,7 @@ async function openInvitation(page,origin){
     assert.match(customSubmission.extra_answers,/A carrot cake/);
     await customPage.close();
     const restored=await browser.newPage();
-    await restored.goto(origin+'/?version=2&invite=rollback-test#bunny',{waitUntil:'domcontentloaded'});
+    await restored.goto(origin+'/version-1.html?version=2&invite=rollback-test#bunny',{waitUntil:'domcontentloaded'});
     assert.equal(new URL(restored.url()).searchParams.get('version'),'1');
     assert.equal(new URL(restored.url()).searchParams.get('invite'),'rollback-test');
     assert.equal(new URL(restored.url()).hash,'#bunny');

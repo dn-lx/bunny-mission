@@ -1,10 +1,11 @@
 # Bunny Mission project memory
 
-Bunny Mission is a private invitation site with server-side unlock, animated Nibbles, recorded dialogue, and optional outing and date planning. The active integration branch now uses Next.js App Router with React; the V1 page and media remain available as a rollback snapshot. A No reply submits decision=no and must notify Alex.
+Bunny Mission is a private invitation site with server-side unlock, animated Nibbles, recorded dialogue, and optional outing and date planning. The active integration branch uses the Next.js App Router with React and exports the client-side guest flow as static files; protected operations remain in Netlify Functions. The V1 page and media remain available as a rollback snapshot. A No reply submits decision=no and must notify Alex.
 
 - Product name: Bunny Mission. Invitation wording may still mention Alex.
 - Develop is integration; main is production. Do not promote the Next.js migration without an explicit release request.
 - The pre-migration page is preserved at public/version-1.html; archived V1 and V2 resources remain under public/resources.
+- Netlify publishes the Next.js static export from `out/`; `NETLIFY_NEXT_PLUGIN_SKIP=true` keeps the runtime adapter from taking over the static root.
 - Netlify form declarations are preserved in public/__forms.html for framework form detection.
 - Keep passwords, credentials, tokens, private invitation data, and notification addresses out of Git, logs, and public assets; preserve server-side authentication.
 - Approved Nibbles art only; no personal photos or face.

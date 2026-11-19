@@ -6,7 +6,7 @@ Bunny Mission is a private, mobile-friendly invitation for Alex and a guest. The
 
 - The active integration app on develop uses the Next.js App Router with React.
 - main is production; develop is the integration branch. The Next.js migration is on develop only.
-- Netlify's managed OpenNext adapter handles the Next.js build. The existing Netlify Functions remain in netlify/functions.
+- The guest flow is a static Next.js export. Protected invitation checks and owner actions continue through Netlify Functions in netlify/functions.
 - The product is named Bunny Mission. The invitation wording may still ask, “Would you like to go out with Alex?”
 - The complete pre-migration page is preserved at /version-1.html. The archived V1 and V2 resources remain under public/resources.
 - The page flow and Nibbles media are unchanged by the framework migration.
@@ -31,7 +31,7 @@ Install the dependencies with npm install. Start the Next.js page with npm run d
 
 ## Netlify deployment
 
-The build runs npm run build, publishes .next, and uses Netlify's managed Next.js adapter. The custom function directory remains netlify/functions. Keep develop as the preview branch and main as production. Verify the actual branch deployment is Ready in Netlify before calling it live.
+The build runs npm run build, exports the guest app to out, and publishes that static output. NETLIFY_NEXT_PLUGIN_SKIP disables the Next.js server runtime because this client-side flow uses the existing Netlify Functions for protected operations. The custom function directory remains netlify/functions. Keep develop as the preview branch and main as production. Verify the actual branch deployment is Ready in Netlify before calling it live.
 
 Do not use a static-only drag-and-drop of public; it would omit the password function.
 

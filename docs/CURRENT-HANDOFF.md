@@ -10,7 +10,9 @@ The active guest route on develop is a Next.js App Router app using React 19.3.1
 - public/__forms.html is the static form blueprint for Netlify's form detection. The guest page sends URL-encoded AJAX submissions to /__forms.html for the going-out-develop form.
 - Invitation codes are still verified by /.netlify/functions/unlock. The Yes flow fetches the current public availability again immediately before sending.
 - Bunny Studio stays at /admin.html. The existing owner and unlock functions remain under netlify/functions.
-- Netlify uses its managed OpenNext adapter; no adapter version is pinned. The build command is npm run build, the publish directory is .next, and custom functions remain configured.
+- The guest page uses a static Next.js export. `next.config.mjs` sets `output: "export"`; `npm run build` writes the site to `out/`, which Netlify publishes.
+- `NETLIFY_NEXT_PLUGIN_SKIP=true` prevents a server runtime from intercepting the static root route. Password checks and owner actions continue through the existing Netlify Functions.
+- The first Netlify Next deploy was marked ready but both the branch alias and deploy URL returned Netlify's generic 404. Its deploy summary showed no Next server handler and no root page. The app does not need SSR, so the root now ships as a static export while the protected functions remain separate.
 
 The Next.js migration was committed to develop only. The merge to main happened before the migration; main remains on the pre-migration app. No Next.js build, browser inspection, form delivery, or Netlify deployment check has been run for this migration. Treat the develop implementation as pending those checks; do not call it live until the branch deployment is Ready.
 
