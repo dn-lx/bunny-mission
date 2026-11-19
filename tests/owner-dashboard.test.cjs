@@ -108,3 +108,9 @@ test('calendar sits at the bottom and success copy has no dance caption',()=>{
   assert.doesNotMatch(invitation,/Bunny is doing a very tiny happy dance/i);
 });
 
+test('No keeps the 🥲 emoji and the first two dodges show different messages',()=>{
+  assert.match(invitation,/const NO_FACE = "🥲"/);
+  assert.match(invitation,/const showDodgeMessage = noDodges < 2/);
+  assert.match(invitation,/setOopsMessage\(noDodges === 0 \? "Oops, it slipped!" : "Oh, it slipped again!"\)/);
+});
+

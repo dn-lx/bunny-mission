@@ -17,7 +17,7 @@ const DEFAULT_CLIPS = {
   success: "/video/flow/success.mp4",
   decline: "/video/flow/decline.mp4"
 };
-const NO_FACES = ["🤭", "😏", "🙃"];
+const NO_FACE = "🥲";
 
 
 function textValue(value, fallback, maxLength = 180) {
@@ -93,6 +93,7 @@ export default function Invitation() {
   const [noDodges, setNoDodges] = useState(0);
   const [oopsPosition, setOopsPosition] = useState(null);
   const [showOops, setShowOops] = useState(false);
+  const [oopsMessage, setOopsMessage] = useState("");
   const [selectedOuting, setSelectedOuting] = useState("");
   const videoRef = useRef(null);
   const [holding, setHolding] = useState("");
@@ -402,9 +403,9 @@ export default function Invitation() {
     setError("");
     const dodge = choice === "no" && !reducedMotion && !event.key && noDodges < 3;
     if (dodge) {
-      const firstDodge = noDodges === 0;
+      const showDodgeMessage = noDodges < 2;
       const bounds = noButton.current?.getBoundingClientRect();
-      if (firstDodge) {
+      if (showDodgeMessage) {
         const width = window.visualViewport?.width || window.innerWidth;
         const height = window.visualViewport?.height || window.innerHeight;
         const bubbleWidth = Math.min(190, width - 16);
@@ -412,6 +413,7 @@ export default function Invitation() {
           left: Math.max(8, Math.min(width - bubbleWidth - 8, (bounds?.left ?? width / 2) + (bounds?.width ?? 0) / 2 - bubbleWidth / 2)),
           top: Math.max(64, (bounds?.top ?? height * .68) - 42)
         });
+        setOopsMessage(noDodges === 0 ? "Oops, it slipped!" : "Oh, it slipped again!");
         setShowOops(true);
         window.clearTimeout(oopsTimer.current);
         oopsTimer.current = window.setTimeout(() => {
@@ -504,7 +506,7 @@ export default function Invitation() {
         onPointerUp={cancelHold} onPointerLeave={() => { if (activeHold.current !== "no") cancelHold(); }} onPointerCancel={cancelHold}
         onKeyDown={event => holdKey("no", event)} onKeyUp={cancelHold} onBlur={cancelHold}
         onContextMenu={event => event.preventDefault()} onClick={event => event.preventDefault()}>
-        <span aria-hidden="true">{NO_FACES[noDodges % NO_FACES.length]}</span>
+        <span aria-hidden="true">{NO_FACE}</span>
         <span className="bm-choice-label" aria-hidden="true">No</span>
         {holding === "no" && <span className="bm-choice-spinner" aria-hidden="true" />}
       </button>
@@ -553,7 +555,7 @@ export default function Invitation() {
 
       {isAsk && showOops && (
         <div className="bm-no-oops" role="status" style={oopsPosition || undefined}>
-          Oops, it slipped!
+          {oopsMessage}
         </div>
       )}
 
