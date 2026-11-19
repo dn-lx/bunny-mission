@@ -96,10 +96,13 @@ async function openInvitation(page,origin){
       await nextPage.setViewportSize(viewport);
       const headingBox=await inviteHeading.boundingBox();
       const bunnyBox=await characterRect(nextPage);
+      const answerBox=await nextPage.locator('.bm-answer-row').boundingBox();
       assert.ok(Math.abs(bunnyBox.x+bunnyBox.width/2-viewport.width/2)<1&&Math.abs(bunnyBox.y+bunnyBox.height/2-viewport.height/2)<1,
         'Bunny stays centered at '+viewport.width+'x'+viewport.height);
       assert.ok(headingBox.y+headingBox.height < bunnyBox.y,
         'Invitation sentence must sit above the bunny at '+viewport.width+'x'+viewport.height);
+      assert.ok(answerBox.y >= bunnyBox.y+bunnyBox.height-1,
+        'Yes and No buttons sit below the bunny at '+viewport.width+'x'+viewport.height);
       const yesText=await yesChoice.innerText();
       const noText=await noChoice.innerText();
       assert.ok(yesText.includes('😍')&&yesText.includes('Yes'),'Yes keeps its emoji and visible label');
@@ -142,7 +145,7 @@ async function openInvitation(page,origin){
     await nextPage.getByRole('button',{name:'No, thank you',exact:true}).waitFor();
     const declineFlowBunny=await characterRect(nextPage);
     const dodgeMessages=['Oops, it slipped!','Oh, it slipped again!'];
-    for(let i=0;i<3;i++){
+    for(let i=0;i<2;i++){
       const no=nextPage.getByRole('button',{name:'No, thank you',exact:true});
       const before=await no.boundingBox();
       await no.hover(); await nextPage.mouse.down();

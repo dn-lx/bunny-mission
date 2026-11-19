@@ -651,3 +651,18 @@ button:disabled { cursor: default; opacity: .58; }
   padding: 8px 0 0;
   background: var(--bm-glass);
 }
+
+/* Place the decision buttons below the centered bunny on every viewport. */
+.bm-screen--ask .bm-panel--ask {
+  position: fixed;
+  z-index: 6;
+  left: 50%;
+  bottom: max(8px, env(safe-area-inset-bottom) + 8px);
+  width: min(calc(100% - 24px), 440px);
+  margin: 0;
+  padding: 0;
+  transform: translateX(-50%);
+}
+.bm-panel--ask .bm-hold-hint { margin: 0 auto 8px; text-align: center; }
+.bm-panel--ask .bm-answer-row { width: min(100%, 340px); min-height: 132px; margin: 0 auto; gap: 28px; }
+.bm-panel--ask .bm-choice-status { min-height: 24px; margin: 2px 0 0; }

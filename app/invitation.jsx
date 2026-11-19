@@ -391,7 +391,7 @@ export default function Invitation() {
     const size = Math.min(140, width * .36);
     const old = noButton.current?.getBoundingClientRect();
     const left = old && old.left > width / 2 ? 16 : Math.max(16, width - size - 16);
-    const top = [height * .32, height * .63, height * .43][noDodges];
+    const top = [height * .32, height * .63][noDodges];
     setNoPosition({ left, top: Math.max(64, Math.min(height - size - 16, top)) });
     setNoDodges(count => count + 1);
   }
@@ -401,7 +401,7 @@ export default function Invitation() {
     activeHold.current = choice;
     setHolding(choice);
     setError("");
-    const dodge = choice === "no" && !reducedMotion && !event.key && noDodges < 3;
+    const dodge = choice === "no" && !reducedMotion && !event.key && noDodges < 2;
     if (dodge) {
       const showDodgeMessage = noDodges < 2;
       const bounds = noButton.current?.getBoundingClientRect();
@@ -636,6 +636,7 @@ export default function Invitation() {
 
           {isAsk && (
             <>
+              <p className="bm-hold-hint" id="choice-hold-hint">Press and hold the button of your choice for 1 second.</p>
               <div className="bm-answer-row" role="group" aria-label="Your answer">
                 <button className="bm-emoji-choice bm-yes-button" type="button"
                   aria-label="Yes" aria-describedby="choice-hold-hint" disabled={pending}
@@ -649,7 +650,6 @@ export default function Invitation() {
                 </button>
                 {renderNoButton()}
               </div>
-              <p className="bm-hold-hint" id="choice-hold-hint">Press and hold the button of your choice for 1 second.</p>
               <p className="bm-choice-status" role="status" aria-live="polite">{holding ? <><span className="bm-inline-spinner" aria-hidden="true" /> Next page is loading…</> : "\u00a0"}</p>
               {pending && <p className="bm-feedback" role="status">Sending your reply…</p>}
               {error && <p className="bm-feedback" role="alert">{error}</p>}
