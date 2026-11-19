@@ -65,8 +65,32 @@ async function openInvitation(page,origin){
     assert.equal(await nextPage.locator('#invitation-code').count(),1,'Next.js root must render the invitation gate');
     await nextPage.locator('#invitation-code').fill('TEST');
     await nextPage.getByRole('button',{name:'Unlock my invitation'}).click();
-    await nextPage.getByRole('heading',{name:/Test Girl, would you like to go out with Alex/}).waitFor({timeout:5000});
+    const inviteHeading=nextPage.getByRole('heading',{name:/Test Girl, would you like to go out with Alex/});
+    await inviteHeading.waitFor({timeout:5000});
     const yesChoice=nextPage.getByRole('button',{name:'Yes',exact:true});
+    const noChoice=nextPage.getByRole('button',{name:'No, thank you',exact:true});
+    for(const viewport of [{width:390,height:844},{width:1280,height:850},{width:230,height:600}]){
+      await nextPage.setViewportSize(viewport);
+      const headingBox=await inviteHeading.boundingBox();
+      const bunnyBox=await nextPage.locator('.bm-character').boundingBox();
+      assert.ok(headingBox.y+headingBox.height < bunnyBox.y,
+        'Invitation sentence must sit above the bunny at '+viewport.width+'x'+viewport.height);
+      const yesText=await yesChoice.innerText();
+      const noText=await noChoice.innerText();
+      assert.ok(yesText.includes('😍')&&yesText.includes('Yes'),'Yes keeps its emoji and visible label');
+      assert.ok(noText.includes('🤭')&&noText.includes('No'),'No starts with a non-tongue emoji and visible label');
+      assert.doesNotMatch(await noChoice.innerText(),/😛|🤪|😜/,'No must not start with a tongue-out face');
+    }
+    await nextPage.setViewportSize({width:390,height:844});
+    const noBefore=await noChoice.boundingBox();
+    await noChoice.hover(); await nextPage.mouse.down();
+    await nextPage.waitForFunction(({x,y})=>{
+      const no=document.querySelector('.bm-no-button')?.getBoundingClientRect();
+      return no && Math.abs(no.x-x)+Math.abs(no.y-y)>80;
+    },{x:noBefore.x,y:noBefore.y},{timeout:1500});
+    assert.ok(await nextPage.locator('.bm-choice-spinner').isVisible(),'No shows its spinner as it dodges on touch');
+    await nextPage.mouse.up();
+    assert.equal(await nextPage.locator('.bm-choice-spinner').count(),0,'Early release cancels the No hold');
     await yesChoice.hover(); await nextPage.mouse.down();
     await nextPage.waitForTimeout(450);
     assert.ok(await nextPage.locator('.bm-choice-spinner').isVisible(),'Spinner appears during hold');
@@ -208,4 +232,5 @@ async function openInvitation(page,origin){
     await new Promise(resolve=>server.close(resolve));
   }
 })().catch(err=>{console.error(err);process.exitCode=1;});
+
 

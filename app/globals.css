@@ -481,3 +481,60 @@ button:disabled { cursor: default; opacity: .58; }
 .bm-inline-spinner { display: inline-block; vertical-align: middle; width: 14px; height: 14px; border: 2px solid #8e263d33; border-top-color: var(--bm-berry); border-radius: 50%; animation: choice-spin .65s linear infinite; }
 @keyframes choice-spin { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .bm-choice-spinner, .bm-inline-spinner { animation: none; } }
+
+/* Keep the invitation sentence clear above Nibbles on phone and desktop. */
+.bm-panel--ask h1 {
+  position: fixed;
+  top: calc(env(safe-area-inset-top) + clamp(56px, 6vh, 90px));
+  left: 50%;
+  z-index: 4;
+  width: min(92vw, 21ch);
+  margin: 0;
+  padding: 0 8px;
+  transform: translateX(-50%);
+}
+.bm-emoji-choice {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  min-height: 132px;
+}
+.bm-choice-label {
+  color: var(--bm-berry);
+  font-size: 14px;
+  font-weight: 850;
+  line-height: 1;
+  text-shadow: 0 1px 8px rgb(255 247 237 / .95);
+}
+@media (min-width: 960px) {
+  .bm-app--ask .bm-character { bottom: -10vh; }
+}
+@media (max-width: 959px) {
+  .bm-panel--ask h1 {
+    top: calc(env(safe-area-inset-top) + clamp(84px, 14vh, 112px));
+    width: min(94vw, 21ch);
+    font-size: clamp(24px, 6vw, 38px);
+  }
+}
+@media (max-height: 800px) and (max-width: 959px) {
+  .bm-character {
+    bottom: clamp(130px, 24vh, 170px);
+    width: min(80vw, 42vh, 310px);
+  }
+  .bm-panel--ask h1 {
+    top: calc(env(safe-area-inset-top) + clamp(78px, 14vh, 112px));
+    font-size: clamp(23px, 5.8vw, 27px);
+  }
+}
+@media (min-width: 960px) and (max-height: 700px) {
+  .bm-app--ask .bm-character {
+    bottom: -5vh;
+    width: min(52vw, 72vh, 680px);
+  }
+  .bm-panel--ask h1 {
+    top: calc(env(safe-area-inset-top) + clamp(54px, 8vh, 70px));
+    font-size: clamp(24px, 4vw, 38px);
+  }
+}

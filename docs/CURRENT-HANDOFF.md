@@ -45,7 +45,7 @@ The execution plan and acceptance criteria are in docs/VERSION-2-PLAN.md. Start 
 
 Current develop uses visualViewport resize/scroll state to fit the welcome form above the mobile keyboard. The decline screen keeps the existing Flow bunny video visible above the goodbye text.
 
-Yes and No are facial emoji controls with accessible names. The shared note says “Press and hold the button of your choice for 2 seconds.” A rotating ring and “Next page is loading…” appear during a hold; early release cancels. Yes advances after two seconds. No escapes during the hold up to three times and then accepts a complete hold. Keyboard and reduced-motion use the complete hold without escapes. No dodge instructions are shown to guests.
+The personalized invitation sentence sits above the bunny. Yes and No each show a facial emoji with a visible word label and accessible names. The default No face is 🤭, followed by 😏 and 🙃; tongue-out faces are not used. The shared note says “Press and hold the button of your choice for 2 seconds.” A rotating ring and “Next page is loading…” appear during a hold; early release cancels. Yes advances after two seconds. No moves immediately on touch up to three times, then accepts a complete hold. Keyboard and reduced-motion use the complete hold without escapes. No dodge instructions are shown to guests.
 
 The existing going-out-develop form and its notification configuration remain in use. Active form payloads now contain a readable reply summary plus the decision and subject, removing empty obsolete fields and JSON from new Next guest replies. No new email service was introduced; this is a plain-text notification summary. The preserved version-1.html still has its historical payload.
 

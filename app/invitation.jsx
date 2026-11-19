@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { createPortal } from "react-dom";
 
 const TIMES = [
   { icon: "☀️", label: "Morning" },
@@ -18,7 +17,7 @@ const DEFAULT_CLIPS = {
   success: "/video/flow/success.mp4",
   decline: "/video/flow/decline.mp4"
 };
-const NO_FACES = ["😛", "🤪", "😜"];
+const NO_FACES = ["🤭", "😏", "🙃"];
 
 
 function textValue(value, fallback, maxLength = 180) {
@@ -375,27 +374,28 @@ export default function Invitation() {
     setHolding("");
   }
 
+  function dodgeNoButton() {
+    const width = window.visualViewport?.width || window.innerWidth;
+    const height = window.visualViewport?.height || window.innerHeight;
+    const size = Math.min(140, width * .36);
+    const old = noButton.current?.getBoundingClientRect();
+    const left = old && old.left > width / 2 ? 16 : Math.max(16, width - size - 16);
+    const top = [height * .32, height * .63, height * .43][noDodges];
+    setNoPosition({ left, top: Math.max(64, Math.min(height - size - 16, top)) });
+    setNoDodges(count => count + 1);
+  }
+
   function startHold(choice, event) {
     if (pending || activeHold.current || (event.button !== undefined && event.button !== 0)) return;
     activeHold.current = choice;
     setHolding(choice);
     setError("");
     const dodge = choice === "no" && !reducedMotion && !event.key && noDodges < 3;
+    if (dodge) dodgeNoButton();
     holdTimer.current = window.setTimeout(() => {
       holdTimer.current = null;
       activeHold.current = "";
       setHolding("");
-      if (dodge) {
-        const width = window.visualViewport?.width || window.innerWidth;
-        const height = window.visualViewport?.height || window.innerHeight;
-        const size = Math.min(140, width * .36);
-        const old = noButton.current?.getBoundingClientRect();
-        const left = old && old.left > width / 2 ? 16 : Math.max(16, width - size - 16);
-        const top = [height * .32, height * .63, height * .43][noDodges];
-        setNoPosition({ left, top: Math.max(64, Math.min(height - size - 16, top)) });
-        setNoDodges(count => count + 1);
-        return;
-      }
       setNoPosition(null);
       if (choice === "yes") {
         setSelectedOuting("");
@@ -471,11 +471,12 @@ export default function Invitation() {
       <button ref={noButton} className={"bm-emoji-choice bm-no-button" + (noPosition ? " bm-no-floating" : "")}
         style={noPosition ? { left: noPosition.left, top: noPosition.top } : undefined}
         type="button" aria-label="No, thank you" aria-describedby="choice-hold-hint" disabled={pending}
-        onPointerDown={event => startHold("no", event)}
-        onPointerUp={cancelHold} onPointerLeave={cancelHold} onPointerCancel={cancelHold}
+        onPointerDown={event => { event.currentTarget.setPointerCapture?.(event.pointerId); startHold("no", event); }}
+        onPointerUp={cancelHold} onPointerLeave={() => { if (activeHold.current !== "no") cancelHold(); }} onPointerCancel={cancelHold}
         onKeyDown={event => holdKey("no", event)} onKeyUp={cancelHold} onBlur={cancelHold}
         onContextMenu={event => event.preventDefault()} onClick={event => event.preventDefault()}>
         <span aria-hidden="true">{NO_FACES[noDodges % NO_FACES.length]}</span>
+        <span className="bm-choice-label" aria-hidden="true">No</span>
         {holding === "no" && <span className="bm-choice-spinner" aria-hidden="true" />}
       </button>
     );
@@ -563,14 +564,15 @@ export default function Invitation() {
               <div className="bm-answer-row" role="group" aria-label="Your answer">
                 <button className="bm-emoji-choice bm-yes-button" type="button"
                   aria-label="Yes" aria-describedby="choice-hold-hint" disabled={pending}
-                  onPointerDown={event => startHold("yes", event)}
+                  onPointerDown={event => { event.currentTarget.setPointerCapture?.(event.pointerId); startHold("yes", event); }}
                   onPointerUp={cancelHold} onPointerLeave={cancelHold} onPointerCancel={cancelHold}
                   onKeyDown={event => holdKey("yes", event)} onKeyUp={cancelHold} onBlur={cancelHold}
                   onContextMenu={event => event.preventDefault()} onClick={event => event.preventDefault()}>
                   <span aria-hidden="true">😍</span>
+                  <span className="bm-choice-label" aria-hidden="true">Yes</span>
                   {holding === "yes" && <span className="bm-choice-spinner" aria-hidden="true" />}
                 </button>
-                {!noPosition && renderNoButton()}
+                {renderNoButton()}
               </div>
               <p className="bm-hold-hint" id="choice-hold-hint">Press and hold the button of your choice for 2 seconds.</p>
               <p className="bm-choice-status" role="status" aria-live="polite">{holding ? <><span className="bm-inline-spinner" aria-hidden="true" /> Next page is loading…</> : "\u00a0"}</p>
@@ -709,8 +711,6 @@ export default function Invitation() {
           )}
         </section>
       </main>
-      {isAsk && noPosition && createPortal(renderNoButton(), document.body)}
-
     </div>
   );
 }
