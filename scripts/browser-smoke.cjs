@@ -161,7 +161,7 @@ async function openInvitation(page,origin){
         assert.equal(await page.locator('#chapter').textContent(),'step 3 of 3');
         assert.equal(await page.locator('#send-answer').isEnabled(),false,'Calendar must wait for a valid selection');
         await page.locator('.calendar-day:not([disabled]):not(.blank)').first().click();
-        await page.getByRole('button',{name:/Afternoon/}).click();
+        await page.locator('.time-option').filter({hasText:'Afternoon'}).click();
         assert.equal(await page.locator('#send-answer').isEnabled(),true,'Choosing an open time enables direct sending');
         assert.match(await page.locator('#send-answer').innerText(),/Send my choices to Alex/);
         await page.locator('#send-answer').click();
