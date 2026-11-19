@@ -1,4 +1,6 @@
-# Working on Go Out with Alex
+# Working on Bunny Mission
+
+Bunny Mission is the product name; the invitation may still ask whether the guest would like to go out with Alex.
 
 Before editing, read this file, policy, project memory and current handoff. Inspect current `develop` source, tests, media manifests and workflows. Use Graphify or targeted search before broad reads; load only relevant skills and one superpower. Source/tests/live state override old chats.
 
