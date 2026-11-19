@@ -1,101 +1,48 @@
-# Go Out with Alex 🐰
+# Bunny Mission 🐰
 
-A mobile-friendly invitation hosted on Netlify: one code-entry welcome, an animated talking bunny, a playful Yes/No question, two outing choices, and a calendar.
+Bunny Mission is a private, mobile-friendly invitation for Alex and a guest. The guest enters an invitation code, answers a short Yes/No question, chooses “Something simple” or “Surprise me,” answers any owner-configured follow-up questions, and can select an available day and time.
 
-## Current setup
+## Current product and branches
 
-- GitHub source: https://github.com/dn-lx/go-out-with-alex.
-- Netlify project: https://app.netlify.com/projects/go-out-with-alex
-- **Status: both production (`main`) and development (`develop`) are connected to Netlify. Develop is the active testing branch.**
-- Temporary recipient name: **Test Girl**
-- Temporary invitation ID: `test-invite`
-- The demo password is shared privately with the owner and **must never appear in this Git repository**.
-- Nothing in PageChime, BailaCue, or Lexora has been changed.
+- GitHub source: https://github.com/dn-lx/bunny-mission.
+- `develop` is the active testing branch. `main` is production and requires an explicit release request.
+- The product is named **Bunny Mission**. The invitation copy may still ask, “Would you like to go out with Alex?”
+- Netlify uses a site slug independent of the GitHub repository name. Existing repository notes contain the legacy `go-out-with-alex` slug; confirm the current project and deploy URL in Netlify before sharing a link.
+- The V1 update simplifies pages and reply handling only. Existing Nibbles media is unchanged; no flower-offer clip is included.
 
-## Publish on Netlify
+## V1 guest flow
 
-1. In the existing Netlify project's **Build & deploy / Continuous deployment** settings, choose **Link repository**.
-2. Select GitHub and find `dn-lx/go-out-with-alex.`. Note the repository accidentally has a **trailing dot**. If you rename it in GitHub Settings to `go-out-with-alex`, choose the renamed version.
-3. Use branch `main`, publish directory `public`, and function directory `netlify/functions` (declared in `netlify.toml`). No build command is required for the static HTML.
-4. Deploy, then open `https://go-out-with-alex.netlify.app`.
-5. Verify the password screen unlocks the named invitation. The unlock endpoint is `/.netlify/functions/unlock`.
-6. Verify Netlify Forms detected `going-out` and that a voluntary answer submission appears in **Forms**.
+1. **Welcome and code entry:** one screen shows “A little surprise for you” with the invitation-code field and unlock action. Invalid codes can be corrected without starting the invitation again. Fullscreen is requested after an eligible user action; there is no separate fullscreen continuation page.
+2. **Invitation:** after code verification, show the guest’s name and the personalized invitation question with clear Yes and No choices. The playful No button dodges up to three times, then remains selectable. Keyboard and reduced-motion use stay accessible.
+3. **Outing choice:** show only “Something simple” and “Surprise me.” Insert optional questions configured by Alex only when they exist; skip empty question steps.
+4. **Calendar:** dates and Morning, Afternoon, and Evening begin unavailable. Guests can select only a time Alex has opened. They can send an available selection with “Send my choices to Alex” or choose “Choose a day together later.”
+5. **Replies:** a Yes reply is sent when the guest submits the calendar step. A No reply submits `decision=no` when the decline is accepted. Both use the existing `going-out-develop` Netlify Form and its owner notification. Failed submissions can be retried.
 
-Do **not** deploy this app through a static-only drag-and-drop of the `public` directory: that would omit the serverless password function.
+## Email and privacy
+
+The `going-out-develop` form notification must be configured in Netlify for Alex. Keep the notification address, invitation codes, credentials, and other private details out of Git. Do not put a raw invitation password in `lib/invites.cjs` or public files; store only its supported hash entry.
+
+## Netlify deployment
+
+- The build publishes `public`; serverless functions come from `netlify/functions`, as declared in `netlify.toml`.
+- Keep `develop` as the preview branch and `main` as production. Verify the actual branch deployment is Ready in Netlify before calling it live.
+- Use the existing Netlify project connection and check its current site slug; renaming the GitHub repository does not automatically rename the Netlify site.
+- Do not use a static-only drag-and-drop of `public`; it would omit the password function.
 
 ## Customize invitations
 
-Edit `lib/invites.cjs` to replace `Test Girl` and the temporary digest with a new randomly generated invitation. To generate a new private passcode, on a trusted machine run:
+Edit `lib/invites.cjs` to replace the temporary guest and invitation entry. To generate a new private code on a trusted machine, run:
 
 ```bash
-node scripts/new-invite.cjs invite-2 "Her Name"
+node scripts/new-invite.cjs invite-2 "Guest name"
 ```
 
-The command prints a private code and a SHA-256 hash entry. Add the hash entry to `lib/invites.cjs`, but **do not commit or paste the raw password into GitHub**. Redeploy after changing invites. For several recipients, each must have her own unique `id`, `name`, and `hash`.
+Add only the generated hash entry to `lib/invites.cjs`; never commit or paste the raw code into GitHub. Give each guest a unique invitation ID, name, and hash.
 
-A public website's password gate is not designed for highly sensitive information. For stronger protection, add robust server-side rate limiting and stronger password storage.
+## Checks and project notes
 
-## Interaction and privacy
+Run `npm test` for the unlock and UI contract checks. Real-device speech, fullscreen, keyboard behavior, and Netlify form delivery require separate browser/deploy verification.
 
-- The first page combines “A little surprise for you” with invitation-code entry. It requests fullscreen when the guest focuses or submits the code; there is no manual fullscreen continuation button.
-- The existing Nibbles Flow clips are unchanged in this page update.
-- The **Yes** face celebrates with hearts; the **No** face makes three mischievous escapes, then becomes selectable.
-- Choosing **No** opens the gentle decline page and submits a `decision=no` response to the `going-out-develop` Netlify Form.
-- After **Yes**, guests choose **Something simple** or **Surprise me**, then select an open date and Morning, Afternoon, or Evening. Dates and dayparts are closed by default; the calendar sends directly with **Send my choices to Alex**. A guest can also choose to pick a day together later.
-- There are no external analytics or paid speech services in the app.
-
-## Test
-
-```bash
-npm test
-```
-
-The tests cover valid/invalid codes, a named invitation, case-insensitive matching, HTTP-method restriction, body-size limits and the temporary demo invitation. These are backend tests; real speech, fullscreen, and form delivery must also be verified on the live site.
-
-## Development branch and Netlify preview
-
-Branch deploy trigger: Netlify branch deployment was enabled by the site owner on November 11, 2026. The current `develop` commit must be verified in Netlify's deploy list before the preview can be considered live.
-
-
-
-The `develop` branch is the active development branch. `main` remains production and must not be updated until an explicit release request.
-
-The `[context.develop]` section in `netlify.toml` configures the branch build, but **does not turn on branch deployments by itself**. The Netlify project Owner must:
-
-1. Open [go-out-with-alex Project configuration](https://app.netlify.com/projects/go-out-with-alex/configuration).
-2. Go to **Developer settings → Continuous deployment → Branches and deploy contexts → Configure**.
-3. Choose **Let me add individual branches**, enter `develop`, and **Save**.
-4. Push a new commit to `develop` if Netlify does not build immediately.
-5. Verify the actual ready deployment at `https://develop--go-out-with-alex.netlify.app`. Never treat a predicted URL as confirmation.
-
-This prevents a development update from changing `https://go-out-with-alex.netlify.app` (production).
-
-## Email when a visitor sends an answer
-
-The `going-out-develop` Netlify Form receives an explicit response when the guest declines or sends calendar choices. Declines include `decision=no` and the subject `Alex received a bunny invitation decline`; yes responses include the submitted choices. Netlify's submission notification is configured for `going-out-develop` and **don.alex.perera@gmail.com**. Both decline and calendar submissions reach this form, so either response triggers the email. Avoid collecting or publishing invitation codes in form data.
-
-## Current UI details
-
-- Only **🥰 (Yes)** and **😏 (No)** appear as face buttons; accessible labels still identify the choices for screen readers.
-- The No face slips exactly **three** times with different expressions, then remains selectable, with a small idle wiggle.
-- No transient text appears when No dodges.
-- The bunny wiggles ears, bobs, animates its mouth when speaking, and speaks on every transition after the visitor activates the experience. Voice availability depends on the browser and device.
-- The password panel uses Visual Viewport events to move upward as the mobile keyboard opens.
-- `npm test` covers the unlock API plus UI contract and syntax tests. This is not a substitute for real-device voice and keyboard testing.
-
-## Animated Nibbles and recorded narration
-
-The approved Nibbles character now appears in an immersive full-screen layout. Dialogue clips are H.264/AAC MP4s rendered from a 20-pose reference-consistent animation atlas. Distinct eye, mouth, ear, paw, hop, celebration, tail-bounce dance, sneaky tiptoe, and tongue-out wink poses change with each scene; three mouth shapes follow the Qwen3 waveform. Tapping or keyboard-activating the bunny plays a silly bonus performance.
-
-The current narration pipeline uses the open-weight [Qwen3-TTS 1.7B](https://huggingface.co/Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice) with the expressive English `Ryan` voice and scene-specific performance directions. The dialogue is in `scripts/tts/bunny-lines.json`. GitHub Actions' `Generate natural bunny voice (Qwen3)` workflow uses `scripts/tts/generate_qwen.py` to render all 16 `/audio/*.mp3` files and only enables them through `public/audio/manifest.json` after every file passes validation. **The previous Kokoro narration is disabled; do not re-enable it.** No ElevenLabs recordings were created.
-
-Use GitHub Actions → `Generate natural bunny voice (Qwen3)` → Run workflow on **develop** only after changing the source dialogue. The workflow generates the audio on a CPU GitHub runner, so the result depends on the job completing successfully. No model weights, tokens, or credentials are committed. GitHub Actions usage remains subject to the account's hosting policies and limits.
-
-The source files may be distributed in the public website; do not put invitation passwords, personal recordings, or other private data in those files.
-
-
-### Qwen3 recording release
-
-On November 12, 2026, the Qwen3 GitHub Actions voice-generation job completed successfully and committed all 16 replacement MP3s. The audio manifest now identifies `Qwen3-TTS-12Hz-1.7B-CustomVoice` with voice `Ryan`. This develop-only documentation commit triggers Netlify to publish the latest recordings because the generated-audio commit intentionally included `[skip ci]`.
-
-Animation method, hardware checks, cost assumptions, and regeneration steps are documented in [`docs/animation-pipeline.md`](docs/animation-pipeline.md). The owner API remains server-side authenticated; the Netlify credential setup must be completed before owner sign-in can be used.
+- Current V1 state: `docs/CURRENT-HANDOFF.md`.
+- V2 remains paused for planning: `docs/VERSION-2-PLAN.md`.
+- The guest-facing page script is in `QUIZ-SCRIPT.md`.
