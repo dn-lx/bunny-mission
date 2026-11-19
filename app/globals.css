@@ -332,11 +332,11 @@ button:disabled { cursor: default; opacity: .58; }
   .bm-character {
     left: 50%;
     bottom: -2vh;
-    width: min(52vw, 82vh, 740px);
+    width: min(60vw, 104vh, 820px);
   }
   .bm-app--gate .bm-character,
   .bm-app--calendar .bm-character {
-    left: 28%;
+    left: 31%;
     bottom: 0;
   }
   .bm-screen--gate,
