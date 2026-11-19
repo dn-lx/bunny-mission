@@ -1,6 +1,6 @@
 # Go Out with Alex 🐰
 
-A mobile-friendly invitation hosted on Netlify: a fullscreen welcome, invitation password, animated talking bunny, expressive Yes/No buttons, and an optional mini-quiz about going out with Alex.
+A mobile-friendly invitation hosted on Netlify: one code-entry welcome, an animated talking bunny, a playful Yes/No question, two outing choices, and a calendar.
 
 ## Current setup
 
@@ -37,11 +37,11 @@ A public website's password gate is not designed for highly sensitive informatio
 
 ## Interaction and privacy
 
-- The fullscreen gate requests fullscreen when the browser permits it; browsers that refuse offer a manual continue path.
-- The approved Nibbles rabbit uses 16 Qwen3-TTS 1.7B English voice recordings and scene-matched MP4 animation on `develop`. Kokoro is disabled. Tapping the bunny triggers an extra funny line and a character flourish.
-- The **Yes** face celebrates with hearts; the **No** face makes three longer mischievous escapes, then becomes fully selectable.
-- The visitor may decline, and no decline response is sent to Alex.
-- After **Yes**, a short planning flow covers activity, preferences, location and a calendar day/time. Only an explicit **Send my choices to Alex** click submits them using Netlify Forms.
+- The first page combines “A little surprise for you” with invitation-code entry. It requests fullscreen when the guest focuses or submits the code; there is no manual fullscreen continuation button.
+- The existing Nibbles Flow clips are unchanged in this page update.
+- The **Yes** face celebrates with hearts; the **No** face makes three mischievous escapes, then becomes selectable.
+- Choosing **No** opens the gentle decline page and submits a `decision=no` response to the `going-out-develop` Netlify Form.
+- After **Yes**, guests choose **Something simple** or **Surprise me**, then select an open date and Morning, Afternoon, or Evening. Dates and dayparts are closed by default; the calendar sends directly with **Send my choices to Alex**. A guest can also choose to pick a day together later.
 - There are no external analytics or paid speech services in the app.
 
 ## Test
@@ -72,16 +72,7 @@ This prevents a development update from changing `https://go-out-with-alex.netli
 
 ## Email when a visitor sends an answer
 
-The existing `going-out` Netlify Form records the recipient and activity/vibe/timing answers **only after a visitor chooses Send**. Email notifications are a Netlify dashboard setting and have not been configured programmatically.
-
-To send an email to **don.alex.perera@gmail.com** whenever a verified `going-out` form response is received:
-
-1. Open Netlify → **Forms → Submission notifications → Add notification**.
-2. Select **Email notification**, use `don.alex.perera@gmail.com`, and limit the notification to form `going-out`.
-3. Complete any recipient confirmation Netlify sends and save.
-4. Submit one explicitly consented test response on the branch deploy and check delivery and spam folders.
-
-Declining is not silently reported. A visitor must explicitly agree to send her response. Avoid collecting or publishing password values in form data.
+The `going-out-develop` Netlify Form receives an explicit response when the guest declines or sends calendar choices. Declines include `decision=no` and the subject `Alex received a bunny invitation decline`; yes responses include the submitted choices. Netlify's submission notification is configured for `going-out-develop` and **don.alex.perera@gmail.com**. Both decline and calendar submissions reach this form, so either response triggers the email. Avoid collecting or publishing invitation codes in form data.
 
 ## Current UI details
 

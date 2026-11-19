@@ -2,28 +2,19 @@
   'use strict';
   const $ = id => document.getElementById(id);
   const API='/.netlify/functions/owner';
-  let state=null, editId=null, extraQuestions=[], stepOrder=[], nextExtraId=0, availableDays=[], availabilityBusy=false;
+  let state=null, editId=null, extraQuestions=[], stepOrder=[], nextExtraId=0, availabilitySlots={}, availabilityBusy=false;
   const enabledSteps=new Set();
-  const stepLabels={outing:'Activity',detail:'Activity follow-up',area:'Meeting area',schedule:'Calendar'};
-  const timeDefaults=['Morning','Afternoon','Evening','Flexible time'];
+  const timeDefaults=['Morning','Afternoon','Evening'];
+  const slotCheckboxes={Morning:'available-morning',Afternoon:'available-afternoon',Evening:'available-evening'};
   const defaults={
     screens:{
       ask:['{name}, would you like to go out with {sender}?','That’s the whole big, very important question. What do you think?','Ehhh... Alex has a question for ya. He sent a rabbit. Bold choice, huh?'],
-      outing:['What would you like to do?','Pick an idea that actually sounds fun to you.','Here is the fun part. Coffee, wandering, food or sweets? I did not even put carrot farming on the list.'],
-      area:['Where would be convenient?','No need to pick a specific place yet.','Somewhere comfortable for you, of course. My hop-mobile has a very limited range.'],
-      schedule:['Which day works for you?','Pick a day from the calendar and a time of day, or decide together later.','Aha! The calendar! Pick a day that works for you. This rabbit does not do surprise alarms.'],
+      outing:['What sounds nice?','Choose a simple plan, or leave the idea to Alex.','What would you like to do together?'],
+      schedule:['Which day works for you?','Choose an open date and time, or ask Alex to choose a day together.','The calendar! I checked it twice. It is the only calendar I have ever seen without a carrot day.'],
       success:['Bunny is doing happy little jumps!','You said yes to going out with Alex. I think this deserves a tiny celebration.','Well, would ya look at that! Mission accomplished! I knew this bow tie had magical powers!'],
-      decline:['No worries at all','','Hey, no worries! Thanks for being straight with me. Here’s a little flower, on the house.']
+      decline:['No worries at all. Have a nice day.','','No worries at all. Have a nice day.']
     },
-    outings:{coffee:'Coffee or tea',walk:'A walk and exploring',food:'A bite to eat',sweet:'Something sweet',surprise:'A little surprise'},
-    details:{
-      coffee:['What kind of coffee stop?',['A cosy café and a good chat','Takeaway coffee and a stroll','Tea or a different drink','You two can choose']],
-      walk:['Where should we wander?',['A park and some nature','Exploring the city','Somewhere by the water','You two can choose']],
-      food:['What food sounds good?',['Italian','Asian food','Street food or casual bites','You two can choose']],
-      sweet:['Which sweet treat?',['Bakery or pastries','Ice cream or gelato','Waffles or pancakes','You two can choose']],
-      surprise:['What should the surprise feel like?',['Calm and cosy','Playful and fun','Outside and exploring','Alex can come up with something']]
-    },
-    areas:['Somewhere near me','Somewhere near Alex','Meet halfway','Choose a place together']
+    outings:{simple:'Something simple',surprise:'Surprise me'}
   };
   function elt(tag,text,className){
     const v=document.createElement(tag);if(text!==undefined&&text!==null)v.textContent=String(text);if(className)v.className=className;return v;
@@ -74,11 +65,11 @@
     try{
       state=await api('state');$('dashboard').hidden=false;$('login').hidden=true;$('logout').hidden=false;
       extraQuestions=Array.isArray(state.settings.extraQuestions)?state.settings.extraQuestions.map(x=>({...x,options:[...x.options]})):[];
-      const allSteps=[...Object.keys(stepLabels),...extraQuestions.map(q=>q.id)];
-      const configured=state.settings.workflow||allSteps;
-      stepOrder=[...new Set([...configured,...allSteps])];
+      const extraIds=extraQuestions.map(q=>q.id);
+      const configured=Array.isArray(state.settings.workflow)?state.settings.workflow:[];
+      stepOrder=[...new Set([...configured.filter(key=>extraIds.includes(key)),...extraIds])];
       enabledSteps.clear();
-      configured.forEach(key=>enabledSteps.add(key));
+      configured.filter(key=>extraIds.includes(key)).forEach(key=>enabledSteps.add(key));
       nextExtraId=extraQuestions.length;
       $('password').value='';resetPasswordVisibility();
       renderInvites();renderSettings();
@@ -167,34 +158,9 @@
       const pair=labelInput(key,config.outingLabels?.[key]||'',value,'input',75);
       pair.input.dataset.outing=key;outings.append(pair.outer);
     });
-    const details=$('detail-fields');details.replaceChildren();
-    for(const [key,[heading,options]] of Object.entries(defaults.details)){
-      const wrapper=elt('div',null,'question');wrapper.append(elt('h3',key));
-      const inputs=elt('div',null,'grid');
-      const h=labelInput('Follow-up question',config.detail?.[key]?.heading||'',heading,'input',180);
-      h.input.dataset.detail=key;h.input.dataset.field='heading';
-      const speech=labelInput('Bunny line (optional)',config.detail?.[key]?.speech||'','Keep original narration','textarea',500);
-      speech.input.dataset.detail=key;speech.input.dataset.field='speech';
-      const opts=labelInput('Four choices (one per line)',
-        (config.detail?.[key]?.options?.some(Boolean)?config.detail[key].options:options).join('\n'),
-        options.join(' / '),'textarea',600);
-      opts.input.dataset.detail=key;opts.input.dataset.field='options';
-      opts.outer.classList.add('full');speech.outer.classList.add('full');
-      inputs.append(h.outer,speech.outer,opts.outer);wrapper.append(inputs);details.append(wrapper);
-    }
-    const areas=$('area-fields');areas.replaceChildren();
-    defaults.areas.forEach((value,index)=>{
-      const pair=labelInput('Area choice '+(index+1),config.areaLabels?.[index]||'',value,'input',85);
-      pair.input.dataset.area=String(index);areas.append(pair.outer);
-    });
-    const timeFields=$('time-fields');timeFields.replaceChildren();
-    const timeHeading=labelInput('Time of day question',config.timeHeading,'What time of day suits you?','input',180);
-    timeHeading.outer.classList.add('full');timeHeading.input.id='time-heading';
-    timeFields.append(timeHeading.outer);
-    timeDefaults.forEach((value,index)=>{
-      const pair=labelInput('Time choice '+(index+1),config.timeLabels?.[index]||'',value,'input',85);
-      pair.input.dataset.time=String(index);timeFields.append(pair.outer);
-    });
+    availabilitySlots=normalizeAvailability(config);
+    $('available-date').value='';
+    timeDefaults.forEach(slot => { $(slotCheckboxes[slot]).checked=false; });
     renderAvailability();
     renderExtra();
     renderWorkflow();
@@ -202,6 +168,23 @@
   function localDateKey(date){
     return [date.getFullYear(),String(date.getMonth()+1).padStart(2,'0'),String(date.getDate()).padStart(2,'0')].join('-');
   }
+  function normalizeAvailability(config){
+    if(config?.availabilitySlots&&typeof config.availabilitySlots==='object'&&!Array.isArray(config.availabilitySlots)){
+      return Object.fromEntries(Object.entries(config.availabilitySlots)
+        .filter(([key,slots])=>/^\d{4}-\d{2}-\d{2}$/.test(key)&&Array.isArray(slots))
+        .map(([key,slots])=>[key,[...new Set(slots.filter(slot=>timeDefaults.includes(slot)))]])
+        .filter(([,slots])=>slots.length));
+    }
+    const old=Array.isArray(config?.availableDays)?config.availableDays:[];
+    return Object.fromEntries(old.filter(key=>/^\d{4}-\d{2}-\d{2}$/.test(key))
+      .map(key=>[key,[...timeDefaults]]));
+  }
+  function syncAvailabilityDate(){
+    const key=$('available-date').value;
+    const slots=availabilitySlots[key]||[];
+    timeDefaults.forEach(slot=>{ $(slotCheckboxes[slot]).checked=slots.includes(slot); });
+  }
+  $('available-date').addEventListener('change',syncAvailabilityDate);
   function renderAvailability(){
     const input=$('available-date');
     const now=new Date();
@@ -209,22 +192,41 @@
     input.max=localDateKey(new Date(now.getFullYear(),now.getMonth()+4,0));
     const list=$('availability-days');
     list.replaceChildren();
-    if(!availableDays.length){
-      list.append(elt('p','No days are open yet. Every guest date is blocked.','mini'));
+    const keys=Object.keys(availabilitySlots).sort();
+    if(!keys.length){
+      list.append(elt('p','No dates are open yet. Every date is blocked by default.','mini'));
       return;
     }
-    for(const key of availableDays){
+    for(const key of keys){
+      const slots=availabilitySlots[key]||[];
       const [year,month,day]=key.split('-').map(Number);
       const date=new Date(year,month-1,day);
-      const row=elt('div',null,'question row between');
+      const row=elt('div',null,'question');
       row.setAttribute('role','listitem');
-      row.append(elt('span',new Intl.DateTimeFormat('en',{weekday:'long',month:'long',day:'numeric',year:'numeric'}).format(date)));
-      const block=elt('button','Block this day','btn danger');
-      block.type='button';
-      block.disabled=availabilityBusy;
-      block.addEventListener('click',()=>updateAvailability(availableDays.filter(item=>item!==key),'Day blocked. Guests can no longer select it.'));
-      row.append(block);
-      list.append(row);
+      const header=elt('div',null,'row between');
+      header.append(elt('strong',new Intl.DateTimeFormat('en',{weekday:'long',month:'long',day:'numeric',year:'numeric'}).format(date)));
+      const block=elt('button','Block date','btn danger');
+      block.type='button';block.disabled=availabilityBusy;
+      block.addEventListener('click',()=>{
+        const next={...availabilitySlots};delete next[key];
+        updateAvailability(next,'Date blocked. Guests cannot select it.');
+      });
+      header.append(block);row.append(header);
+      const timeRow=elt('div',null,'row');
+      for(const slot of timeDefaults){
+        const open=slots.includes(slot);
+        const button=elt('button',(open?'✓ ':'＋ ')+slot,open?'btn primary':'btn');
+        button.type='button';button.disabled=availabilityBusy;
+        button.setAttribute('aria-pressed',String(open));
+        button.addEventListener('click',()=>{
+          const nextSlots=open?slots.filter(value=>value!==slot):[...slots,slot];
+          const next={...availabilitySlots};
+          if(nextSlots.length)next[key]=nextSlots;else delete next[key];
+          updateAvailability(next,open?slot+' closed for this date.':slot+' opened for this date.');
+        });
+        timeRow.append(button);
+      }
+      row.append(timeRow);list.append(row);
     }
   }
   async function updateAvailability(next,message){
@@ -232,9 +234,10 @@
     availabilityBusy=true;
     $('open-availability').disabled=true;
     try{
-      const result=await api('availability','POST',{availableDays:next});
+      const result=await api('availability','POST',{availableSlots:next});
       state.settings=result.settings;
-      availableDays=Array.isArray(result.settings.availableDays)?result.settings.availableDays:[];
+      availabilitySlots=normalizeAvailability(result.settings);
+      syncAvailabilityDate();
       notice(message);
     }catch(error){notice(error.message,true);}
     finally{
@@ -248,30 +251,34 @@
     const now=new Date();
     const minimum=localDateKey(now);
     const maximum=localDateKey(new Date(now.getFullYear(),now.getMonth()+4,0));
+    const slots=timeDefaults.filter(slot=>$(slotCheckboxes[slot]).checked);
     if(!key){notice('Choose a date first.',true);return;}
     if(key<minimum||key>maximum){notice('Choose a date from today through the next four months.',true);return;}
-    if(availableDays.includes(key)){notice('That day is already open.',true);return;}
-    updateAvailability([...availableDays,key].sort(),'Day opened. Guests can now select it.');
+    if(!slots.length){notice('Open at least one time of day.',true);return;}
+    updateAvailability({...availabilitySlots,[key]:slots},'Date availability saved.');
   });
   function renderWorkflow(){
     const list=$('workflow-fields');list.replaceChildren();
+    if(!stepOrder.length){
+      list.append(elt('p','The guest flow goes from preference to calendar. Add optional questions below if you want to include any.','mini'));
+      return;
+    }
     stepOrder.forEach((key,index)=>{
-      const extra=extraQuestions.find(q=>q.id===key);
-      const name=stepLabels[key]||extra?.heading||'New question';
+      const q=extraQuestions.find(item=>item.id===key);
+      if(!q)return;
       const row=elt('div',null,'question row between');
       const label=elt('label',null,'row');
       const check=elt('input');check.type='checkbox';check.checked=enabledSteps.has(key);
       check.style.width='auto';check.style.minHeight='0';
-      const caption=elt('span',name);caption.dataset.workflowTitle=key;
+      const caption=elt('span',q.heading||'New optional question');caption.dataset.workflowTitle=key;
       label.append(check,caption);
       check.addEventListener('change',()=>{
-        if(check.checked)enabledSteps.add(key);
-        else enabledSteps.delete(key);
+        if(check.checked)enabledSteps.add(key);else enabledSteps.delete(key);
       });
       const controls=elt('div',null,'row');
       for(const [direction,offset] of [['Up',-1],['Down',1]]){
         const button=elt('button',direction,'btn');button.type='button';
-        button.setAttribute('aria-label','Move '+name+' '+direction.toLowerCase());
+        button.setAttribute('aria-label','Move '+(q.heading||'question')+' '+direction.toLowerCase());
         const target=index+offset;
         button.disabled=target<0||target>=stepOrder.length;
         button.addEventListener('click',()=>{
@@ -320,20 +327,15 @@
   $('settings-form').addEventListener('submit',async e=>{
     e.preventDefault();const save=e.submitter;save.disabled=true;
     const extraIds=new Map(extraQuestions.map((q,index)=>[q.id,'extra-'+index]));
-    const workflow=stepOrder.filter(key=>enabledSteps.has(key)).map(key=>extraIds.get(key)||key);
+    const workflow=['outing',...stepOrder.filter(key=>enabledSteps.has(key)).map(key=>extraIds.get(key)||key),'schedule'];
     const settings={senderName:$('sender-name').value,siteLabel:$('site-label').value,screens:{},outingLabels:{},
-      detail:{},areaLabels:[],timeLabels:[],availableDays:[...availableDays],timeHeading:$('time-heading').value,workflow,extraQuestions};
+      detail:state.settings.detail||{},areaLabels:state.settings.areaLabels||[],timeLabels:[],availableSlots:{...availabilitySlots},
+      timeHeading:'What time of day suits you?',workflow,extraQuestions};
     document.querySelectorAll('[data-screen]').forEach(x=>{
       if(!settings.screens[x.dataset.screen])settings.screens[x.dataset.screen]={};
       settings.screens[x.dataset.screen][x.dataset.field]=x.value;
     });
     document.querySelectorAll('[data-outing]').forEach(x=>{settings.outingLabels[x.dataset.outing]=x.value;});
-    document.querySelectorAll('[data-detail]').forEach(x=>{
-      if(!settings.detail[x.dataset.detail])settings.detail[x.dataset.detail]={};
-      settings.detail[x.dataset.detail][x.dataset.field]=x.dataset.field==='options'?x.value.split('\n').map(y=>y.trim()):x.value;
-    });
-    document.querySelectorAll('[data-area]').forEach(x=>{settings.areaLabels[Number(x.dataset.area)]=x.value;});
-    document.querySelectorAll('[data-time]').forEach(x=>{settings.timeLabels[Number(x.dataset.time)]=x.value;});
     try{
       const result=await api('save','POST',{settings});
       state.settings=result.settings;

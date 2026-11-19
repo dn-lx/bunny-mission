@@ -4,6 +4,7 @@ const assert = require('node:assert/strict');
 const { readFileSync } = require('node:fs');
 const { Script } = require('node:vm');
 const html = readFileSync('public/index.html','utf8');
+const adminHtml = readFileSync('public/admin.html','utf8');
 const css = readFileSync('public/invitation.css','utf8');
 const js = html.match(/<script>([\s\S]*?)<\/script>/i)?.[1];
 test('inline browser JavaScript has valid syntax', () => {
@@ -29,7 +30,10 @@ test('No dodges three times with facial expressions but no new reaction text', (
 test('gate supports visible-viewport keyboard repositioning and bunny narration', () => {
   assert.match(css,/\.gate:focus-within\.keyboard-open/);
   assert.match(js,/visualViewport\?\.addEventListener\('resize'/);
-  assert.match(js,/function showPassword\(\)/);
+  assert.match(js,/function requestInvitationFullscreen\(\)/);
+  assert.match(html,/A little surprise for you\./);
+  assert.match(html,/Invitation code/);
+  assert.doesNotMatch(html,/Continue without full screen|manual-fullscreen|request-fullscreen/);
   assert.match(js,/say\(gateSpeech, gateSpeechKey\)/);
 });
 test('explicit user-submitted Netlify response is enabled and can be emailed', () => {
@@ -37,7 +41,9 @@ test('explicit user-submitted Netlify response is enabled and can be emailed', (
   assert.match(html,/name="subject"/);
   assert.match(js,/async function submitAnswer\(/);
   assert.match(js,/send-answer/);
-  assert.match(js,/'decision': 'yes'/);
+  assert.match(js,/'decision': decision/);
+  assert.match(js,/submitAnswer\('no'\)/);
+  assert.match(js,/Alex received a bunny invitation decline/);
 });
 
 test('device speech fallback favours a gentle English voice', () => {
@@ -70,28 +76,26 @@ test('Yes and No have visible emoji markings and absolute layout overrides', () 
   assert.match(js, /no\.setAttribute\('aria-label'/);
 });
 
-test('activity details are meaningful and specific to the selected plan', () => {
-  for (const activity of ['coffee','walk','food','sweet','surprise']) {
-    assert.match(js,new RegExp(activity+": \\{ heading:"));
-  }
-  for (const detail of ['A cosy café and a good chat','A park and some nature',
-    'Italian','Ice cream or gelato','Calm and cosy']) {
-    assert.ok(js.includes(detail));
-  }
-  assert.match(js, /picks\.activityKey=key/);
-  assert.match(js, /flows\[flows.indexOf\(step\)\+1\]/);
+test('preference page has only the two agreed simple choices',()=>{
+  const outing=js.slice(js.indexOf("        outing: {"),js.indexOf("        detail: {"));
+  assert.match(outing,/\['☕','Something simple','simple'\]/);
+  assert.match(outing,/\['✨','Surprise me','surprise'\]/);
+  assert.equal((outing.match(/\['/g)||[]).length,2);
+  assert.match(js,/const planningSteps = \['outing','schedule'\]/);
+  assert.match(js,/flows=\['ask','outing',\.\.\.configuredExtras,'schedule'\]/);
 });
-test('calendar is interactive, excludes previous days, and offers time options', () => {
-  assert.match(js, /function addSchedule\(\)/);
-  assert.match(js, /function drawCalendar\(\)/);
-  assert.match(js, /btn\.disabled = key < today \|\| key > maxDate/);
-  assert.match(js, /new Intl\.DateTimeFormat/);
-  assert.match(js, /'Morning'/);
-  assert.match(js, /'Afternoon'/);
-  assert.match(js, /'Evening'/);
-  assert.match(js, /'Flexible time'/);
-  assert.match(js, /'Pick a day together later'/);
-  assert.match(js, /continueBtn\.disabled = !picks\.day \|\| !picks\.time/);
+test('calendar blocks dates without opened dayparts and sends directly',()=>{
+  assert.match(js,/function addSchedule\(\)/);
+  assert.match(js,/function drawCalendar\(\)/);
+  assert.match(js,/btn\.disabled = key < today \|\| key > maxDate \|\| offered\.length===0/);
+  assert.match(js,/availableSlots\[key\]/);
+  for(const slot of ['Morning','Afternoon','Evening'])assert.ok(js.includes("'"+slot+"'"));
+  assert.match(js,/'Send my choices to Alex 💌'/);
+  assert.match(js,/'Choose a day together later'/);
+  assert.doesNotMatch(js,/Flexible time|Continue ♡|schedule-continue/);
+  assert.match(adminHtml,/id="available-morning"/);
+  assert.match(adminHtml,/id="available-afternoon"/);
+  assert.match(adminHtml,/id="available-evening"/);
 });
 test('submission and summary include activity, custom detail, area, day and time', () => {
   for(const key of ['detail','meet_area','day','time']) {
@@ -185,7 +189,7 @@ test('invitation uses an immersive viewport layout and the approved Nibbles art 
   assert.match(css, /\.shell \{[^}]*min-height: 100dvh/);
   assert.match(css, /\.gate-screen \{[^}]*min-height: var\(--visible-height, 100dvh\)/);
   assert.match(css, /@media \(max-aspect-ratio: 1\/1\)/);
-  assert.equal((html.match(/class="gate-character"/g)||[]).length,2);
+  assert.equal((html.match(/class="gate-character"/g)||[]).length,1);
 });
 
 test('animation atlas preserves Nibbles and supplies distinct acting keyframes',()=>{

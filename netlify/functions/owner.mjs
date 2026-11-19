@@ -126,7 +126,14 @@ export default async function owner(request){
     }
     if(action==='availability'){
       const current=await readSettings();
-      const clean=sanitizedSettings({...current,availableDays:body.availableDays});
+      const updated={...current};
+      if(Object.prototype.hasOwnProperty.call(body,'availableSlots')){
+        updated.availableSlots=body.availableSlots;
+      }else{
+        delete updated.availableSlots;
+        updated.availableDays=body.availableDays;
+      }
+      const clean=sanitizedSettings(updated);
       await writeSettings(clean);
       return reply({ok:true,settings:clean});
     }

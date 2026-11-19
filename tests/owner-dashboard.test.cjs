@@ -18,6 +18,10 @@ test('owner dashboard is private, responsive, and JavaScript parses',()=>{
   assert.match(adminHtml,/id="workflow-fields"/);
   assert.match(adminHtml,/id="settings-form"/);
   assert.match(adminHtml,/id="add-question"/);
+  assert.match(adminHtml,/id="available-morning"/);
+  assert.match(adminHtml,/id="available-afternoon"/);
+  assert.match(adminHtml,/id="available-evening"/);
+  assert.match(adminJs,/availableSlots:next/);
   assert.match(adminJs,/crypto\.getRandomValues/);
 });
 test('owner API signs sessions, checks CSRF and rejects cross-site writes',()=>{
@@ -58,20 +62,22 @@ test('secure invitation hashes, whitelisted settings, and validation',async()=>{
   assert.ok(!JSON.stringify(safe).includes('SHOULDNOTLEAK'));
 });
 
-test('workflow preserves existing defaults, custom order, disabled steps and edited time choices',async()=>{
+test('workflow defaults to the short preference-to-calendar flow and supports optional questions',async()=>{
   const {sanitizedSettings}=await import('../lib/owner-store.mjs');
   const extraQuestions=[{heading:'Which dessert?',options:['Cake','Ice cream']}];
-  assert.deepEqual(sanitizedSettings({extraQuestions}).workflow,['outing','detail','area','schedule','extra-0']);
+  assert.deepEqual(sanitizedSettings({extraQuestions}).workflow,['outing','schedule']);
   const custom=sanitizedSettings({
     extraQuestions,workflow:['extra-0','schedule','area','unknown','area'],
     timeHeading:'What time?',timeLabels:['Before work','After work']
   });
-  assert.deepEqual(custom.workflow,['extra-0','schedule','area']);
+  assert.deepEqual(custom.workflow,['extra-0','schedule']);
   assert.deepEqual(sanitizedSettings(custom),custom);
   assert.deepEqual(custom.timeLabels,['Before work','After work']);
   assert.equal(custom.timeHeading,'What time?');
   assert.deepEqual(sanitizedSettings({workflow:[]}).workflow,[]);
-  for(const workflow of [['detail'],['detail','outing']]){
-    assert.throws(()=>sanitizedSettings({workflow}),/must come after/);
-  }
+  const slots=sanitizedSettings({availableSlots:{'2026-11-20':['Morning','Evening'],'2026-11-21':['Flexible time','Morning'],'2026-02-30':['Afternoon']}});
+  assert.deepEqual(slots.availableSlots,{'2026-11-20':['Morning','Evening'],'2026-11-21':['Morning']});
+  assert.deepEqual(slots.availableDays,['2026-11-20','2026-11-21']);
+  assert.deepEqual(sanitizedSettings({availableDays:['2026-11-20']}).availableSlots,{'2026-11-20':['Morning','Afternoon','Evening']});
+  assert.deepEqual(sanitizedSettings({availableSlots:{},availableDays:['2026-11-20']}).availableSlots,{});
 });

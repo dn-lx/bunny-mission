@@ -17,40 +17,23 @@
 <body data-locked="true">
   <div class="decor" aria-hidden="true"><span class="d one">♡</span><span class="d two">✧</span><span class="d three">✦</span><span class="d four">♡</span></div>
   <div class="gate" id="gate" role="dialog" aria-modal="true" aria-labelledby="gate-heading">
-    <section class="gate-screen" id="full-screen-gate">
+    <section class="gate-screen" id="entry-gate">
       <div class="gate-art" aria-hidden="true">
         <div class="gate-film">
           <video class="gate-character" playsinline webkit-playsinline preload="none" poster="/video/flow/poster.webp"></video>
         </div>
       </div>
       <div class="gate-copy">
-        <h1 id="gate-heading">A tiny surprise awaits.</h1>
-        <p class="gate-desc">Bunny has one little request. Make this screen as big as you can.</p>
-      </div>
-      <div class="gate-actions">
-        <button class="btn btn-primary" id="request-fullscreen" type="button">⛶ Enter fullscreen</button>
-        <p class="gate-help" id="fullscreen-help" role="status"></p>
-        <button class="btn btn-secondary" id="manual-fullscreen" type="button" hidden style="margin-top:8px">I've expanded my screen →</button>
-      </div>
-    </section>
-    <section class="gate-screen" id="password-gate" hidden>
-      <div class="gate-art" aria-hidden="true">
-        <div class="gate-film">
-          <video class="gate-character" playsinline webkit-playsinline preload="none" poster="/video/flow/poster.webp"></video>
-        </div>
-      </div>
-      <div class="gate-copy">
-        <h1 id="password-heading">Secret bunny entrance</h1>
-        <p class="gate-desc">Enter your invitation password to open the surprise.</p>
+        <h1 id="gate-heading">A little surprise for you.</h1>
+        <p class="gate-desc">Enter the invitation code Alex shared with you.</p>
       </div>
       <div class="gate-actions">
         <form id="unlock-form" autocomplete="off">
-          <label class="gate-label" for="invite-code">Your secret password</label>
-          <input class="gate-code" id="invite-code" type="password" inputmode="text" spellcheck="false" autocapitalize="characters" autocomplete="off" placeholder="••••••••••" maxlength="32" required>
-          <button class="btn btn-primary" id="unlock-button" type="submit">Open my surprise ♡</button>
+          <label class="gate-label" for="invite-code">Invitation code</label>
+          <input class="gate-code" id="invite-code" type="password" inputmode="text" spellcheck="false" autocapitalize="characters" autocomplete="off" placeholder="Enter code" maxlength="32" required>
+          <button class="btn btn-primary" id="unlock-button" type="submit">Unlock invitation</button>
         </form>
         <p class="gate-hint" id="gate-error" role="status"></p>
-        <button id="gate-voice-replay" class="voice-replay" type="button">▶ Hear the bunny</button>
       </div>
     </section>
   </div>
@@ -100,7 +83,7 @@
     <input name="time" type="text">
     <input name="decision" type="text">
     <input name="extra_answers" type="text">
-    <input name="subject" type="hidden" value="Alex received a bunny invitation answer">
+    <input name="subject" type="hidden" value="Alex received a bunny invitation response">
   </form>
   <script>
     (() => {
@@ -122,7 +105,7 @@
       const dialogue = copy.querySelector('.dialogue');
       const bunny = document.getElementById('bunny');
       const bunnyVideo = document.getElementById('bunny-video');
-      const gateVideo = document.querySelector('#password-gate .gate-character');
+      const gateVideo = document.querySelector('#entry-gate .gate-character');
       const portraitVersion = document.documentElement.dataset.mediaVersion === '2';
       const audioClips = Object.create(null);
       if (portraitVersion) {
@@ -146,24 +129,24 @@
         .catch(() => { /* Device speech is available if the recordings fail to load. */ });
       const confetti = document.getElementById('confetti');
       const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      let step = 'intro';
+      let step = 'ask';
       let tries = 0;
       let escapeTimer = null;
       let lastTouchDodge = 0;
       let voiceOn = true;
       let unlocked = false;
       const picks = { outing: '', activityKey: '', detail: '', meetArea: '', day: '', time: '' };
-      const planningSteps = ['outing','detail','area','schedule'];
-      let availableDays = new Set();
-      let flows = ['ask',...planningSteps,'success'];
+      const planningSteps = ['outing','schedule'];
+      let availableSlots = Object.create(null);
+      let flows = ['ask',...planningSteps];
       let timeQuestion = 'What time of day suits you?';
-      const calendarTimes = [['☀️','Morning'],['🌤️','Afternoon'],['🌙','Evening'],['✨','Flexible time']];
+      const calendarTimes = [['☀️','Morning'],['🌤️','Afternoon'],['🌙','Evening']];
       const extraQuestions = [];
       const extraAnswers = {};
       const editedVoiceClips = new Set();
       let configuredAskTemplate = '{name}, would you like to go out with {sender}?';
       const fillQuestion = text => String(text).replace(/\{(name|sender)\}/g, (_,key) => key==='name' ? person : sender);
-      const advance = () => nav(flows[flows.indexOf(step)+1] || 'success');
+      const advance = () => nav(flows[flows.indexOf(step)+1] || 'schedule');
       function resetAnswers() {
         for (const key of Object.keys(picks)) picks[key]='';
         for (const key of Object.keys(extraAnswers)) delete extraAnswers[key];
@@ -191,15 +174,13 @@
           mood: 'wink'
         },
         outing: {
-          chapter: 'step 1 of 4',
-          heading: 'What would you like to do?',
-          subheading: 'Pick an idea that actually sounds fun to you.',
+          chapter: 'one little choice',
+          heading: 'What sounds nice?',
+          subheading: 'Choose a simple plan, or leave the idea to Alex.',
           speech: 'What would you like to do together?',
           mood: 'smile',
           options: [
-            ['☕','Coffee or tea','coffee'], ['🌿','A walk and exploring','walk'],
-            ['🍝','A bite to eat','food'], ['🍰','Something sweet','sweet'],
-            ['🎁','A little surprise','surprise']
+            ['☕','Something simple','simple'], ['✨','Surprise me','surprise']
           ]
         },
         detail: {
@@ -238,7 +219,7 @@
           chapter: '',
           heading: 'No worries at all',
           subheading: '',
-          speech: 'No worries at all. Have a lovely day.',
+          speech: 'No worries at all. Have a nice day.',
           mood: 'smile'
         }
       };
@@ -410,39 +391,23 @@
       window.visualViewport?.addEventListener('scroll', fitPasswordAboveKeyboard);
       window.addEventListener('orientationchange', () => window.setTimeout(fitPasswordAboveKeyboard, 120));
       document.getElementById('invite-code').addEventListener('focus', fitPasswordAboveKeyboard);
-      function showPassword() {
-        document.getElementById('full-screen-gate').hidden = true;
-        document.getElementById('password-gate').hidden = false;
-        document.getElementById('gate').setAttribute('aria-labelledby', 'password-heading');
-          fitPasswordAboveKeyboard();
-        say(gateSpeech, gateSpeechKey);
-        document.getElementById('invite-code').focus({ preventScroll:true });
-      }
-      const fullscreenBtn = document.getElementById('request-fullscreen');
-      const manualBtn = document.getElementById('manual-fullscreen');
-      fullscreenBtn.addEventListener('click', async () => {
-        if (!document.documentElement.requestFullscreen) {
-          document.getElementById('fullscreen-help').textContent = 'Your browser cannot switch into fullscreen automatically. On iPhone, use Share → Add to Home Screen; otherwise maximize the page and tap below.';
-          manualBtn.hidden = false;
-          return;
-        }
+      function requestInvitationFullscreen() {
+        const root = document.documentElement;
+        if (document.fullscreenElement || typeof root.requestFullscreen !== 'function') return;
         try {
-          const fullscreen = document.documentElement.requestFullscreen({navigationUI:'hide'});
-          enableNarration();
-          await fullscreen;
-          showPassword();
+          const request = root.requestFullscreen({navigationUI:'hide'});
+          request?.catch(() => {});
         } catch (_) {
-          document.getElementById('fullscreen-help').textContent = 'Fullscreen was blocked by your browser. Expand the page manually, then tap below.';
-          manualBtn.hidden = false;
+          // Fullscreen is optional when the browser or device does not support it.
         }
-      });
-      manualBtn.addEventListener('click', showPassword);
-      document.getElementById('gate-voice-replay').addEventListener('click', () => say(gateSpeech, gateSpeechKey));
+      }
+      document.getElementById('invite-code').addEventListener('focus', requestInvitationFullscreen, {once:true});
       document.getElementById('unlock-form').addEventListener('submit', async event => {
         event.preventDefault();
         const code = document.getElementById('invite-code').value.trim();
         const button = document.getElementById('unlock-button');
         const error = document.getElementById('gate-error');
+        requestInvitationFullscreen();
         enableNarration();
         error.textContent = ''; button.disabled = true; button.textContent = 'Checking your envelope…';
         try {
@@ -466,7 +431,7 @@
           gateSpeechKey = 'password-error';
           gateSpeech = 'Oops! That code does not look quite right. Try another one!';
           say(gateSpeech, gateSpeechKey);
-          button.disabled = false; button.textContent = 'Open my surprise ♡';
+          button.disabled = false; button.textContent = 'Unlock invitation';
         }
       });
 
@@ -491,39 +456,49 @@
       function addSchedule() {
         const wrap = document.createElement('div'); wrap.className = 'calendar-wrap';
         const calendar = document.createElement('div'); calendar.className = 'planning-calendar';
-        calendar.setAttribute('aria-label','Choose a day from the calendar');
+        calendar.setAttribute('aria-label','Choose an available day');
         const availabilityHint = document.createElement('p');
         availabilityHint.className='schedule-hint availability-hint';
         availabilityHint.setAttribute('role','status');
-        availabilityHint.textContent = availableDays.size
-          ? 'Only dates Alex opened are available.'
-          : 'No dates are open yet. You can pick a day together later.';
+        availabilityHint.textContent = Object.keys(availableSlots).length
+          ? 'Choose an open day and one of its available times.'
+          : 'No dates are open yet. You can ask Alex to choose a day with you.';
         const selectedText = document.createElement('div'); selectedText.className='schedule-hint'; selectedText.setAttribute('role','status');
-        const timeLabel = document.createElement('div'); timeLabel.className='gate-label'; timeLabel.textContent=fillQuestion(timeQuestion);
+        const timeLabel = document.createElement('div'); timeLabel.className='gate-label'; timeLabel.textContent='What time of day suits you?';
         const times = document.createElement('div'); times.className='time-options';
-        times.setAttribute('role','group'); times.setAttribute('aria-label','Time of day');
-        const continueBtn = makeButton('Continue ♡','btn-primary',() => {
-          if (!picks.day || !picks.time) return;
-          advance();
+        times.setAttribute('role','group'); times.setAttribute('aria-label','Available times of day');
+        const sendButton = makeButton('Send my choices to Alex 💌','btn-primary',() => submitAnswer('yes'),'send-answer');
+        const togetherButton = makeButton('Choose a day together later','btn-secondary',() => {
+          picks.day='Choose together';
+          picks.time='';
+          updateSelected();
         });
-        continueBtn.id = 'schedule-continue';
         const updateSelected = () => {
-          selectedText.textContent = picks.day ? formatDay(picks.day) + ' · ' + (picks.time || 'choose a time below') : 'Choose an available day above';
-          continueBtn.disabled = !picks.day || !picks.time;
-          [...times.children].forEach(btn => {
-            const selected = btn.dataset.value === picks.time;
-            btn.classList.toggle('selected',selected);
-            btn.setAttribute('aria-pressed',String(selected));
+          const offered = picks.day && picks.day !== 'Choose together' ? (availableSlots[picks.day] || []) : [];
+          times.replaceChildren();
+          for (const [icon,value] of calendarTimes) {
+            if (!offered.includes(value)) continue;
+            const btn = document.createElement('button');
+            btn.type = 'button'; btn.className = 'time-option'; btn.dataset.value = value;
+            btn.textContent = icon + ' ' + value;
+            btn.setAttribute('aria-pressed',String(picks.time===value));
+            btn.classList.toggle('selected',picks.time===value);
+            btn.addEventListener('click',() => { picks.time=value; updateSelected(); });
+            times.append(btn);
+          }
+          timeLabel.hidden = !picks.day || picks.day === 'Choose together';
+          times.hidden = timeLabel.hidden;
+          if (picks.day === 'Choose together') selectedText.textContent='You and Alex can choose a day together.';
+          else if (picks.day) selectedText.textContent=formatDay(picks.day)+(picks.time ? ' · '+picks.time : ' · choose a time');
+          else selectedText.textContent='Choose an available day above';
+          sendButton.disabled = picks.day === 'Choose together' ? false : !picks.day || !picks.time || !offered.includes(picks.time);
+          [...calendar.querySelectorAll('.calendar-day:not(.blank)')].forEach(btn => {
+            const candidate=btn.dataset.day;
+            btn.classList.toggle('selected',candidate===picks.day);
+            if(candidate===picks.day)btn.setAttribute('aria-pressed','true');
+            else btn.removeAttribute('aria-pressed');
           });
         };
-        for (const [icon,label] of calendarTimes) {
-          const value=fillQuestion(label);
-          const btn = document.createElement('button');
-          btn.type = 'button'; btn.className = 'time-option'; btn.dataset.value = value;
-          btn.textContent = icon + ' ' + value;
-          btn.addEventListener('click',() => { picks.time=value; updateSelected(); });
-          times.append(btn);
-        }
         function drawCalendar() {
           calendar.replaceChildren();
           const header = document.createElement('div'); header.className='calendar-header';
@@ -550,25 +525,28 @@
           const today = dayKey(now), maxDate = dayKey(new Date(now.getFullYear(),now.getMonth()+4,0));
           for(let d=1;d<=new Date(y,m+1,0).getDate();d++) {
             const candidate = new Date(y,m,d), key = dayKey(candidate);
+            const offered = availableSlots[key] || [];
             const btn = document.createElement('button');
-            btn.type='button'; btn.className='calendar-day'; btn.textContent=String(d);
-            btn.setAttribute('aria-label',new Intl.DateTimeFormat('en',{weekday:'long',month:'long',day:'numeric',year:'numeric'}).format(candidate));
-            btn.disabled = key < today || key > maxDate;
-            if (!availableDays.has(key)) btn.disabled = true;
-            btn.classList.toggle('available',availableDays.has(key) && !btn.disabled);
+            btn.type='button'; btn.className='calendar-day'; btn.textContent=String(d); btn.dataset.day=key;
+            btn.setAttribute('aria-label',new Intl.DateTimeFormat('en',{weekday:'long',month:'long',day:'numeric',year:'numeric'}).format(candidate)+(offered.length ? ', '+offered.join(', ')+' available' : ', unavailable'));
+            btn.disabled = key < today || key > maxDate || offered.length===0;
+            btn.classList.toggle('available',offered.length>0 && !btn.disabled);
             btn.classList.toggle('today',key===today);
-            btn.classList.toggle('selected',key===picks.day);
-            if(key===picks.day)btn.setAttribute('aria-pressed','true');
-            btn.addEventListener('click',()=>{picks.day=key;drawCalendar();updateSelected();});
+            btn.addEventListener('click',()=>{
+              if (btn.disabled) return;
+              picks.day=key;
+              if(!offered.includes(picks.time))picks.time='';
+              drawCalendar();
+              updateSelected();
+            });
             grid.append(btn);
           }
           calendar.append(grid);
         }
-        drawCalendar();updateSelected();
+        drawCalendar();
+        updateSelected();
         const controls=document.createElement('div');controls.className='schedule-actions';
-        controls.append(continueBtn,makeButton('Pick a day together later','btn-secondary',()=>{
-          picks.day='Choose together'; picks.time=fillQuestion(calendarTimes[3][1]); advance();
-        }));
+        controls.append(sendButton,togetherButton);
         wrap.append(calendar,availabilityHint,timeLabel,times,selectedText,controls);
         actions.append(wrap);
       }
@@ -661,7 +639,7 @@
         no.addEventListener('click', e => {
           // A synthesized click after a touch-dodge must not count as acceptance of No.
           if (Date.now() - lastTouchDodge < 600) return;
-          if (e.detail === 0 || reduceMotion || tries >= 3) { nav('decline'); return; }
+          if (e.detail === 0 || reduceMotion || tries >= 3) { nav('decline'); submitAnswer('no'); return; }
           dodge(no);
         });
         row.append(yes,no); actions.append(row);
@@ -718,27 +696,41 @@
           if (!win) feedback.textContent = 'Open WhatsApp to send it, or use Copy.';
         }
       }
-      async function submitAnswer() {
+      let submissionInFlight = false;
+      let submittedDecision = '';
+      async function submitAnswer(decision='yes') {
         const btn = document.getElementById('send-answer');
-        if (!btn || btn.disabled) return;
-        btn.disabled = true;
-        feedback.textContent = 'Sending your choices…';
+        if (submissionInFlight || submittedDecision) return;
+        if (decision === 'yes' && (!btn || btn.disabled)) return;
+        if (decision === 'no' && step !== 'decline') return;
+        submissionInFlight = true;
+        if (btn) btn.disabled = true;
+        feedback.textContent = decision === 'no' ? 'Sending your reply…' : 'Sending your choices…';
         const params = new URLSearchParams({
           'form-name': 'going-out-develop', 'bot-field':'', 'invite': inviteId, 'recipient': person,
           'outing': picks.outing, 'energy': picks.detail, 'timing': timingAnswer(),
           'detail': picks.detail, 'meet_area': picks.meetArea,
           'day': picks.day, 'time': picks.time,
-          'decision': 'yes', 'subject': 'Alex received a bunny invitation answer',
+          'decision': decision,
+          'subject': decision === 'no' ? 'Alex received a bunny invitation decline' : 'Alex received a bunny invitation answer',
           'extra_answers': JSON.stringify(answeredExtraQuestions().map(q=>({question:fillQuestion(q.heading),answer:extraAnswers[q.id]})))
         });
         try {
           const res = await fetch('/', {method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body:params.toString()});
           if (!res.ok) throw new Error('Could not save the response');
-          feedback.textContent = 'Sent! Alex can see your choices now. ♡';
-          btn.textContent = 'Sent ♡';
-        } catch (err) {
-          feedback.textContent = 'That did not send. You can still use Share or Copy.';
-          btn.disabled = false;
+          submittedDecision = decision;
+          feedback.textContent = decision === 'no' ? 'Your reply has been sent.' : 'Sent! Alex has your choices. ♡';
+          if (btn) btn.textContent = 'Sent ♡';
+        } catch (_) {
+          feedback.textContent = decision === 'no'
+            ? 'Your reply could not send just now.'
+            : 'That did not send. Please try again.';
+          if (btn) btn.disabled = false;
+          if (decision === 'no' && !document.getElementById('retry-decline')) {
+            actions.append(makeButton('Try sending again','btn-secondary',() => submitAnswer('no'),'retry-decline'));
+          }
+        } finally {
+          submissionInFlight = false;
         }
       }
       function confettiOn(enabled) {
@@ -780,8 +772,7 @@
           const dot=document.createElement('span');dot.className='dot'+(i===current?' active':'');
           dot.setAttribute('aria-hidden','true');dots.append(dot);
         }
-        back.classList.toggle('hidden',!(['ask','outing','detail','area','schedule'].includes(step)||step.startsWith('extra-')));
-        if(step==='intro')actions.append(makeButton('Open the envelope ✉','btn-primary',()=>nav('ask')));
+        back.classList.toggle('hidden',!(['outing','schedule'].includes(step)||step.startsWith('extra-')));
         if(step==='ask')addAsk();
         if(step==='outing'){
           const grid=document.createElement('div');grid.className='choices';
@@ -824,24 +815,22 @@
             actions.append(grid);
           }
         }
-        if(step==='success'){
-          const summary=makeSummary();
-          if (summary.childElementCount) actions.append(summary);
-          actions.append(makeButton('Send my choices to Alex 💌','btn-primary',submitAnswer,'send-answer'));
-          const note=document.createElement('p');note.className='gate-help';
-          note.textContent='Nothing is sent unless you choose Send. Your selections are shared with Alex.';
-          actions.append(note);
-          const row=document.createElement('div');row.className='button-row';
-          row.append(makeButton('Share ↗','btn-primary',shareAnswer),makeButton('Copy ✦','btn-secondary',copyAnswer));
-          actions.append(row);
-          actions.append(makeButton('Play again ↺','btn-quiet',()=>{resetAnswers();nav('intro');}));
-        }
+
         if(unlocked)say(data.speech,sceneTrackKey());
       }
 
       function applyOwnerSettings(value){
         if(!value||typeof value!=='object')return;
-        availableDays = new Set(Array.isArray(value.availableDays) ? value.availableDays.filter(key => typeof key==='string' && /^\d{4}-\d{2}-\d{2}$/.test(key)) : []);
+        if (value.availableSlots && typeof value.availableSlots === 'object' && !Array.isArray(value.availableSlots)) {
+          availableSlots = Object.fromEntries(Object.entries(value.availableSlots).filter(([day,slots]) =>
+            /^\d{4}-\d{2}-\d{2}$/.test(day) && Array.isArray(slots))
+            .map(([day,slots]) => [day, [...new Set(slots.filter(slot => calendarTimes.some(([,label]) => label===slot)))]])
+            .filter(([,slots]) => slots.length));
+        } else {
+          availableSlots = Object.fromEntries((Array.isArray(value.availableDays) ? value.availableDays : [])
+            .filter(day => typeof day==='string' && /^\d{4}-\d{2}-\d{2}$/.test(day))
+            .map(day => [day, calendarTimes.map(([,label]) => label)]));
+        }
         sender=typeof value.senderName==='string'&&value.senderName.trim()?value.senderName.trim().slice(0,48):'Alex';
         if (sender !== 'Alex') {
           screens.ask.speech = 'Would you like to go out with ' + sender + '?';
@@ -880,9 +869,6 @@
           if(label&&screens.area.options[index])screens.area.options[index][1]=label;
         });
         if(value.timeHeading)timeQuestion=value.timeHeading;
-        value.timeLabels?.forEach((label,index)=>{
-          if(label&&calendarTimes[index])calendarTimes[index][1]=label;
-        });
         const extras=Array.isArray(value.extraQuestions)?value.extraQuestions.slice(0,5):[];
         for(let i=0;i<extras.length;i++){
           const q=extras[i];
@@ -894,10 +880,11 @@
         }
         const available=[...planningSteps,...extraQuestions.map(question=>question.id)];
         const configured=Array.isArray(value.workflow)?value.workflow:available;
-        flows=['ask',...configured.filter(key=>available.includes(key)),'success'];
+        const configuredExtras=configured.filter(key=>extraQuestions.some(question=>question.id===key));
+        flows=['ask','outing',...configuredExtras,'schedule'];
       }
       back.addEventListener('click', () => {
-        const previous=step==='ask' ? 'intro' : flows[flows.indexOf(step)-1];
+        const previous=flows[flows.indexOf(step)-1];
         if (previous) nav(previous);
       });
       render();

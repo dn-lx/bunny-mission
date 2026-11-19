@@ -73,34 +73,33 @@
           <div class="field"><label for="site-label">Small header label</label><input id="site-label" maxlength="48" placeholder="tiny bunny mission"></div>
         </div>
         <h3>Workflow</h3>
-        <p class="mini">Choose and reorder the steps shown after Yes. The opening invitation and the final screen stay in place. The activity follow-up needs an activity choice first.</p>
+        <p class="mini">The main path is fixed: choose a preference, answer any optional questions you add, then send choices from the calendar.</p>
         <div id="workflow-fields"></div>
         <div class="divider"></div>
         <h3>Questions &amp; bunny dialogue</h3>
         <p class="mini">For the invitation question, use {name} for her name and {sender} for yours. Editing spoken lines switches that line to your device voice until you generate a matching new recording.</p>
         <div id="screen-fields"></div>
         <div class="divider"></div>
-        <h3>First activity question · answer choices</h3>
+        <h3>Preference choices</h3>
         <div id="outing-fields" class="grid"></div>
         <div class="divider"></div>
-        <h3>Activity follow-up questions & choices</h3>
-        <div id="detail-fields"></div>
-        <div class="divider"></div>
-        <h3>Meeting area choices</h3>
-        <div id="area-fields" class="grid"></div>
-        <div class="divider"></div>
-        <h3>Calendar time choices</h3>
-        <div id="time-fields" class="grid"></div>
-        <div class="divider"></div>
         <h3>Calendar availability</h3>
-        <p class="mini">Every date starts blocked. Open only the dates you are available; guests can choose dates shown here. Choose dates within the next four months.</p>
-        <div class="row">
-          <div class="field"><label for="available-date">Date to open</label><input id="available-date" type="date"></div>
-          <button id="open-availability" type="button" class="btn primary">Open this day</button>
+        <p class="mini">Dates are blocked by default. Open Morning, Afternoon, or Evening for each date, up to four months ahead.</p>
+        <div class="grid">
+          <div class="field"><label for="available-date">Date</label><input id="available-date" type="date"></div>
+          <div class="field">
+            <span class="mini">Available times</span>
+            <div class="row">
+              <label class="row"><input id="available-morning" type="checkbox" style="width:auto;min-height:0"> Morning</label>
+              <label class="row"><input id="available-afternoon" type="checkbox" style="width:auto;min-height:0"> Afternoon</label>
+              <label class="row"><input id="available-evening" type="checkbox" style="width:auto;min-height:0"> Evening</label>
+            </div>
+          </div>
         </div>
+        <button id="open-availability" type="button" class="btn primary">Save date availability</button>
         <div id="availability-days" aria-live="polite"></div>
         <div class="divider"></div>
-        <div class="row between"><div><h3>Optional extra questions</h3><p class="mini">Add up to five questions with two to six choices each. Place them anywhere in the workflow above.</p></div><button id="add-question" type="button" class="btn">+ Add question</button></div>
+        <div class="row between"><div><h3>Optional extra questions</h3><p class="mini">Add up to five optional questions. They appear before the calendar and are off unless you enable them in the workflow.</p></div><button id="add-question" type="button" class="btn">+ Add question</button></div>
         <div id="extra-questions"></div>
         <button class="btn primary" type="submit">Save all story changes</button>
       </form>
