@@ -316,7 +316,7 @@ export default function Invitation() {
           ? "Alex received a bunny invitation decline"
           : "Alex received a bunny invitation answer"
       });
-      const response = await fetch("/", {
+      const response = await fetch("/__forms.html", {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
         body: params.toString(),

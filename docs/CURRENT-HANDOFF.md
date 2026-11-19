@@ -7,10 +7,10 @@ The active guest route on develop is a Next.js App Router app using React 19.3.1
 - The new root route is in app/page.jsx and app/invitation.jsx.
 - public/index.html was removed from the deploy root so Netlify cannot serve the old static page in place of the Next.js route.
 - The complete former root page is preserved at public/version-1.html. Archived V1 and V2 resources remain unchanged.
-- public/__forms.html is the static form blueprint for Netlify's form detection. The guest page sends URL-encoded AJAX submissions to going-out-develop.
+- public/__forms.html is the static form blueprint for Netlify's form detection. The guest page sends URL-encoded AJAX submissions to /__forms.html for the going-out-develop form.
 - Invitation codes are still verified by /.netlify/functions/unlock. The Yes flow fetches the current public availability again immediately before sending.
 - Bunny Studio stays at /admin.html. The existing owner and unlock functions remain under netlify/functions.
-- Netlify uses its managed OpenNext adapter; no adapter version is pinned. The build command is npm run build, and custom functions remain configured.
+- Netlify uses its managed OpenNext adapter; no adapter version is pinned. The build command is npm run build, the publish directory is .next, and custom functions remain configured.
 
 The Next.js migration was committed to develop only. The merge to main happened before the migration; main remains on the pre-migration app. No Next.js build, browser inspection, form delivery, or Netlify deployment check has been run for this migration. Treat the develop implementation as pending those checks; do not call it live until the branch deployment is Ready.
 

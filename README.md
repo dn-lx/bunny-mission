@@ -21,7 +21,7 @@ Bunny Mission is a private, mobile-friendly invitation for Alex and a guest. The
 
 ## Forms, email, and privacy
 
-The static form blueprint is public/__forms.html, as required for Netlify form detection with Next.js. Client replies use URL-encoded AJAX submissions. Netlify must have form detection enabled and the going-out-develop notification configured for Alex. The site never puts the notification address, invitation codes, credentials, or other private details in Git or public assets.
+The static form blueprint is public/__forms.html, as required for Netlify form detection with Next.js. Client replies use URL-encoded AJAX submissions to /__forms.html, outside the Next.js route handler. Netlify must have form detection enabled and the going-out-develop notification configured for Alex. The site never puts the notification address, invitation codes, credentials, or other private details in Git or public assets.
 
 The invitation code is checked by /.netlify/functions/unlock. The Bunny Studio owner dashboard stays at /admin.html and continues using its existing protected Netlify Function.
 
@@ -31,7 +31,7 @@ Install the dependencies with npm install. Start the Next.js page with npm run d
 
 ## Netlify deployment
 
-The build runs npm run build and leaves the publish/runtime configuration to Netlify's managed Next.js adapter. The custom function directory remains netlify/functions. Keep develop as the preview branch and main as production. Verify the actual branch deployment is Ready in Netlify before calling it live.
+The build runs npm run build, publishes .next, and uses Netlify's managed Next.js adapter. The custom function directory remains netlify/functions. Keep develop as the preview branch and main as production. Verify the actual branch deployment is Ready in Netlify before calling it live.
 
 Do not use a static-only drag-and-drop of public; it would omit the password function.
 
