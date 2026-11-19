@@ -705,3 +705,8 @@ body {
   .bm-no-button.is-dodging { transition-duration: .01ms !important; }
   .bm-no-spinner { animation-duration: .01ms !important; }
 }
+
+@media (min-width: 960px) {
+  .bm-screen--gate .bm-gate-panel { width: 100%; }
+}
+.bm-code-row input { text-transform: none; }
