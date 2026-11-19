@@ -761,13 +761,13 @@
         dialogue.open = false;
         bubble.textContent = step === 'detail' && !editedVoiceClips.has(sceneTrackKey())
           ? 'What sounds most like you?' : data.speech;
+        const current = flows.indexOf(step);
         chapter.textContent=step==='ask'?data.chapter:'step '+(current+1)+' of '+flows.length;
         bunny.dataset.mood=data.mood;
         confettiOn(step==='success');
         actions.replaceChildren();
         copy.classList.remove('enter'); void copy.offsetWidth; copy.classList.add('enter');
         dots.replaceChildren();
-        const current = flows.indexOf(step);
         if(current>=0)for(let i=0;i<flows.length;i++) {
           const dot=document.createElement('span');dot.className='dot'+(i===current?' active':'');
           dot.setAttribute('aria-hidden','true');dots.append(dot);
