@@ -761,7 +761,7 @@
         dialogue.open = false;
         bubble.textContent = step === 'detail' && !editedVoiceClips.has(sceneTrackKey())
           ? 'What sounds most like you?' : data.speech;
-        chapter.textContent=data.chapter;
+        chapter.textContent=step==='ask'?data.chapter:'step '+(current+1)+' of '+flows.length;
         bunny.dataset.mood=data.mood;
         confettiOn(step==='success');
         actions.replaceChildren();
