@@ -17,8 +17,7 @@ const DEFAULT_CLIPS = {
   success: "/video/flow/success.mp4",
   decline: "/video/flow/decline.mp4"
 };
-const NO_FACES = ["😛", "🤪", "😜"];
-const NO_MOVES = [{ x: 24, y: -42 }, { x: -24, y: 34 }, { x: 28, y: -18 }];
+const NO_FACES = ["😜", "🤪", "😛", "😝"];
 
 function textValue(value, fallback, maxLength = 180) {
   return typeof value === "string" && value.trim()
@@ -82,7 +81,6 @@ export default function Invitation() {
   const [inviteId, setInviteId] = useState("");
   const [settings, setSettings] = useState({});
   const [voiceOn, setVoiceOn] = useState(true);
-  const [reducedMotion, setReducedMotion] = useState(false);
   const [clipPaths, setClipPaths] = useState(DEFAULT_CLIPS);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
@@ -91,8 +89,13 @@ export default function Invitation() {
   const [selectedTime, setSelectedTime] = useState("");
   const [answers, setAnswers] = useState({});
   const [noDodges, setNoDodges] = useState(0);
+  const [noLoading, setNoLoading] = useState(false);
+  const [noHint, setNoHint] = useState("Hold No for 2 seconds to let the bunny dodge.");
+  const [noPosition, setNoPosition] = useState(null);
   const [selectedOuting, setSelectedOuting] = useState("");
   const videoRef = useRef(null);
+  const noHoldTimer = useRef(null);
+  const noDodgeTimer = useRef(null);
 
   const sender = textValue(settings.senderName, "Alex", 48);
   const slots = useMemo(() => getAvailableSlots(settings), [settings]);
@@ -132,13 +135,15 @@ export default function Invitation() {
   }, [calendarMonth]);
 
   useEffect(() => {
+    return () => {
+      if (noHoldTimer.current) window.clearTimeout(noHoldTimer.current);
+      if (noDodgeTimer.current) window.clearTimeout(noDodgeTimer.current);
+    };
+  }, []);
+
+  useEffect(() => {
     const now = new Date();
     setCalendarMonth(new Date(now.getFullYear(), now.getMonth(), 1));
-    const media = window.matchMedia("(prefers-reduced-motion: reduce)");
-    setReducedMotion(media.matches);
-    const updateMotion = event => setReducedMotion(event.matches);
-    media.addEventListener?.("change", updateMotion);
-    return () => media.removeEventListener?.("change", updateMotion);
   }, []);
 
   useEffect(() => {
@@ -331,12 +336,70 @@ export default function Invitation() {
     }
   }
 
-  function chooseNo(event) {
-    if (event.detail === 0 || reducedMotion || noDodges >= 3) {
-      submitAnswer("no");
-      return;
+  function noEscapePosition(attempt) {
+    const width = Math.min(184, Math.max(132, window.innerWidth * 0.44));
+    const height = 66;
+    const margin = 16;
+    const maxLeft = Math.max(margin, window.innerWidth - width - margin);
+    const maxTop = Math.max(92, window.innerHeight - height - margin);
+    const paths = [
+      [0.72, 0.25],
+      [0.1, 0.69],
+      [0.55, 0.48]
+    ];
+    const [x, y] = paths[Math.min(attempt, paths.length - 1)];
+    return {
+      left: Math.round(Math.min(maxLeft, Math.max(margin, window.innerWidth * x))),
+      top: Math.round(Math.min(maxTop, Math.max(92, window.innerHeight * y)))
+    };
+  }
+
+  function beginNoHold() {
+    if (pending || noLoading || noHoldTimer.current || noDodgeTimer.current) return;
+    setError("");
+    setNoHint("Keep holding No for 2 seconds…");
+    noHoldTimer.current = window.setTimeout(() => {
+      noHoldTimer.current = null;
+      setNoLoading(true);
+      setNoHint("A tiny escape plan is loading…");
+      noDodgeTimer.current = window.setTimeout(() => {
+        noDodgeTimer.current = null;
+        setNoLoading(false);
+        if (noDodges >= 3) {
+          setNoHint("You caught the No emoji!");
+          setNoPosition(null);
+          submitAnswer("no");
+          return;
+        }
+        const nextAttempt = noDodges + 1;
+        setNoDodges(nextAttempt);
+        setNoPosition(noEscapePosition(nextAttempt - 1));
+        setNoHint(nextAttempt === 3
+          ? "It made one last escape. Hold No for 2 seconds to catch it."
+          : "It escaped! Hold No for 2 seconds to try again.");
+      }, 2000);
+    }, 2000);
+  }
+
+  function endNoHold() {
+    if (!noHoldTimer.current) return;
+    window.clearTimeout(noHoldTimer.current);
+    noHoldTimer.current = null;
+    setNoHint("Hold No for 2 seconds to let the bunny dodge.");
+  }
+
+  function handleNoKeyDown(event) {
+    if (event.key === " " || event.key === "Enter") {
+      event.preventDefault();
+      beginNoHold();
     }
-    setNoDodges(current => current + 1);
+  }
+
+  function handleNoKeyUp(event) {
+    if (event.key === " " || event.key === "Enter") {
+      event.preventDefault();
+      endNoHold();
+    }
   }
   function chooseDay(day) {
     setSelectedDate(day);
@@ -394,6 +457,12 @@ export default function Invitation() {
 
   return (
     <div className={"bm-app" + (screenType ? " bm-app--" + screenType : "")}>
+      <div className="bm-decorations" aria-hidden="true">
+        <span className="bm-deco-heart">♡</span>
+        <span className="bm-deco-left">✧</span>
+        <span className="bm-deco-star">✦</span>
+        <span className="bm-deco-right">♡</span>
+      </div>
       {!isDecline && (
         <header className={"bm-header" + (isAsk ? " bm-header--minimal" : "")}>
           <div className="bm-brand"><span aria-hidden="true">🐰</span> Bunny Mission</div>
@@ -433,11 +502,13 @@ export default function Invitation() {
       </div>
 
       <main className={"bm-screen bm-screen--" + step}>
-        <section className={"bm-panel" + (isAsk ? " bm-panel--ask" : "") + (isDecline ? " bm-panel--decline" : "") + (currentExtra ? " bm-panel--question" : "")}>
-          {isGate && (
-            <>
-              <h1>A little surprise for you.</h1>
-              <p className="bm-description">Enter the invitation code Alex shared with you.</p>
+        {isGate ? (
+          <>
+            <div className="bm-gate-copy">
+              <h1 id="gate-heading">A little surprise for you.</h1>
+              <p className="bm-gate-description">Enter the invitation code Alex shared with you.</p>
+            </div>
+            <section className="bm-panel bm-gate-panel" aria-labelledby="gate-heading">
               <form className="bm-code-form" onSubmit={unlock}>
                 <label htmlFor="invitation-code">Invitation code</label>
                 <div className="bm-code-row">
@@ -464,27 +535,39 @@ export default function Invitation() {
                 </button>
               </form>
               {error && <p className="bm-feedback" role="alert">{error}</p>}
-            </>
-          )}
-
+            </section>
+          </>
+        ) : (
+        <section className={"bm-panel" + (isAsk ? " bm-panel--ask" : "") + (isDecline ? " bm-panel--decline" : "") + (currentExtra ? " bm-panel--question" : "")}>
           {isAsk && (
             <>
               <h1>{askHeading}</h1>
               <div className="bm-answer-row" role="group" aria-label="Your answer">
                 <button className="bm-primary-button bm-answer-button" type="button" disabled={pending} onClick={() => { setSelectedOuting(""); setStep("outing"); setError(""); }}>
-                  <span aria-hidden="true">💖</span> Yes
+                  <span className="bm-answer-emoji" aria-hidden="true">💖</span><span>Yes</span>
                 </button>
                 <button
-                  className="bm-secondary-button bm-answer-button bm-no-button"
+                  className={"bm-secondary-button bm-answer-button bm-no-button" + (noDodges ? " is-dodging" : "") + (noLoading ? " is-loading" : "")}
                   type="button"
-                  disabled={pending}
-                  style={noDodges ? { transform: "translate(" + NO_MOVES[(noDodges - 1) % NO_MOVES.length].x + "px," + NO_MOVES[(noDodges - 1) % NO_MOVES.length].y + "px)" } : undefined}
-                  aria-label="No, thank you"
-                  onClick={chooseNo}
+                  disabled={pending || noLoading}
+                  style={noPosition ? { left: noPosition.left + "px", top: noPosition.top + "px" } : undefined}
+                  aria-label={noLoading ? "The No emoji is loading its escape for two seconds" : "No. Hold for two seconds to make the bunny dodge."}
+                  aria-describedby="no-hold-hint"
+                  aria-busy={noLoading}
+                  onPointerDown={beginNoHold}
+                  onPointerUp={endNoHold}
+                  onPointerLeave={endNoHold}
+                  onPointerCancel={endNoHold}
+                  onKeyDown={handleNoKeyDown}
+                  onKeyUp={handleNoKeyUp}
+                  onClick={event => event.preventDefault()}
                 >
-                  <span aria-hidden="true">{noDodges ? NO_FACES[Math.min(noDodges - 1, 2)] : "🐰"}</span> No
+                  {noLoading
+                    ? <><span className="bm-no-spinner" aria-hidden="true" /><span>Escaping…</span></>
+                    : <><span className="bm-no-face" aria-hidden="true">{noDodges ? NO_FACES[(noDodges - 1) % NO_FACES.length] : "😜"}</span><span>No</span></>}
                 </button>
               </div>
+              <p className="bm-no-hint" id="no-hold-hint" role="status" aria-live="polite">{noHint}</p>
               {pending && <p className="bm-feedback" role="status">Sending your reply…</p>}
               {error && <p className="bm-feedback" role="alert">{error}</p>}
             </>
@@ -619,6 +702,7 @@ export default function Invitation() {
             </div>
           )}
         </section>
+        )}
       </main>
 
     </div>
