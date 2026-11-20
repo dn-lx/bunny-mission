@@ -1,26 +1,24 @@
 {
   "provider": "Official Qwen/Qwen3-TTS Hugging Face ZeroGPU demo",
-  "model": "Qwen3-TTS-12Hz-1.7B-Base",
+  "model": "Qwen3-TTS-12Hz-1.7B-VoiceDesign",
   "generatedOn": "2026-11-20",
   "cost": "Free ZeroGPU allowance; no paid API or credits used",
-  "referenceText": "Hi there, how are you? Would you like to go out with Alex?",
-  "voiceDirection": "A very soft, smooth, gentle little-girl character voice for a friendly cartoon bunny. Light youthful feminine timbre, warm and calm, with clear natural English pronunciation. Speak slowly and evenly, with a tiny smile and gentle question intonation. Clean dry speech only; no music, no sound effects, no laughter, no background noise.",
-  "master": "public/audio/qwen/nibbles-master.flac",
-  "reference": "public/audio/qwen/reference.wav",
-  "notes": "Phrase timing adaptation to existing Flow animation; approximate lip sync, no new facial animation. Original video packets are copied. Original soundtracks are completely replaced.",
+  "voiceDirection": "One consistent FEMALE CHILD voice throughout, a little girl speaking as a sweet cartoon bunny. Clearly feminine and young: a light, small, high, delicate girlish timbre and soft smooth rounded tone. Natural youthful resonance, tender and sweet. No low or husky adult register. Clear gentle English pronunciation, conversational warmth, fluid phrasing, natural pitch variation and small pauses. Soft spoken rather than whispered. The invitation and choice questions sound shy, curious and hopeful. Oh lovely and the happy dance sound softly delighted with playful joy. The final reassurance sounds kind and comforting. Keep emotions subtle and natural while keeping the same little girl voice. Clean dry speech only, no music, no sound effects, no laughter or background noise. Speak only the supplied words.",
+  "master": "public/audio/qwen/female-child-master.flac",
+  "notes": "Active narration directly in the existing app. No comparison interface. Video frames and accepted target speech windows are preserved; original effects are completely replaced.",
   "clips": {
     "password": {
       "text": "Enter your invitation password to open the surprise.",
       "segments": [
         {
-          "sourceStart": 0.8,
-          "sourceEnd": 1.12,
+          "sourceStart": 0,
+          "sourceEnd": 0.32,
           "targetStart": 2.15,
           "targetEnd": 2.47
         },
         {
-          "sourceStart": 1.12,
-          "sourceEnd": 3.84,
+          "sourceStart": 0.32,
+          "sourceEnd": 3.05,
           "targetStart": 2.975,
           "targetEnd": 6.312
         }
@@ -30,8 +28,8 @@
       "text": "Would you like to go out with Alex?",
       "segments": [
         {
-          "sourceStart": 4.575,
-          "sourceEnd": 6.185,
+          "sourceStart": 3.705,
+          "sourceEnd": 5.32,
           "targetStart": 2.63,
           "targetEnd": 4.892
         }
@@ -41,8 +39,8 @@
       "text": "What would you like to do together?",
       "segments": [
         {
-          "sourceStart": 6.85,
-          "sourceEnd": 8.35,
+          "sourceStart": 6.095,
+          "sourceEnd": 7.655,
           "targetStart": 2.67,
           "targetEnd": 4.586
         }
@@ -52,8 +50,8 @@
       "text": "What sounds most like you?",
       "segments": [
         {
-          "sourceStart": 9.105,
-          "sourceEnd": 10.57,
+          "sourceStart": 8.3,
+          "sourceEnd": 9.76,
           "targetStart": 2.67,
           "targetEnd": 4.249
         }
@@ -63,8 +61,8 @@
       "text": "Where would you feel most comfortable meeting?",
       "segments": [
         {
-          "sourceStart": 11.17,
-          "sourceEnd": 13.145,
+          "sourceStart": 10.565,
+          "sourceEnd": 12.63,
           "targetStart": 2.665,
           "targetEnd": 4.903
         }
@@ -74,14 +72,14 @@
       "text": "Pick a day and time, or decide together later.",
       "segments": [
         {
-          "sourceStart": 13.675,
-          "sourceEnd": 14.78,
+          "sourceStart": 13.175,
+          "sourceEnd": 14.3,
           "targetStart": 2.385,
           "targetEnd": 3.59
         },
         {
-          "sourceStart": 14.78,
-          "sourceEnd": 16.26,
+          "sourceStart": 14.535,
+          "sourceEnd": 15.97,
           "targetStart": 3.935,
           "targetEnd": 5.391
         }
@@ -91,14 +89,14 @@
       "text": "Oh, lovely! A tiny happy dance.",
       "segments": [
         {
-          "sourceStart": 16.945,
-          "sourceEnd": 17.81,
+          "sourceStart": 16.62,
+          "sourceEnd": 17.45,
           "targetStart": 2.378,
           "targetEnd": 3.279
         },
         {
-          "sourceStart": 18.185,
-          "sourceEnd": 19.65,
+          "sourceStart": 17.65,
+          "sourceEnd": 18.95,
           "targetStart": 3.67,
           "targetEnd": 5.234
         }
@@ -108,14 +106,14 @@
       "text": "Lovely! Your plans are ready to share with Alex.",
       "segments": [
         {
-          "sourceStart": 20.115,
-          "sourceEnd": 20.54,
+          "sourceStart": 19.435,
+          "sourceEnd": 20.055,
           "targetStart": 2.2,
           "targetEnd": 2.706
         },
         {
-          "sourceStart": 20.54,
-          "sourceEnd": 22.5,
+          "sourceStart": 20.51,
+          "sourceEnd": 22.615,
           "targetStart": 2.992,
           "targetEnd": 5.143
         }
@@ -125,18 +123,20 @@
       "text": "No worries at all. Have a lovely day.",
       "segments": [
         {
-          "sourceStart": 22.965,
-          "sourceEnd": 24.04,
+          "sourceStart": 23.065,
+          "sourceEnd": 24.42,
           "targetStart": 2.168,
           "targetEnd": 3.271
         },
         {
-          "sourceStart": 24.375,
-          "sourceEnd": 25.42,
+          "sourceStart": 24.78,
+          "sourceEnd": 25.975,
           "targetStart": 3.915,
           "targetEnd": 4.934
         }
       ]
     }
-  }
+  },
+  "voiceType": "soft female child character",
+  "outputSuffix": "-girl"
 }

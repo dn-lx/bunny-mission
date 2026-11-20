@@ -1,42 +1,21 @@
 # Bunny Mission current handoff
 
-## Softer expressive samples (20 November 2026)
+## Female child narration in the existing app (20 November 2026)
 
-The user approved the nine current Qwen voices and their lip sync, then asked
-for softer, more childlike emotion. Two review-only samples (invitation and
-happy reaction) were generated together with Qwen VoiceDesign on the official
-free demo. Compare them via **Softer & expressive** on `/voice-preview.html`.
-The accepted Qwen clips remain active in the invitation. Metadata and the
-lossless source are retained; the new `ask-soft.mp4` and `yes-soft.mp4` share the
-accepted speech windows and the original unchanged animation. Media checks
-also cover these two files. See `docs/QWEN-VOICE-TRIAL.md`.
+The owner explicitly rejected the added voice comparison interface and asked
+for a softer female child voice directly in the existing app. The comparison
+page and two review samples were removed; its old URL redirects to the app.
+There are no additional voice selection controls or guest pages.
 
-## Qwen voice trial (20 November 2026)
+All nine standard scenes now use a single new Qwen VoiceDesign recording with
+explicit soft female child character direction and gentle expression. The
+manifest selects `-girl.mp4` files; animation packets and speech windows are
+retained. Source audio and timing metadata are stored for reproduction.
+Original Flow and the previously accepted Qwen files remain available for
+internal rollback. Custom edited questions retain their device-speech fallback.
 
-The user requested a complete free Qwen voice trial after reviewing the sample.
-Nine lines were generated successfully on the official Qwen Hugging Face demo,
-using the generated soft childlike reference for consistent voice cloning.
-`public/video/flow/manifest.json` now points to the nine `-qwen.mp4` copies.
-Original MP4s and archived V1/V2 assets remain available. No production release
-or invitation data changes are included.
-
-The exact text and timing map, generated reference/master and a repeatable
-FFmpeg renderer are retained. All animation packets and timestamps are
-unchanged; only the soundtrack is replaced. Speech and pauses follow the
-original timing. This is approximate dubbing, not regenerated phoneme lip sync.
-Review `/voice-preview.html` or compare the Next invitation with
-`/?voice=original`. Custom edited questions still use the existing device
-speech fallback. Details and checks: `docs/QWEN-VOICE-TRIAL.md`.
-
-Local checks: 38 tests pass, static Next.js build passes, and all nine media
-checks pass (identical video packets/timestamps, H.264/AAC, expected duration,
-speech present and silent endings). Local browser launch is blocked by socket
-permissions; the develop workflow checks the full invitation, Qwen defaults,
-nine comparison controls and original-voice query after publication.
-
-The specification registry and latest relevant Supabase interaction search
-returned no Bunny/Nibbles matches. Current repository source and media were
-used for this task. The repository's current name is `dn-lx/bunny-mission`.
+Work is restricted to develop. Invitation data and owner settings are unchanged.
+See `docs/QWEN-VOICE-TRIAL.md` for media details and verification commands.
 
 ## Next.js migration on develop
 

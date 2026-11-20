@@ -1,15 +1,15 @@
 {
   "version": 1,
   "clips": {
-    "ask": "/video/flow/ask-qwen.mp4",
-    "outing": "/video/flow/outing-qwen.mp4",
-    "schedule": "/video/flow/schedule-qwen.mp4",
-    "detail": "/video/flow/detail-qwen.mp4",
-    "area": "/video/flow/area-qwen.mp4",
-    "yes": "/video/flow/yes-qwen.mp4",
-    "success": "/video/flow/success-qwen.mp4",
-    "decline": "/video/flow/decline-qwen.mp4",
-    "password": "/video/flow/password-qwen.mp4"
+    "ask": "/video/flow/ask-girl.mp4",
+    "outing": "/video/flow/outing-girl.mp4",
+    "schedule": "/video/flow/schedule-girl.mp4",
+    "detail": "/video/flow/detail-girl.mp4",
+    "area": "/video/flow/area-girl.mp4",
+    "yes": "/video/flow/yes-girl.mp4",
+    "success": "/video/flow/success-girl.mp4",
+    "decline": "/video/flow/decline-girl.mp4",
+    "password": "/video/flow/password-girl.mp4"
   },
-  "voice": "qwen-trial"
+  "voice": "female-child"
 }

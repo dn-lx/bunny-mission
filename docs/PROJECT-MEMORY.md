@@ -11,8 +11,11 @@ Bunny Mission is a private invitation site with server-side unlock, animated Nib
 - Approved Nibbles art only; no personal photos or face.
 - Zero added spend: no paid generation, credit purchases, GPU/API billing, hosting upgrade, or overage. Qwen3-TTS remains approved for future media work only when requested.
 - Graphify is local tooling and stays out of the deployed app.
-- A Qwen voice trial on develop retains original Flow videos alongside `-qwen.mp4`
-  copies. Use `/?voice=original` to compare the original voice, or
-  `/voice-preview.html` to compare all nine scenes. See `docs/QWEN-VOICE-TRIAL.md`.
+- Update Nibbles narration directly in the existing invitation app. The owner
+  explicitly rejected a separate comparison interface or additional voice UI.
+- Narration should be a soft female child character voice with gentle emotion.
+  Keep the existing bunny animation and speech windows; original media remains
+  available for rollback. See `docs/QWEN-VOICE-TRIAL.md`.
+
 
 Resume from root AGENTS, current handoff, relevant manifests, and tests. Do not claim unobserved media, browser, or deployment checks.
