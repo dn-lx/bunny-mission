@@ -1,5 +1,16 @@
 # Bunny Mission current handoff
 
+## Softer expressive samples (20 November 2026)
+
+The user approved the nine current Qwen voices and their lip sync, then asked
+for softer, more childlike emotion. Two review-only samples (invitation and
+happy reaction) were generated together with Qwen VoiceDesign on the official
+free demo. Compare them via **Softer & expressive** on `/voice-preview.html`.
+The accepted Qwen clips remain active in the invitation. Metadata and the
+lossless source are retained; the new `ask-soft.mp4` and `yes-soft.mp4` share the
+accepted speech windows and the original unchanged animation. Media checks
+also cover these two files. See `docs/QWEN-VOICE-TRIAL.md`.
+
 ## Qwen voice trial (20 November 2026)
 
 The user requested a complete free Qwen voice trial after reviewing the sample.

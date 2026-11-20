@@ -187,6 +187,15 @@ async function openInvitation(page,origin){
       await article.getByRole('button',{name:'Qwen',exact:true}).click();
       assert.match(await video.getAttribute('src'),/-qwen\.mp4$/);
     }
+    const expressive=review.getByRole('button',{name:'Softer & expressive',exact:true});
+    assert.equal(await expressive.count(),2,'Invitation and happy reaction have softer expressive samples');
+    for(const id of ['ask','yes']){
+      const article=review.locator('#voice-'+id);
+      await article.getByRole('button',{name:'Softer & expressive',exact:true}).click();
+      assert.equal(await article.locator('video').getAttribute('src'),'/video/flow/'+id+'-soft.mp4');
+      await article.getByRole('button',{name:'Qwen',exact:true}).click();
+      assert.equal(await article.locator('video').getAttribute('src'),'/video/flow/'+id+'-qwen.mp4');
+    }
     await review.goto(origin+'/?voice=original');
     await review.getByRole('heading',{name:'A little surprise for you.'}).waitFor();
     assert.equal(await review.locator('.bm-character video').getAttribute('src'),'/video/flow/password.mp4','Original voice remains available');

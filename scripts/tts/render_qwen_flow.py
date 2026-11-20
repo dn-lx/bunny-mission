@@ -5,7 +5,9 @@ Requires FFmpeg with the rubberband filter. No model, GPU or network call is mad
 Original MP4s are retained; outputs use the -qwen suffix for an easy rollback.
 """
 import array
+import argparse
 import json
+import re
 import subprocess
 import tempfile
 import wave
@@ -20,12 +22,14 @@ def run(command):
     return subprocess.check_output(command)
 
 
-def render():
-    timing = json.loads(TIMING.read_text())
+def render(timing_path=TIMING):
+    timing = json.loads(timing_path.read_text())
+    suffix = timing.get("outputSuffix", "-qwen")
+    assert re.fullmatch(r"-[a-z-]+", suffix), "Invalid output suffix"
     master = ROOT / timing["master"]
     for key, clip in timing["clips"].items():
         original = ROOT / f"public/video/flow/{key}.mp4"
-        destination = original.with_name(f"{key}-qwen.mp4")
+        destination = original.with_name(f"{key}{suffix}.mp4")
         duration = float(run([
             "ffprobe", "-v", "error", "-show_entries", "format=duration",
             "-of", "default=noprint_wrappers=1:nokey=1", str(original)
@@ -73,4 +77,6 @@ def render():
 
 
 if __name__ == "__main__":
-    render()
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("timing", nargs="?", type=Path, default=TIMING)
+    render(parser.parse_args().timing)
