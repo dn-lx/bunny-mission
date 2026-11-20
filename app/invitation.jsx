@@ -341,28 +341,37 @@ export default function Invitation() {
         return (question?.heading || id) + ": " + answers[id];
       });
       const summary = [
-        "🐰 BUNNY MISSION",
+        "🐰 A little update from Bunny Mission",
         "",
         decision === "yes" ? "💖 " + guest + " said yes!" : "💌 " + guest + " kindly declined.",
         "",
         ...(decision === "yes" ? [
-          "PLAN",
-          selectedOuting === "surprise"
+          "✨ Plan: " + (selectedOuting === "surprise"
             ? textValue(settings.outingLabels?.surprise, "Surprise me", 75)
-            : textValue(settings.outingLabels?.simple, "Something simple", 75),
-          "",
-          "WHEN",
-          timing,
-          ...(extraLines.length ? ["", "THEIR CHOICES", ...extraLines] : [])
+            : textValue(settings.outingLabels?.simple, "Something simple", 75)),
+          "🗓️ When: " + timing,
+          ...(extraLines.length ? ["", "A few more choices:", ...extraLines.map(line => "• " + line)] : [])
         ] : ["No outing or date was selected."]),
         "",
         "Invitation: " + inviteId
       ].join("\n");
+      const outing = decision === "yes"
+        ? (selectedOuting === "surprise"
+          ? textValue(settings.outingLabels?.surprise, "Surprise me", 75)
+          : textValue(settings.outingLabels?.simple, "Something simple", 75))
+        : "";
       const params = new URLSearchParams({
-        "form-name": "going-out-develop",
+        "form-name": "bunny-mission-replies",
         "bot-field": "",
-        reply: summary,
+        request_id: crypto.randomUUID(),
+        email_kind: "bunny-mission-replies-v1",
+        guest,
+        invite: inviteId,
+        mission_note: summary,
         decision,
+        outing,
+        when: decision === "yes" ? timing : "",
+        extra_answers: decision === "yes" ? extraLines.join("\n") : "",
         subject: "Bunny Mission · " + guest + (decision === "yes" ? " said yes 💖" : " declined 💌")
       });
       const response = await fetch("/__forms.html", {
