@@ -1,0 +1,142 @@
+{
+  "provider": "Official Qwen/Qwen3-TTS Hugging Face ZeroGPU demo",
+  "model": "Qwen3-TTS-12Hz-1.7B-Base",
+  "generatedOn": "2026-11-20",
+  "cost": "Free ZeroGPU allowance; no paid API or credits used",
+  "referenceText": "Hi there, how are you? Would you like to go out with Alex?",
+  "voiceDirection": "A very soft, smooth, gentle little-girl character voice for a friendly cartoon bunny. Light youthful feminine timbre, warm and calm, with clear natural English pronunciation. Speak slowly and evenly, with a tiny smile and gentle question intonation. Clean dry speech only; no music, no sound effects, no laughter, no background noise.",
+  "master": "public/audio/qwen/nibbles-master.flac",
+  "reference": "public/audio/qwen/reference.wav",
+  "notes": "Phrase timing adaptation to existing Flow animation; approximate lip sync, no new facial animation. Original video packets are copied. Original soundtracks are completely replaced.",
+  "clips": {
+    "password": {
+      "text": "Enter your invitation password to open the surprise.",
+      "segments": [
+        {
+          "sourceStart": 0.8,
+          "sourceEnd": 1.12,
+          "targetStart": 2.15,
+          "targetEnd": 2.47
+        },
+        {
+          "sourceStart": 1.12,
+          "sourceEnd": 3.84,
+          "targetStart": 2.975,
+          "targetEnd": 6.312
+        }
+      ]
+    },
+    "ask": {
+      "text": "Would you like to go out with Alex?",
+      "segments": [
+        {
+          "sourceStart": 4.575,
+          "sourceEnd": 6.185,
+          "targetStart": 2.63,
+          "targetEnd": 4.892
+        }
+      ]
+    },
+    "outing": {
+      "text": "What would you like to do together?",
+      "segments": [
+        {
+          "sourceStart": 6.85,
+          "sourceEnd": 8.35,
+          "targetStart": 2.67,
+          "targetEnd": 4.586
+        }
+      ]
+    },
+    "detail": {
+      "text": "What sounds most like you?",
+      "segments": [
+        {
+          "sourceStart": 9.105,
+          "sourceEnd": 10.57,
+          "targetStart": 2.67,
+          "targetEnd": 4.249
+        }
+      ]
+    },
+    "area": {
+      "text": "Where would you feel most comfortable meeting?",
+      "segments": [
+        {
+          "sourceStart": 11.17,
+          "sourceEnd": 13.145,
+          "targetStart": 2.665,
+          "targetEnd": 4.903
+        }
+      ]
+    },
+    "schedule": {
+      "text": "Pick a day and time, or decide together later.",
+      "segments": [
+        {
+          "sourceStart": 13.675,
+          "sourceEnd": 14.78,
+          "targetStart": 2.385,
+          "targetEnd": 3.59
+        },
+        {
+          "sourceStart": 14.78,
+          "sourceEnd": 16.26,
+          "targetStart": 3.935,
+          "targetEnd": 5.391
+        }
+      ]
+    },
+    "yes": {
+      "text": "Oh, lovely! A tiny happy dance.",
+      "segments": [
+        {
+          "sourceStart": 16.945,
+          "sourceEnd": 17.81,
+          "targetStart": 2.378,
+          "targetEnd": 3.279
+        },
+        {
+          "sourceStart": 18.185,
+          "sourceEnd": 19.65,
+          "targetStart": 3.67,
+          "targetEnd": 5.234
+        }
+      ]
+    },
+    "success": {
+      "text": "Lovely! Your plans are ready to share with Alex.",
+      "segments": [
+        {
+          "sourceStart": 20.115,
+          "sourceEnd": 20.54,
+          "targetStart": 2.2,
+          "targetEnd": 2.706
+        },
+        {
+          "sourceStart": 20.54,
+          "sourceEnd": 22.5,
+          "targetStart": 2.992,
+          "targetEnd": 5.143
+        }
+      ]
+    },
+    "decline": {
+      "text": "No worries at all. Have a lovely day.",
+      "segments": [
+        {
+          "sourceStart": 22.965,
+          "sourceEnd": 24.04,
+          "targetStart": 2.168,
+          "targetEnd": 3.271
+        },
+        {
+          "sourceStart": 24.375,
+          "sourceEnd": 25.42,
+          "targetStart": 3.915,
+          "targetEnd": 4.934
+        }
+      ]
+    }
+  }
+}

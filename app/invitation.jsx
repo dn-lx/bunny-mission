@@ -183,6 +183,8 @@ export default function Invitation() {
 
   useEffect(() => {
     let active = true;
+    // Keep the embedded Flow voices available while reviewing the Qwen trial.
+    if (new URLSearchParams(window.location.search).get("voice") === "original") return;
     fetch("/video/flow/manifest.json", { cache: "no-store" })
       .then(response => response.ok ? response.json() : null)
       .then(manifest => {

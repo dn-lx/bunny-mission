@@ -1,14 +1,15 @@
 {
   "version": 1,
   "clips": {
-    "ask": "/video/flow/ask.mp4",
-    "outing": "/video/flow/outing.mp4",
-    "schedule": "/video/flow/schedule.mp4",
-    "detail": "/video/flow/detail.mp4",
-    "area": "/video/flow/area.mp4",
-    "yes": "/video/flow/yes.mp4",
-    "success": "/video/flow/success.mp4",
-    "decline": "/video/flow/decline.mp4",
-    "password": "/video/flow/password.mp4"
-  }
+    "ask": "/video/flow/ask-qwen.mp4",
+    "outing": "/video/flow/outing-qwen.mp4",
+    "schedule": "/video/flow/schedule-qwen.mp4",
+    "detail": "/video/flow/detail-qwen.mp4",
+    "area": "/video/flow/area-qwen.mp4",
+    "yes": "/video/flow/yes-qwen.mp4",
+    "success": "/video/flow/success-qwen.mp4",
+    "decline": "/video/flow/decline-qwen.mp4",
+    "password": "/video/flow/password-qwen.mp4"
+  },
+  "voice": "qwen-trial"
 }

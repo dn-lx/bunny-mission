@@ -1,5 +1,32 @@
 # Bunny Mission current handoff
 
+## Qwen voice trial (20 November 2026)
+
+The user requested a complete free Qwen voice trial after reviewing the sample.
+Nine lines were generated successfully on the official Qwen Hugging Face demo,
+using the generated soft childlike reference for consistent voice cloning.
+`public/video/flow/manifest.json` now points to the nine `-qwen.mp4` copies.
+Original MP4s and archived V1/V2 assets remain available. No production release
+or invitation data changes are included.
+
+The exact text and timing map, generated reference/master and a repeatable
+FFmpeg renderer are retained. All animation packets and timestamps are
+unchanged; only the soundtrack is replaced. Speech and pauses follow the
+original timing. This is approximate dubbing, not regenerated phoneme lip sync.
+Review `/voice-preview.html` or compare the Next invitation with
+`/?voice=original`. Custom edited questions still use the existing device
+speech fallback. Details and checks: `docs/QWEN-VOICE-TRIAL.md`.
+
+Local checks: 38 tests pass, static Next.js build passes, and all nine media
+checks pass (identical video packets/timestamps, H.264/AAC, expected duration,
+speech present and silent endings). Local browser launch is blocked by socket
+permissions; the develop workflow checks the full invitation, Qwen defaults,
+nine comparison controls and original-voice query after publication.
+
+The specification registry and latest relevant Supabase interaction search
+returned no Bunny/Nibbles matches. Current repository source and media were
+used for this task. The repository's current name is `dn-lx/bunny-mission`.
+
 ## Next.js migration on develop
 
 The active guest route on develop is a Next.js App Router app using React 19.3.1 and Next.js 16.4.6. The migration preserves the existing V1 page flow, Flow video files, unlock function, owner dashboard, and Netlify response form.

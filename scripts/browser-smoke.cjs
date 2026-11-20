@@ -79,6 +79,7 @@ async function openInvitation(page,origin){
     const nextErrors=[];nextPage.on('pageerror',err=>nextErrors.push(String(err)));
     await nextPage.goto(origin,{waitUntil:'domcontentloaded'});
     await nextPage.getByRole('heading',{name:'A little surprise for you.'}).waitFor({timeout:10000});
+    await nextPage.waitForFunction(()=>document.querySelector('.bm-character video')?.getAttribute('src')==='/video/flow/password-qwen.mp4');
     assert.equal(await nextPage.locator('#invitation-code').count(),1,'Next.js root must render the invitation gate');
     const gateBunny=await characterRect(nextPage);
     assert.ok(Math.abs(gateBunny.x+gateBunny.width/2-195)<1&&Math.abs(gateBunny.y+gateBunny.height/2-422)<1,
@@ -176,6 +177,21 @@ async function openInvitation(page,origin){
     assert.match(submissions.at(-1)?.reply,/Test Girl kindly declined/);
     assert.doesNotMatch(submissions.at(-1)?.reply,/PLAN|THEIR CHOICES|\[\]/);
     await nextPage.close();
+    const review=await browser.newPage({viewport:{width:390,height:844}});
+    await review.goto(origin+'/voice-preview.html');
+    assert.equal(await review.locator('article').count(),9,'Every recorded scene has a voice comparison');
+    for(const article of await review.locator('article').all()){
+      const video=article.locator('video');
+      await article.getByRole('button',{name:'Original',exact:true}).click();
+      assert.doesNotMatch(await video.getAttribute('src'),/-qwen\.mp4$/);
+      await article.getByRole('button',{name:'Qwen',exact:true}).click();
+      assert.match(await video.getAttribute('src'),/-qwen\.mp4$/);
+    }
+    await review.goto(origin+'/?voice=original');
+    await review.getByRole('heading',{name:'A little surprise for you.'}).waitFor();
+    assert.equal(await review.locator('.bm-character video').getAttribute('src'),'/video/flow/password.mp4','Original voice remains available');
+    await review.close();
+    console.log('PASS: Qwen default, nine voice comparisons and original voice rollback');
     for(const viewport of [{width:360,height:780},{width:390,height:844},{width:1280,height:850}]){
       const page=await browser.newPage({viewport});
       const errors=[];page.on('pageerror',err=>errors.push(String(err)));
