@@ -17,6 +17,7 @@ export default function HomePage() {
         <input type="hidden" name="form-name" value="bunny-mission-replies" />
         <input type="text" name="bot-field" />
         <input type="hidden" name="request_id" />
+        <input type="hidden" name="email_kind" value="bunny-mission-replies-v1" />
         <input type="hidden" name="guest" />
         <input type="hidden" name="invite" />
         <textarea name="mission_note" defaultValue="" />

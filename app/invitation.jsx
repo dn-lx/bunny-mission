@@ -364,6 +364,7 @@ export default function Invitation() {
         "form-name": "bunny-mission-replies",
         "bot-field": "",
         request_id: crypto.randomUUID(),
+        email_kind: "bunny-mission-replies-v1",
         guest,
         invite: inviteId,
         mission_note: summary,

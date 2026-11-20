@@ -5,7 +5,8 @@ New guest replies are still captured by Netlify Forms under
 reply to Resend, which renders the designed HTML and plain-text email. The old
 `going-out-develop` form and its notification are retained for historical
 submissions; new responses use the new form name so they do not inherit that
-plain-text notification.
+plain-text notification. A registered `email_kind` marker scopes the event
+handler to this form without depending on Netlify's internal form-name field.
 
 ## Configure delivery
 

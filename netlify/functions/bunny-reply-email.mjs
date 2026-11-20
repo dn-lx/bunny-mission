@@ -1,4 +1,4 @@
-const FORM_NAME = 'bunny-mission-replies';
+const EVENT_MARKER = 'bunny-mission-replies-v1';
 const OWNER_EMAIL = 'don.alex.perera@gmail.com';
 
 const clean = value => typeof value === 'string' ? value.trim().slice(0, 4000) : '';
@@ -50,7 +50,7 @@ function emailContent(data) {
 export default {
   async formSubmitted(event) {
     const data = event?.data || {};
-    if (data['form-name'] !== FORM_NAME) return;
+    if (data.email_kind !== EVENT_MARKER) return;
 
     const apiKey = process.env.RESEND_API_KEY;
     const from = process.env.RESEND_FROM_EMAIL;

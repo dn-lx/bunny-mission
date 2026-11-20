@@ -72,8 +72,8 @@ New guest responses are captured as `bunny-mission-replies`. A Netlify
 `formSubmitted` event generates designed HTML and plain-text Resend messages
 for Yes and No, including plan/time and optional answers when applicable.
 Guest-provided values are HTML-escaped and Resend idempotency keys use the
-request ID. Legacy `going-out-develop` submissions and notification settings
-remain intact.
+request ID. A registered marker scopes the handler to the new form. Legacy
+`going-out-develop` submissions and notification settings remain intact.
 
 Resend delivery requires a verified sender domain plus `RESEND_API_KEY` and
 `RESEND_FROM_EMAIL` in Netlify runtime environment variables. See
