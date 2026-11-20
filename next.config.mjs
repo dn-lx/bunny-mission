@@ -1,0 +1,6 @@
+const nextConfig = {
+  output: "export",
+  poweredByHeader: false,
+  reactStrictMode: true
+};
+export default nextConfig;

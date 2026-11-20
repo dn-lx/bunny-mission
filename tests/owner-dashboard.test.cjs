@@ -5,8 +5,10 @@ const fs=require('node:fs');
 const {Script}=require('node:vm');
 const adminJs=fs.readFileSync('public/admin.js','utf8');
 const adminHtml=fs.readFileSync('public/admin.html','utf8');
-const guest=fs.readFileSync('public/index.html','utf8');
+const guest=fs.readFileSync('public/version-1.html','utf8');
 const ownerCode=fs.readFileSync('netlify/functions/owner.mjs','utf8');
+const invitation=fs.readFileSync('app/invitation.jsx','utf8');
+const appCss=fs.readFileSync('app/globals.css','utf8');
 
 test('owner dashboard is private, responsive, and JavaScript parses',()=>{
   assert.doesNotThrow(()=>new Script(adminJs));
@@ -81,3 +83,38 @@ test('workflow defaults to the short preference-to-calendar flow and supports op
   assert.deepEqual(sanitizedSettings({availableDays:['2026-11-20']}).availableSlots,{'2026-11-20':['Morning','Afternoon','Evening']});
   assert.deepEqual(sanitizedSettings({availableSlots:{},availableDays:['2026-11-20']}).availableSlots,{});
 });
+
+test('the owner editor and guest calendar use the exact saved daypart availability',()=>{
+  const normalizeBody=adminJs.match(/function normalizeAvailability\(config\)\{([\s\S]*?)\n  \}/)?.[1];
+  assert.ok(normalizeBody,'owner availability normalization should be present');
+  const normalize=new Function('config','timeDefaults',normalizeBody);
+  const dayparts=['Morning','Afternoon','Evening'];
+  const entered={
+    '2026-11-20':['Morning','Evening'],
+    '2026-11-21':['Afternoon']
+  };
+  assert.deepEqual(normalize({availableSlots:entered},dayparts),entered);
+  assert.deepEqual(normalize({availableDays:['2026-11-20']},dayparts),{
+    '2026-11-20':['Morning','Afternoon','Evening']
+  });
+  assert.doesNotMatch(adminJs,/config\?\.availabilitySlots/);
+  assert.match(invitation,/TIMES\.filter\(time => selectedSlots\.includes\(time\.label\)\)/);
+  assert.match(invitation,/latestSlots\[selectedDate\]/);
+});
+
+test('calendar sits at the bottom and success copy has no dance caption',()=>{
+  assert.match(appCss,/\.bm-screen--calendar \{\s*align-items: flex-end;/);
+  assert.match(appCss,/\.bm-screen--calendar \.bm-panel \{\s*width: min\(100%, 640px\);\s*max-height:/);
+  assert.doesNotMatch(invitation,/Bunny is doing a very tiny happy dance/i);
+});
+
+test('No keeps the 🥲 emoji and the first two dodges show different messages',()=>{
+  assert.match(invitation,/const NO_FACE = "🥲"/);
+  assert.match(invitation,/noDodges < 2/);
+  assert.match(invitation,/const showDodgeMessage = noDodges < 2/);
+  assert.match(invitation,/setOopsMessage\(noDodges === 0 \? "Oops, it slipped!" : "Oh, it slipped again!"\)/);
+  const askPanelCss=appCss.match(/\.bm-screen--ask \.bm-panel--ask \{([^}]*)\}/)?.[1]||'';
+  assert.match(askPanelCss,/position: fixed/);
+  assert.doesNotMatch(askPanelCss,/transform/);
+});
+

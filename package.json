@@ -1,16 +1,22 @@
 {
-  "name": "go-out-with-alex",
+  "name": "bunny-mission",
   "version": "1.0.0",
   "private": true,
-  "description": "An animated, passcode-protected bunny invitation to go out with Alex.",
+  "description": "A private, passcode-protected Bunny Mission invitation.",
   "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
     "test": "node --test tests/*.test.cjs",
     "check": "npm test"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=20.9.0"
   },
   "dependencies": {
-    "@netlify/blobs": "11.1.9"
+    "@netlify/blobs": "11.1.9",
+    "next": "16.4.6",
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
   }
 }

@@ -3,7 +3,7 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const { readFileSync } = require('node:fs');
 const { Script } = require('node:vm');
-const html = readFileSync('public/index.html','utf8');
+const html = readFileSync('public/version-1.html','utf8');
 const adminHtml = readFileSync('public/admin.html','utf8');
 const css = readFileSync('public/invitation.css','utf8');
 const js = html.match(/<script>([\s\S]*?)<\/script>/i)?.[1];
@@ -228,4 +228,12 @@ test('paused version 2 links retain invitation parameters while selecting versio
     if (suffix.includes('version=2')) assert.equal(replaced,'/?version=1&invite=example#bunny');
     else assert.equal(replaced,undefined);
   }
+});
+
+test('Next.js static export publishes a root page on Netlify', () => {
+  const nextConfig = readFileSync('next.config.mjs', 'utf8');
+  const netlifyConfig = readFileSync('netlify.toml', 'utf8');
+  assert.match(nextConfig, /output:\s*["']export["']/);
+  assert.match(netlifyConfig, /publish\s*=\s*"out"/);
+  assert.match(netlifyConfig, /NETLIFY_NEXT_PLUGIN_SKIP\s*=\s*"true"/);
 });
