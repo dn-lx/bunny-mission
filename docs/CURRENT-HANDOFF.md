@@ -7,12 +7,11 @@ for a softer female child voice directly in the existing app. The comparison
 page and two review samples were removed; its old URL redirects to the app.
 There are no additional voice selection controls or guest pages.
 
-All nine standard scenes now use a single new Qwen VoiceDesign recording with
-explicit soft female child character direction and gentle expression. The
-manifest selects `-girl.mp4` files; animation packets and speech windows are
-retained. Source audio and timing metadata are stored for reproduction.
-Original Flow and the previously accepted Qwen files remain available for
-internal rollback. Custom edited questions retain their device-speech fallback.
+All nine standard scenes use the accepted soft female child voice. The active
+manifest selects `-girl-early.mp4` clips, trimmed from the matching `-girl.mp4`
+source so speech begins about one second after playback starts. Audio and video
+were trimmed together to preserve lip sync; original clips remain intact for
+rollback. Custom edited questions retain their device-speech fallback.
 
 Work is restricted to develop. Invitation data and owner settings are unchanged.
 See `docs/QWEN-VOICE-TRIAL.md` for media details and verification commands.

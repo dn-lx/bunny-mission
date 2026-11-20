@@ -16,6 +16,10 @@ Bunny Mission is a private invitation site with server-side unlock, animated Nib
 - Narration should be a soft female child character voice with gentle emotion.
   Keep the existing bunny animation and speech windows; original media remains
   available for rollback. See `docs/QWEN-VOICE-TRIAL.md`.
+- Active `-girl-early.mp4` scene clips shorten the original silent lead-in so
+  recorded speech begins about one second after playback starts. Audio and
+  video are trimmed together to preserve lip sync; original `-girl.mp4` clips
+  remain untouched as rollback assets.
 - The owner explicitly wants Bunny Studio on `develop` and `main` to share the
   same invitations and settings store. Keep the existing shared owner store;
   do not split production data from develop data.
