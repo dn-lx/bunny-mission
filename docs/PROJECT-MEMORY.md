@@ -16,6 +16,13 @@ Bunny Mission is a private invitation site with server-side unlock, animated Nib
 - Narration should be a soft female child character voice with gentle emotion.
   Keep the existing bunny animation and speech windows; original media remains
   available for rollback. See `docs/QWEN-VOICE-TRIAL.md`.
+- The owner explicitly wants Bunny Studio on `develop` and `main` to share the
+  same invitations and settings store. Keep the existing shared owner store;
+  do not split production data from develop data.
+- Main currently lacks the `BUNNY_STUDIO_MEPLUS_AUTH` production environment
+  value, so owner sign-in returns 503 there. The existing secret is scoped to
+  the `develop` branch; preserve it in Netlify and enable that same value in
+  production only after the owner confirms the production context change.
 
 
 Resume from root AGENTS, current handoff, relevant manifests, and tests. Do not claim unobserved media, browser, or deployment checks.

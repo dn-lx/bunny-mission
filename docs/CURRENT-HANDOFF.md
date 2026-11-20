@@ -45,7 +45,7 @@ A No reply submits decision=no to the existing going-out-develop Netlify form an
 
 ## Bunny Studio on develop
 
-The owner signs in with the existing Me+ account. The Netlify Functions environment needs the develop-only secret BUNNY_STUDIO_MEPLUS_AUTH with url, key (the publishable key), uid (the approved owner) and sessionSecret (32 random bytes as hex). Keep the values in Netlify.
+The owner signs in with the existing Me+ account. The Netlify Functions environment needs the secret BUNNY_STUDIO_MEPLUS_AUTH with url, key (the publishable key), uid (the approved owner) and sessionSecret (32 random bytes as hex). Production and develop intentionally share the same Bunny Studio Netlify Blobs store. The secret currently exists only for the develop branch; production sign-in returns 503 until the same secret is enabled for the production context. Keep values in Netlify.
 
 Under Personal invitations, edit the name and leave the guest password blank to keep it. The invitation and story editor saves a shared workflow for all invitations. You can reorder or skip the outing preference and optional custom questions before the calendar. The activity follow-up requires the activity first. New guest sessions obtain this configuration after the invitation password is verified. Existing settings are read from the prior record until the first save. Custom questions use device speech unless a matching recording is available for that scene.
 
