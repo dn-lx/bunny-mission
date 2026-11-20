@@ -23,6 +23,15 @@ Bunny Mission is a private invitation site with server-side unlock, animated Nib
   value, so owner sign-in returns 503 there. The existing secret is scoped to
   the `develop` branch; preserve it in Netlify and enable that same value in
   production only after the owner confirms the production context change.
+- New guest replies use a separate `bunny-mission-replies` Netlify form and a
+  `formSubmitted` function to send designed Yes/No messages through Resend.
+  The legacy `going-out-develop` form remains for historical submissions.
+  Resend delivery needs `RESEND_API_KEY` and `RESEND_FROM_EMAIL` as Netlify
+  runtime variables on each deploy context. Do not store secrets in Git or
+  enable paid plans/overages; see `docs/RESEND-EMAIL-SETUP.md`.
+- Bunny Studio UI changes must preserve its current workflow and shared owner
+  data. Keep improvements responsive and align admin headings, form controls,
+  and actions without adding another dashboard or changing invitation logic.
 
 
 Resume from root AGENTS, current handoff, relevant manifests, and tests. Do not claim unobserved media, browser, or deployment checks.

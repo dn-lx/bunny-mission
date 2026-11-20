@@ -29,6 +29,45 @@
     .subtle,.preview{background:#f0f7ff;border-color:#dbeafa;color:#34638e}
     .muted,.mini,footer{color:#6a8096}
     .danger{background:#fff5f6;color:#aa415c;border-color:#ebc7d1}
+    /* Shared alignment and touch sizing across the owner studio. */
+    .wrap{width:min(1100px,calc(100% - 36px));padding-top:30px}
+    header{align-items:center;margin-bottom:30px}
+    header>div:first-child{min-width:min(100%,420px)}
+    .card{padding:clamp(20px,3.2vw,32px);margin-bottom:20px}
+    .card> .row.between{align-items:flex-start;gap:18px}
+    .card> .row.between>div:first-child{flex:1 1 360px;min-width:0}
+    .card> .row.between>.btn,.card> .row.between>.row{flex:0 0 auto}
+    .row{gap:10px}
+    .btn{display:inline-flex;align-items:center;justify-content:center;text-align:center;white-space:normal;line-height:1.25;padding:11px 17px}
+    .row>.btn{min-width:92px}
+    .field{min-width:0;margin-bottom:16px}
+    label{line-height:1.35}
+    h3{margin:9px 0 10px}
+    .divider{margin:25px 0}
+    .question>.row.between{align-items:flex-start}
+    #availability-days .question>.row:first-child{align-items:center}
+    #availability-days .question>.row+.row{margin-top:10px}
+    .form-actions{justify-content:flex-end;margin-top:14px}
+    .form-actions>.btn{min-width:190px}
+    .password-row{gap:10px}
+    .status{line-height:1.45}
+    @media(max-width:660px){
+      .wrap{width:calc(100% - 24px);padding-top:18px;padding-bottom:34px}
+      header{align-items:flex-start;margin-bottom:20px}
+      header>div:first-child{min-width:0}
+      header>.row{width:100%;justify-content:space-between}
+      .card{padding:20px;border-radius:20px}
+      .card>.row.between{align-items:stretch;flex-direction:column;gap:8px}
+      .card>.row.between>.btn{width:100%}
+      .row>.btn{min-width:0}
+      .password-row .btn{min-width:82px}
+      .field .row{align-items:stretch}
+      .field .row>.short{flex:1 1 100%;max-width:none}
+      .field .row>#generate-invite-password{width:100%}
+      .form-actions>.btn{width:100%;margin:0}
+      #availability-days .question>.row:first-child{align-items:flex-start}
+      #availability-days .question>.row:first-child strong{flex:1;line-height:1.45}
+    }
   </style>
 </head>
 <body>
@@ -66,7 +105,7 @@
       </div>
     </section>
     <section class="card">
-      <div class="row between"><div><h2>The invitation & story</h2><p>These settings apply to every invitation. Leave a field blank to use the original wording.</p></div><button class="btn primary" type="submit" form="settings-form">Save changes</button></div>
+      <div class="row between"><div><h2>The invitation &amp; story</h2><p>These settings apply to every invitation. Leave a field blank to use the original wording.</p></div><button class="btn primary" type="submit" form="settings-form">Save changes</button></div>
       <form id="settings-form">
         <div class="grid">
           <div class="field"><label for="sender-name">Your display name</label><input id="sender-name" maxlength="48" placeholder="Alex"></div>
@@ -101,7 +140,7 @@
         <div class="divider"></div>
         <div class="row between"><div><h3>Optional extra questions</h3><p class="mini">Add up to five optional questions. They appear before the calendar and are off unless you enable them in the workflow.</p></div><button id="add-question" type="button" class="btn">+ Add question</button></div>
         <div id="extra-questions"></div>
-        <button class="btn primary" type="submit">Save all story changes</button>
+        <div class="row form-actions"><button class="btn primary" type="submit">Save changes</button></div>
       </form>
     </section>
   </div>

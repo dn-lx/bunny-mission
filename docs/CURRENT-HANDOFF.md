@@ -24,7 +24,7 @@ The active guest route on develop is a Next.js App Router app using React 19.3.1
 - The new root route is in app/page.jsx and app/invitation.jsx.
 - public/index.html was removed from the deploy root so Netlify cannot serve the old static page in place of the Next.js route.
 - The complete former root page is preserved at public/version-1.html. Archived V1 and V2 resources remain unchanged.
-- public/__forms.html is the static form blueprint for Netlify's form detection. The guest page sends URL-encoded AJAX submissions to /__forms.html for the going-out-develop form.
+- public/__forms.html is the static form blueprint for Netlify's form detection. The guest page sends URL-encoded AJAX submissions to /__forms.html for the bunny-mission-replies form.
 - Invitation codes are still verified by /.netlify/functions/unlock. The Yes flow fetches the current public availability again immediately before sending.
 - Bunny Studio stays at /admin.html. The existing owner and unlock functions remain under netlify/functions.
 - The guest page uses a static Next.js export. `next.config.mjs` sets `output: "export"`; `npm run build` writes the site to `out/`, which Netlify publishes.
@@ -41,7 +41,7 @@ The welcome/code screen uses “A little surprise for you.” and stays on the s
 
 The Yes path offers “Something simple” and “Surprise me,” followed by optional admin-enabled questions and the calendar. Dates are closed by default; Alex opens each date by selecting Morning, Afternoon, and/or Evening. Guests can submit an open date and time or choose to decide on a day together later. A fresh unlock request checks the selected time before the Netlify form submission. The existing Flow media is unchanged.
 
-A No reply submits decision=no to the existing going-out-develop Netlify form and shows “No worries at all.” only after the reply succeeds. Both Yes and No use the configured owner notification. No flower scene or clip was added.
+A No reply submits decision=no to the bunny-mission-replies Netlify form and shows “No worries at all.” only after the reply succeeds. Both Yes and No use a designed Resend owner email. No flower scene or clip was added.
 
 ## Bunny Studio on develop
 
@@ -64,17 +64,24 @@ Current develop uses visualViewport resize/scroll state to fit the welcome form 
 
 Yes and No each show a facial emoji with a visible word label and accessible names. The default No face is 🤭, followed by 😏 and 🙃; tongue-out faces are not used. The shared note says “Press and hold the button of your choice for 2 seconds.” A rotating ring and “Next page is loading…” appear during a hold; early release cancels. Yes advances after two seconds. No moves immediately on touch up to three times, then accepts a complete hold. Keyboard and reduced-motion use the complete hold without escapes. No dodge instructions are shown to guests.
 
-The existing going-out-develop form and its notification configuration remain in use. Active form payloads now contain a readable reply summary plus the decision and subject, removing empty obsolete fields and JSON from new Next guest replies. No new email service was introduced; this is a plain-text notification summary. The preserved version-1.html still has its historical payload.
+The legacy going-out-develop form and its notification remain available for historical and archived submissions. New Next.js guest replies use the bunny-mission-replies form. The preserved version-1.html still has its historical payload.
 
-## Cleaner response email on develop (20 November 2026)
+## Resend delivery and Bunny Studio UI polish (20 November 2026)
 
-The existing Netlify Form notification stays in place. Its note field is now
-labelled `mission_note` and uses a compact, friendly summary: a clear Yes/No
-line, outing and time for Yes replies, optional answers, and the invitation
-reference. Decision and dynamic subject fields remain for inbox scanning and
-submission records. Netlify's built-in notification body is plain text; rich
-HTML would require configuring a separate supported email API/provider, so no
-new paid service or credentials were introduced.
+New guest responses are captured as `bunny-mission-replies`. A Netlify
+`formSubmitted` event generates designed HTML and plain-text Resend messages
+for Yes and No, including plan/time and optional answers when applicable.
+Guest-provided values are HTML-escaped and Resend idempotency keys use the
+request ID. Legacy `going-out-develop` submissions and notification settings
+remain intact.
 
-Local Next production build and all seven unlock tests passed. Local Chromium smoke execution was blocked by the runtime denying socket creation, so the committed browser smoke covers keyboard-sized viewports, early cancellation, the two-second Yes hold, bounded No escapes, decline video visibility and readable Yes/No reply bodies in CI. No real guest response or test email was sent.
+Resend delivery requires a verified sender domain plus `RESEND_API_KEY` and
+`RESEND_FROM_EMAIL` in Netlify runtime environment variables. See
+`docs/RESEND-EMAIL-SETUP.md`; secrets are not committed or shared in chat. The
+integration is intended for the free tier. No paid plan/overage is enabled and
+no real guest response or test email was sent.
 
+Bunny Studio controls now have consistent button sizing, spacing, heading and
+action alignment, and responsive mobile behavior. Settings and invitation
+workflow behavior did not change. The changes remain on develop; main has not
+been merged.

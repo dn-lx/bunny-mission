@@ -7,17 +7,23 @@ export default function HomePage() {
     <>
       <Invitation />
       <form
-        name="going-out-develop"
+        name="bunny-mission-replies"
         method="POST"
         data-netlify="true"
         netlify-honeypot="bot-field"
         hidden
         aria-hidden="true"
       >
-        <input type="hidden" name="form-name" value="going-out-develop" />
+        <input type="hidden" name="form-name" value="bunny-mission-replies" />
         <input type="text" name="bot-field" />
+        <input type="hidden" name="request_id" />
+        <input type="hidden" name="guest" />
+        <input type="hidden" name="invite" />
         <textarea name="mission_note" defaultValue="" />
         <input type="hidden" name="decision" />
+        <input type="hidden" name="outing" />
+        <input type="hidden" name="when" />
+        <textarea name="extra_answers" defaultValue="" />
         <input type="hidden" name="subject" value="Alex received a bunny invitation response" />
       </form>
     </>

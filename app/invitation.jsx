@@ -355,11 +355,22 @@ export default function Invitation() {
         "",
         "Invitation: " + inviteId
       ].join("\n");
+      const outing = decision === "yes"
+        ? (selectedOuting === "surprise"
+          ? textValue(settings.outingLabels?.surprise, "Surprise me", 75)
+          : textValue(settings.outingLabels?.simple, "Something simple", 75))
+        : "";
       const params = new URLSearchParams({
-        "form-name": "going-out-develop",
+        "form-name": "bunny-mission-replies",
         "bot-field": "",
+        request_id: crypto.randomUUID(),
+        guest,
+        invite: inviteId,
         mission_note: summary,
         decision,
+        outing,
+        when: decision === "yes" ? timing : "",
+        extra_answers: decision === "yes" ? extraLines.join("\n") : "",
         subject: "Bunny Mission · " + guest + (decision === "yes" ? " said yes 💖" : " declined 💌")
       });
       const response = await fetch("/__forms.html", {
