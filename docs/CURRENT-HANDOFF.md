@@ -66,5 +66,15 @@ Yes and No each show a facial emoji with a visible word label and accessible nam
 
 The existing going-out-develop form and its notification configuration remain in use. Active form payloads now contain a readable reply summary plus the decision and subject, removing empty obsolete fields and JSON from new Next guest replies. No new email service was introduced; this is a plain-text notification summary. The preserved version-1.html still has its historical payload.
 
+## Cleaner response email on develop (20 November 2026)
+
+The existing Netlify Form notification stays in place. Its note field is now
+labelled `mission_note` and uses a compact, friendly summary: a clear Yes/No
+line, outing and time for Yes replies, optional answers, and the invitation
+reference. Decision and dynamic subject fields remain for inbox scanning and
+submission records. Netlify's built-in notification body is plain text; rich
+HTML would require configuring a separate supported email API/provider, so no
+new paid service or credentials were introduced.
+
 Local Next production build and all seven unlock tests passed. Local Chromium smoke execution was blocked by the runtime denying socket creation, so the committed browser smoke covers keyboard-sized viewports, early cancellation, the two-second Yes hold, bounded No escapes, decline video visibility and readable Yes/No reply bodies in CI. No real guest response or test email was sent.
 

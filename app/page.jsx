@@ -16,7 +16,7 @@ export default function HomePage() {
       >
         <input type="hidden" name="form-name" value="going-out-develop" />
         <input type="text" name="bot-field" />
-        <textarea name="reply" defaultValue="" />
+        <textarea name="mission_note" defaultValue="" />
         <input type="hidden" name="decision" />
         <input type="hidden" name="subject" value="Alex received a bunny invitation response" />
       </form>
