@@ -221,9 +221,8 @@ export default function Invitation() {
 
   useEffect(() => {
     const video = videoRef.current;
-    window.speechSynthesis?.cancel();
     if (!video) return;
-    video.muted = !voiceOnRef.current || customVoice || !soundUnlockedRef.current;
+    video.muted = !voiceOnRef.current || !soundUnlockedRef.current;
     setError("");
     video.currentTime = 0;
     const play = video.play();
@@ -241,9 +240,18 @@ export default function Invitation() {
         video.play().catch(() => {});
       });
     }
+  }, [sceneKey, clipPaths]);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (video) video.muted = !voiceOn || customVoice || !soundUnlocked;
+  }, [voiceOn, customVoice, soundUnlocked]);
+
+  useEffect(() => {
+    window.speechSynthesis?.cancel();
     if (customVoice && voiceOnRef.current) speakWithDevice(screenSpeech);
     return () => window.speechSynthesis?.cancel();
-  }, [step, clipPaths, customVoice, screenSpeech]);
+  }, [step, customVoice, screenSpeech]);
 
   useEffect(() => {
     function enableSoundOnFirstGesture(event) {
