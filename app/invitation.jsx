@@ -8,6 +8,16 @@ const TIMES = [
   { icon: "🌙", label: "Evening" }
 ];
 const DEFAULT_CLIPS = {
+  password: "/video/flow/password-girl-early.mp4",
+  ask: "/video/flow/ask-girl-early.mp4",
+  yes: "/video/flow/yes-girl-early.mp4",
+  outing: "/video/flow/outing-girl-early.mp4",
+  detail: "/video/flow/detail-girl-early.mp4",
+  schedule: "/video/flow/schedule-girl-early.mp4",
+  success: "/video/flow/success-girl-early.mp4",
+  decline: "/video/flow/decline-girl-early.mp4"
+};
+const ORIGINAL_CLIPS = {
   password: "/video/flow/password.mp4",
   ask: "/video/flow/ask.mp4",
   yes: "/video/flow/yes.mp4",
@@ -82,6 +92,7 @@ export default function Invitation() {
   const [inviteId, setInviteId] = useState("");
   const [settings, setSettings] = useState({});
   const [voiceOn, setVoiceOn] = useState(true);
+  const [soundUnlocked, setSoundUnlocked] = useState(true);
   const [reducedMotion, setReducedMotion] = useState(false);
   const [clipPaths, setClipPaths] = useState(DEFAULT_CLIPS);
   const [pending, setPending] = useState(false);
@@ -96,6 +107,9 @@ export default function Invitation() {
   const [oopsMessage, setOopsMessage] = useState("");
   const [selectedOuting, setSelectedOuting] = useState("");
   const videoRef = useRef(null);
+  const voiceOnRef = useRef(true);
+  const soundUnlockedRef = useRef(true);
+  const userGestureSeenRef = useRef(false);
   const [holding, setHolding] = useState("");
   const [noPosition, setNoPosition] = useState(null);
   const [viewport, setViewport] = useState(null);
@@ -184,7 +198,10 @@ export default function Invitation() {
   useEffect(() => {
     let active = true;
     // Keep the embedded Flow voices available while reviewing the Qwen trial.
-    if (new URLSearchParams(window.location.search).get("voice") === "original") return;
+    if (new URLSearchParams(window.location.search).get("voice") === "original") {
+      setClipPaths(ORIGINAL_CLIPS);
+      return;
+    }
     fetch("/video/flow/manifest.json", { cache: "no-store" })
       .then(response => response.ok ? response.json() : null)
       .then(manifest => {
@@ -195,7 +212,8 @@ export default function Invitation() {
             clean[key] = path;
           }
         }
-        setClipPaths(clean);
+        const unchanged = Object.keys(clean).every(key => clean[key] === DEFAULT_CLIPS[key]);
+        if (!unchanged) setClipPaths(clean);
       })
       .catch(() => {});
     return () => { active = false; };
@@ -205,30 +223,44 @@ export default function Invitation() {
     const video = videoRef.current;
     window.speechSynthesis?.cancel();
     if (!video) return;
-    video.muted = !voiceOn || customVoice;
-    if (!voiceOn) {
-      video.pause();
-      return;
-    }
+    video.muted = !voiceOnRef.current || customVoice || !soundUnlockedRef.current;
     setError("");
     video.currentTime = 0;
     const play = video.play();
     if (play?.catch) {
       play.catch(() => {
+        if (!video.isConnected) return;
+        if (video.ended) return;
+        // A real user gesture may have enabled sound while autoplay was resolving.
+        if (userGestureSeenRef.current && !video.paused) return;
         // Mobile browsers commonly block autoplay when a clip has audio.
         // Retry silently so Nibbles still starts moving as soon as the page opens.
         video.muted = true;
-        video.play().catch(() => {
-          if (customVoice) speakWithDevice(screenSpeech);
-        });
+        soundUnlockedRef.current = false;
+        setSoundUnlocked(false);
+        video.play().catch(() => {});
       });
     }
-    if (customVoice) speakWithDevice(screenSpeech);
+    if (customVoice && voiceOnRef.current) speakWithDevice(screenSpeech);
     return () => window.speechSynthesis?.cancel();
-  }, [step, voiceOn, clipPaths, customVoice, screenSpeech]);
+  }, [step, clipPaths, customVoice, screenSpeech]);
+
+  useEffect(() => {
+    function enableSoundOnFirstGesture(event) {
+      if (event.target?.closest?.(".bm-icon-button")) return;
+      if (!voiceOnRef.current || (userGestureSeenRef.current && soundUnlockedRef.current)) return;
+      enableSoundAtCurrentTime();
+    }
+    document.addEventListener("pointerdown", enableSoundOnFirstGesture, true);
+    document.addEventListener("keydown", enableSoundOnFirstGesture, true);
+    return () => {
+      document.removeEventListener("pointerdown", enableSoundOnFirstGesture, true);
+      document.removeEventListener("keydown", enableSoundOnFirstGesture, true);
+    };
+  }, [customVoice]);
 
   function speakWithDevice(text) {
-    if (!text || !voiceOn || !window.speechSynthesis || !window.SpeechSynthesisUtterance) return;
+    if (!text || !voiceOnRef.current || !window.speechSynthesis || !window.SpeechSynthesisUtterance) return;
     window.speechSynthesis.cancel();
     const utterance = new window.SpeechSynthesisUtterance(text);
     const voices = window.speechSynthesis.getVoices();
@@ -239,19 +271,43 @@ export default function Invitation() {
     window.speechSynthesis.speak(utterance);
   }
 
-  function replayBunny() {
-    if (!voiceOn) {
-      setVoiceOn(true);
+  function enableSoundAtCurrentTime() {
+    if (!voiceOnRef.current) return;
+    userGestureSeenRef.current = true;
+    soundUnlockedRef.current = true;
+    setSoundUnlocked(true);
+    const video = videoRef.current;
+    if (!video || customVoice) return;
+    video.muted = false;
+    if (video.paused && !video.ended) {
+      video.play().catch(() => {
+        if (!video.isConnected) return;
+        video.muted = true;
+        soundUnlockedRef.current = false;
+        setSoundUnlocked(false);
+      });
+    }
+  }
+
+  function toggleVoice() {
+    const video = videoRef.current;
+    if (voiceOnRef.current && soundUnlockedRef.current) {
+      voiceOnRef.current = false;
+      setVoiceOn(false);
+      window.speechSynthesis?.cancel();
+      if (video) video.muted = true;
       return;
     }
+    voiceOnRef.current = true;
+    soundUnlockedRef.current = true;
+    userGestureSeenRef.current = true;
+    setVoiceOn(true);
+    setSoundUnlocked(true);
+    if (!video) return;
+    video.muted = customVoice;
     if (customVoice) {
       speakWithDevice(screenSpeech);
-      return;
-    }
-    const video = videoRef.current;
-    if (video) {
-      video.currentTime = 0;
-      video.muted = false;
+    } else if (video.paused && !video.ended) {
       video.play().catch(() => {});
     }
   }
@@ -536,23 +592,16 @@ export default function Invitation() {
             <button
               className="bm-icon-button"
               type="button"
-              onClick={() => setVoiceOn(value => !value)}
-              aria-label={voiceOn ? "Mute Bunny" : "Unmute Bunny"}
+              onClick={toggleVoice}
+              aria-label={voiceOn && soundUnlocked ? "Mute Bunny" : "Enable Bunny sound"}
               aria-pressed={!voiceOn}
-            >{voiceOn ? "🔊" : "🔇"}</button>
-            {isAsk && <button className="bm-replay-button" type="button" onClick={replayBunny}>Replay</button>}
+            >{voiceOn && soundUnlocked ? "🔊" : "🔇"}</button>
           </div>
         </header>
       )}
 
       <div className="bm-art">
-        <button
-          type="button"
-          className="bm-character"
-          tabIndex={isDecline ? -1 : 0}
-          aria-label="Replay Bunny’s dialogue"
-          onClick={replayBunny}
-        >
+        <div className="bm-character" aria-hidden="true">
           <video
             ref={videoRef}
             key={sceneKey}
@@ -561,10 +610,10 @@ export default function Invitation() {
             playsInline
             autoPlay
             preload="metadata"
-            muted={!voiceOn || customVoice}
-            onError={() => { if (voiceOn && !customVoice) speakWithDevice(screenSpeech); }}
+            muted={!voiceOn || customVoice || !soundUnlocked}
+            onError={() => { if (voiceOnRef.current && !customVoice) speakWithDevice(screenSpeech); }}
           />
-        </button>
+        </div>
       </div>
 
       {isAsk && showOops && (
@@ -629,7 +678,6 @@ export default function Invitation() {
                     placeholder="Enter code"
                     value={code}
                     enterKeyHint="go"
-                    onFocus={replayBunny}
                     onChange={event => setCode(event.target.value)}
                     required
                   />

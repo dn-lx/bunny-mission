@@ -64,7 +64,7 @@ button:disabled { cursor: default; opacity: .58; }
 }
 .bm-brand span { margin-right: 5px; font-size: 1.35em; }
 .bm-header-tools { display: flex; align-items: center; gap: 6px; }
-.bm-icon-button, .bm-replay-button {
+.bm-icon-button {
   min-height: 38px;
   border: 1px solid rgb(142 38 61 / .22);
   border-radius: 999px;
@@ -88,7 +88,7 @@ button:disabled { cursor: default; opacity: .58; }
   border-radius: 38%;
   background: transparent;
   transform: translateX(-50%);
-  cursor: pointer;
+  cursor: default;
   pointer-events: auto;
   -webkit-mask-image: radial-gradient(ellipse closest-side at 50% 48%, #000 67%, rgb(0 0 0 / .94) 76%, rgb(0 0 0 / .62) 88%, transparent 100%);
   mask-image: radial-gradient(ellipse closest-side at 50% 48%, #000 67%, rgb(0 0 0 / .94) 76%, rgb(0 0 0 / .62) 88%, transparent 100%);

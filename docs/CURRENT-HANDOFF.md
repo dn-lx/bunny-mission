@@ -13,6 +13,12 @@ source so speech begins about one second after playback starts. Audio and video
 were trimmed together to preserve lip sync; original clips remain intact for
 rollback. Custom edited questions retain their device-speech fallback.
 
+Recorded clips try audible autoplay first. When a mobile browser blocks it,
+they fall back to muted playback; the first touch or key interaction outside
+the speaker control unmutes or resumes at the current position without
+rewinding. Touching Nibbles or focusing the invitation-code field does not
+replay the clip, and there is no replay button.
+
 Work is restricted to develop. Invitation data and owner settings are unchanged.
 See `docs/QWEN-VOICE-TRIAL.md` for media details and verification commands.
 
