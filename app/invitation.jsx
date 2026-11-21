@@ -8,6 +8,16 @@ const TIMES = [
   { icon: "🌙", label: "Evening" }
 ];
 const DEFAULT_CLIPS = {
+  password: "/video/flow/password-girl-early.mp4",
+  ask: "/video/flow/ask-girl-early.mp4",
+  yes: "/video/flow/yes-girl-early.mp4",
+  outing: "/video/flow/outing-girl-early.mp4",
+  detail: "/video/flow/detail-girl-early.mp4",
+  schedule: "/video/flow/schedule-girl-early.mp4",
+  success: "/video/flow/success-girl-early.mp4",
+  decline: "/video/flow/decline-girl-early.mp4"
+};
+const ORIGINAL_CLIPS = {
   password: "/video/flow/password.mp4",
   ask: "/video/flow/ask.mp4",
   yes: "/video/flow/yes.mp4",
@@ -190,7 +200,10 @@ export default function Invitation() {
   useEffect(() => {
     let active = true;
     // Keep the embedded Flow voices available while reviewing the Qwen trial.
-    if (new URLSearchParams(window.location.search).get("voice") === "original") return;
+    if (new URLSearchParams(window.location.search).get("voice") === "original") {
+      setClipPaths(ORIGINAL_CLIPS);
+      return;
+    }
     fetch("/video/flow/manifest.json", { cache: "no-store" })
       .then(response => response.ok ? response.json() : null)
       .then(manifest => {
@@ -201,7 +214,8 @@ export default function Invitation() {
             clean[key] = path;
           }
         }
-        setClipPaths(clean);
+        const unchanged = Object.keys(clean).every(key => clean[key] === DEFAULT_CLIPS[key]);
+        if (!unchanged) setClipPaths(clean);
       })
       .catch(() => {});
     return () => { active = false; };

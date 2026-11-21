@@ -7,12 +7,17 @@ for a softer female child voice directly in the existing app. The comparison
 page and two review samples were removed; its old URL redirects to the app.
 There are no additional voice selection controls or guest pages.
 
-All nine standard scenes now use a single new Qwen VoiceDesign recording with
-explicit soft female child character direction and gentle expression. The
-manifest selects `-girl.mp4` files; animation packets and speech windows are
-retained. Source audio and timing metadata are stored for reproduction.
-Original Flow and the previously accepted Qwen files remain available for
-internal rollback. Custom edited questions retain their device-speech fallback.
+All nine standard scenes use the accepted soft female child voice. The active
+manifest selects `-girl-early.mp4` clips, trimmed from the matching `-girl.mp4`
+source so speech begins about one second after playback starts. Audio and video
+were trimmed together to preserve lip sync; original clips remain intact for
+rollback. Custom edited questions retain their device-speech fallback.
+
+Recorded clips try audible autoplay first. When a mobile browser blocks it,
+the clip pauses at the opening frame until a touch or key interaction starts
+it with sound. Later touches never restart the clip; the speaker control only
+toggles sound, and there is no replay button. A small “Tap for sound” label
+appears while browser autoplay is blocked.
 
 Work is restricted to develop. Invitation data and owner settings are unchanged.
 See `docs/QWEN-VOICE-TRIAL.md` for media details and verification commands.
@@ -32,13 +37,6 @@ The active guest route on develop is a Next.js App Router app using React 19.3.1
 - The first Netlify Next deploy was marked ready but both the branch alias and deploy URL returned Netlify's generic 404. Its deploy summary showed no Next server handler and no root page. The app does not need SSR, so the root now ships as a static export while the protected functions remain separate.
 
 The Next.js migration is committed to develop only; main remains on the pre-migration app. Netlify's develop root now loads the invitation code screen in the browser. No real invitation code or guest reply was submitted.
-
-## Mobile audio autoplay (21 November 2026)
-
-Recorded clips try audible autoplay first. If the browser blocks it, the clip
-pauses at its opening frame until a tap or key interaction starts it with sound.
-Later touches never restart it; the speaker control only toggles sound, and no
-replay control is shown.
 
 ## Version 1 page behavior
 
