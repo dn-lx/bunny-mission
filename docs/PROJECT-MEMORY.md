@@ -20,10 +20,10 @@ Bunny Mission is a private invitation site with server-side unlock, animated Nib
   recorded speech begins about one second after playback starts. Audio and
   video are trimmed together to preserve lip sync; original `-girl.mp4` clips
   remain untouched as rollback assets.
-- Invitation clips attempt audible autoplay. If a browser blocks sound, muted
-  playback continues until the speaker or first non-speaker touch/key
-  interaction unmutes or resumes at the current time. Touching Nibbles or
-  focusing the code field never rewinds a clip; no replay control is shown.
+- Invitation clips attempt audible autoplay. If a browser blocks it, the clip
+  pauses at its opening frame until the first touch or key interaction starts
+  it with sound. Later touches never restart a clip; the speaker control only
+  toggles sound and there is no replay control.
 - The owner explicitly wants Bunny Studio on `develop` and `main` to share the
   same invitations and settings store. Keep the existing shared owner store;
   do not split production data from develop data.
