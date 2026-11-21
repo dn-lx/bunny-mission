@@ -82,6 +82,7 @@ export default function Invitation() {
   const [inviteId, setInviteId] = useState("");
   const [settings, setSettings] = useState({});
   const [voiceOn, setVoiceOn] = useState(true);
+  const [soundUnlocked, setSoundUnlocked] = useState(true);
   const [reducedMotion, setReducedMotion] = useState(false);
   const [clipPaths, setClipPaths] = useState(DEFAULT_CLIPS);
   const [pending, setPending] = useState(false);
@@ -96,6 +97,11 @@ export default function Invitation() {
   const [oopsMessage, setOopsMessage] = useState("");
   const [selectedOuting, setSelectedOuting] = useState("");
   const videoRef = useRef(null);
+  const voiceOnRef = useRef(true);
+  const soundUnlockedRef = useRef(true);
+  const userGestureSeenRef = useRef(false);
+  const playbackAttemptRef = useRef(0);
+  const pendingSpeechRef = useRef("");
   const [holding, setHolding] = useState("");
   const [noPosition, setNoPosition] = useState(null);
   const [viewport, setViewport] = useState(null);
@@ -203,32 +209,59 @@ export default function Invitation() {
 
   useEffect(() => {
     const video = videoRef.current;
-    window.speechSynthesis?.cancel();
     if (!video) return;
-    video.muted = !voiceOn || customVoice;
-    if (!voiceOn) {
-      video.pause();
-      return;
-    }
+    const attempt = ++playbackAttemptRef.current;
+    video.muted = !voiceOnRef.current || customVoice || !soundUnlockedRef.current;
     setError("");
     video.currentTime = 0;
     const play = video.play();
     if (play?.catch) {
       play.catch(() => {
-        // Mobile browsers commonly block autoplay when a clip has audio.
-        // Retry silently so Nibbles still starts moving as soon as the page opens.
+        if (!video.isConnected || video.ended || attempt !== playbackAttemptRef.current) return;
+        // If audible autoplay is blocked, wait for a real tap and start once with sound.
+        // Playing silently here makes the voice finish before the guest can enable it.
+        video.pause();
+        try { video.currentTime = 0; } catch {}
         video.muted = true;
-        video.play().catch(() => {
-          if (customVoice) speakWithDevice(screenSpeech);
-        });
+        soundUnlockedRef.current = false;
+        setSoundUnlocked(false);
       });
     }
-    if (customVoice) speakWithDevice(screenSpeech);
+  }, [sceneKey, clipPaths, customVoice]);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (video) video.muted = !voiceOn || customVoice || !soundUnlocked;
+  }, [voiceOn, customVoice, soundUnlocked]);
+
+  useEffect(() => {
+    window.speechSynthesis?.cancel();
+    if (customVoice && voiceOnRef.current) {
+      if (userGestureSeenRef.current) speakWithDevice(screenSpeech);
+      else pendingSpeechRef.current = screenSpeech;
+    } else {
+      pendingSpeechRef.current = "";
+    }
     return () => window.speechSynthesis?.cancel();
-  }, [step, voiceOn, clipPaths, customVoice, screenSpeech]);
+  }, [step, customVoice, screenSpeech]);
+
+  useEffect(() => {
+    function enableSoundOnFirstGesture(event) {
+      if (event.target?.closest?.(".bm-icon-button")) return;
+      if (!voiceOnRef.current ||
+          (userGestureSeenRef.current && soundUnlockedRef.current && !pendingSpeechRef.current)) return;
+      enableSoundAtCurrentTime();
+    }
+    document.addEventListener("pointerdown", enableSoundOnFirstGesture, true);
+    document.addEventListener("keydown", enableSoundOnFirstGesture, true);
+    return () => {
+      document.removeEventListener("pointerdown", enableSoundOnFirstGesture, true);
+      document.removeEventListener("keydown", enableSoundOnFirstGesture, true);
+    };
+  }, [customVoice]);
 
   function speakWithDevice(text) {
-    if (!text || !voiceOn || !window.speechSynthesis || !window.SpeechSynthesisUtterance) return;
+    if (!text || !voiceOnRef.current || !window.speechSynthesis || !window.SpeechSynthesisUtterance) return;
     window.speechSynthesis.cancel();
     const utterance = new window.SpeechSynthesisUtterance(text);
     const voices = window.speechSynthesis.getVoices();
@@ -236,23 +269,76 @@ export default function Invitation() {
     if (preferred) utterance.voice = preferred;
     utterance.rate = 0.88;
     utterance.pitch = 1.2;
+    utterance.onstart = () => {
+      pendingSpeechRef.current = "";
+      soundUnlockedRef.current = true;
+      setSoundUnlocked(true);
+    };
+    utterance.onerror = event => {
+      if (event.error !== "not-allowed") return;
+      pendingSpeechRef.current = text;
+      soundUnlockedRef.current = false;
+      setSoundUnlocked(false);
+    };
     window.speechSynthesis.speak(utterance);
   }
 
-  function replayBunny() {
-    if (!voiceOn) {
-      setVoiceOn(true);
-      return;
-    }
-    if (customVoice) {
-      speakWithDevice(screenSpeech);
-      return;
-    }
+  function enableSoundAtCurrentTime() {
+    if (!voiceOnRef.current) return;
+    userGestureSeenRef.current = true;
+    soundUnlockedRef.current = true;
+    setSoundUnlocked(true);
     const video = videoRef.current;
-    if (video) {
-      video.currentTime = 0;
-      video.muted = false;
-      video.play().catch(() => {});
+    if (customVoice) {
+      const speech = pendingSpeechRef.current || screenSpeech;
+      pendingSpeechRef.current = "";
+      speakWithDevice(speech);
+      return;
+    }
+    if (!video || video.ended) return;
+    video.muted = false;
+    if (video.paused && !video.ended) {
+      const attempt = ++playbackAttemptRef.current;
+      video.play().catch(() => {
+        if (!video.isConnected || attempt !== playbackAttemptRef.current) return;
+        video.pause();
+        try { video.currentTime = 0; } catch {}
+        video.muted = true;
+        soundUnlockedRef.current = false;
+        setSoundUnlocked(false);
+      });
+    }
+  }
+
+  function toggleVoice() {
+    const video = videoRef.current;
+    if (voiceOnRef.current && soundUnlockedRef.current) {
+      voiceOnRef.current = false;
+      setVoiceOn(false);
+      window.speechSynthesis?.cancel();
+      if (video) video.muted = true;
+      return;
+    }
+    voiceOnRef.current = true;
+    soundUnlockedRef.current = true;
+    userGestureSeenRef.current = true;
+    setVoiceOn(true);
+    setSoundUnlocked(true);
+    if (!video) return;
+    video.muted = customVoice;
+    if (customVoice) {
+      pendingSpeechRef.current = "";
+      speakWithDevice(screenSpeech);
+    } else if (video.paused && !video.ended) {
+      const attempt = ++playbackAttemptRef.current;
+      video.play().catch(() => {
+        if (!video.isConnected || attempt !== playbackAttemptRef.current) return;
+        video.pause();
+        try { video.currentTime = 0; } catch {}
+        video.muted = true;
+        soundUnlockedRef.current = false;
+        setSoundUnlocked(false);
+      });
     }
   }
 
@@ -536,35 +622,28 @@ export default function Invitation() {
             <button
               className="bm-icon-button"
               type="button"
-              onClick={() => setVoiceOn(value => !value)}
-              aria-label={voiceOn ? "Mute Bunny" : "Unmute Bunny"}
+              onClick={toggleVoice}
+              aria-label={voiceOn && soundUnlocked ? "Mute Bunny" : "Enable Bunny sound"}
               aria-pressed={!voiceOn}
-            >{voiceOn ? "🔊" : "🔇"}</button>
-            {isAsk && <button className="bm-replay-button" type="button" onClick={replayBunny}>Replay</button>}
+              title={voiceOn && soundUnlocked ? "Mute Nibbles" : "Tap once to hear Nibbles"}
+            >{voiceOn && soundUnlocked ? "🔊" : <>🔇<span className="bm-sound-label">Tap for sound</span></>}</button>}
           </div>
         </header>
       )}
 
       <div className="bm-art">
-        <button
-          type="button"
-          className="bm-character"
-          tabIndex={isDecline ? -1 : 0}
-          aria-label="Replay Bunny’s dialogue"
-          onClick={replayBunny}
-        >
+        <div className="bm-character" aria-hidden="true">
           <video
             ref={videoRef}
             key={sceneKey}
             src={clipPaths[sceneKey] || DEFAULT_CLIPS[sceneKey]}
             poster="/video/flow/poster.webp"
             playsInline
-            autoPlay
             preload="metadata"
-            muted={!voiceOn || customVoice}
-            onError={() => { if (voiceOn && !customVoice) speakWithDevice(screenSpeech); }}
+            muted={!voiceOn || customVoice || !soundUnlocked}
+            onError={() => { if (voiceOnRef.current && !customVoice) speakWithDevice(screenSpeech); }}
           />
-        </button>
+        </div>
       </div>
 
       {isAsk && showOops && (
@@ -629,7 +708,6 @@ export default function Invitation() {
                     placeholder="Enter code"
                     value={code}
                     enterKeyHint="go"
-                    onFocus={replayBunny}
                     onChange={event => setCode(event.target.value)}
                     required
                   />
