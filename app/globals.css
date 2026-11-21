@@ -75,6 +75,7 @@ button:disabled { cursor: default; opacity: .58; }
   font-weight: 750;
   backdrop-filter: blur(12px);
 }
+.bm-sound-label { margin-left: 5px; font-size: 11px; font-weight: 750; white-space: nowrap; }
 .bm-header--minimal .bm-brand { visibility: hidden; }
 .bm-art { position: absolute; inset: 0; z-index: 0; pointer-events: none; }
 .bm-character {
