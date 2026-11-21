@@ -626,7 +626,7 @@ export default function Invitation() {
               aria-label={voiceOn && soundUnlocked ? "Mute Bunny" : "Enable Bunny sound"}
               aria-pressed={!voiceOn}
               title={voiceOn && soundUnlocked ? "Mute Nibbles" : "Tap once to hear Nibbles"}
-            >{voiceOn && soundUnlocked ? "🔊" : <>🔇<span className="bm-sound-label">Tap for sound</span></>}</button>}
+            >{voiceOn && soundUnlocked ? "🔊" : <>🔇<span className="bm-sound-label">Tap for sound</span></>}</button>
           </div>
         </header>
       )}
