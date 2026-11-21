@@ -33,6 +33,13 @@ The active guest route on develop is a Next.js App Router app using React 19.3.1
 
 The Next.js migration is committed to develop only; main remains on the pre-migration app. Netlify's develop root now loads the invitation code screen in the browser. No real invitation code or guest reply was submitted.
 
+## Mobile audio autoplay (21 November 2026)
+
+Recorded clips try audible autoplay first. If the browser blocks it, the clip
+pauses at its opening frame until a tap or key interaction starts it with sound.
+Later touches never restart it; the speaker control only toggles sound, and no
+replay control is shown.
+
 ## Version 1 page behavior
 
 Bunny Mission uses the nine native Google Flow Nibbles clips in public/video/flow/manifest.json. Each clip keeps Flow's gentle voice and mouth movement together in its MP4. The media remains unchanged.
